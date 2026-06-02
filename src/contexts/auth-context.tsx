@@ -20,7 +20,13 @@ export interface AuthContextData {
     signInMutation: UseMutationResult<User, unknown, SignInRequest>;
   };
   signUp: {
-    signUp: (name: string, email: string, password: string) => Promise<void>;
+    signUp: (
+      cnpj: string,
+      companyName: string,
+      userName: string,
+      email: string,
+      password: string,
+    ) => Promise<void>;
     signUpMutation: UseMutationResult<void, unknown, SignUpRequest>;
   };
   confirmAccount: {

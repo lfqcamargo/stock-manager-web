@@ -1,79 +1,164 @@
+import {
+  BarChart3,
+  Package,
+  Settings,
+  TrendingUp,
+  Users,
+  Warehouse,
+} from 'lucide-react';
 import { Outlet } from 'react-router-dom';
 
 import { ModeToggle } from '@/components/ui/mode-toggle';
-import { Separator } from '@/components/ui/separator';
 
 export function PublicLayout() {
   return (
-    <div className="min-h-screen bg-background">
-      {/* Top bar */}
-      <header className="absolute top-0 right-0 left-0 z-10 flex items-center justify-between px-6 py-4">
-        <div className="flex items-center gap-2">
-          {/* Slot para logo — substitua pelo logo do projeto */}
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-            <span className="text-xs font-bold text-primary-foreground">T</span>
-          </div>
-          <span className="text-sm font-semibold text-foreground">
-            Template
-          </span>
+    <div className="bg-background min-h-screen">
+      {/* Background Pattern */}
+      <div className="from-primary/5 via-background to-secondary/10 dark:from-primary/10 dark:via-background dark:to-secondary/20 absolute inset-0 bg-gradient-to-br">
+        {/* Floating Icons - Mobile */}
+        <div className="text-primary/15 dark:text-primary/25 absolute top-16 left-4 md:hidden">
+          <Package className="h-6 w-6" />
         </div>
+        <div className="text-chart-1/15 dark:text-chart-1/25 absolute top-32 right-6 md:hidden">
+          <TrendingUp className="h-5 w-5" />
+        </div>
+        <div className="text-chart-2/15 dark:text-chart-2/25 absolute bottom-24 left-8 md:hidden">
+          <BarChart3 className="h-5 w-5" />
+        </div>
+
+        {/* Floating Icons - Desktop */}
+        <div className="text-primary/20 dark:text-primary/30 absolute top-20 left-10 hidden md:block">
+          <Package className="h-8 w-8" />
+        </div>
+        <div className="text-chart-1/20 dark:text-chart-1/30 absolute top-40 right-16 hidden md:block">
+          <TrendingUp className="h-6 w-6" />
+        </div>
+        <div className="text-chart-2/20 dark:text-chart-2/30 absolute bottom-32 left-20 hidden md:block">
+          <BarChart3 className="h-7 w-7" />
+        </div>
+        <div className="text-chart-3/20 dark:text-chart-3/30 absolute top-60 left-1/3 hidden md:block">
+          <Warehouse className="h-5 w-5" />
+        </div>
+        <div className="text-chart-4/20 dark:text-chart-4/30 absolute right-32 bottom-20 hidden md:block">
+          <Users className="h-6 w-6" />
+        </div>
+        <div className="text-chart-5/20 dark:text-chart-5/30 absolute top-80 right-1/4 hidden md:block">
+          <Settings className="h-5 w-5" />
+        </div>
+      </div>
+
+      {/* Theme Toggle - Fixed Position */}
+      <div className="fixed top-4 right-4 z-50">
         <ModeToggle />
-      </header>
+      </div>
 
-      {/* Main */}
-      <div className="flex min-h-screen">
-        {/* Left panel — branding (desktop only) */}
-        <div className="hidden lg:flex lg:w-1/2 flex-col justify-between bg-muted/40 border-r border-border px-12 py-20">
-          <div />
-
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                Template React
-              </p>
-              <h1 className="text-4xl font-bold tracking-tight text-foreground leading-tight">
-                Construa algo
-                <br />
-                <span className="text-primary">incrível.</span>
-              </h1>
-              <p className="text-muted-foreground text-base max-w-sm">
-                Um ponto de partida sólido com autenticação, temas e estrutura
-                pronta para escalar.
-              </p>
-            </div>
-
-            <Separator className="w-12" />
-
-            <ul className="space-y-3 text-sm text-muted-foreground">
-              <li className="flex items-center gap-2">
-                <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-                Autenticação completa (sign-in, sign-up, recuperação de senha)
-              </li>
-              <li className="flex items-center gap-2">
-                <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-                Tema claro / escuro com persistência
-              </li>
-              <li className="flex items-center gap-2">
-                <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-                React Query + Axios configurados
-              </li>
-              <li className="flex items-center gap-2">
-                <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-                Componentes shadcn/ui prontos para uso
-              </li>
-            </ul>
+      {/* Layout Container */}
+      <div className="relative flex min-h-screen items-center justify-center p-4">
+        {/* Mobile Layout */}
+        <div className="w-full max-w-md md:hidden">
+          <div className="bg-card/95 border-border/50 rounded-2xl border p-6 shadow-2xl backdrop-blur-sm">
+            <Outlet />
           </div>
-
-          <p className="text-xs text-muted-foreground">
-            © {new Date().getFullYear()} Template React. Todos os direitos
-            reservados.
-          </p>
         </div>
 
-        {/* Right panel — form */}
-        <div className="flex flex-1 items-center justify-center px-6 py-24 lg:px-16">
-          <div className="w-full max-w-sm">
-            <Outlet />
+        {/* Desktop Layout */}
+        <div className="hidden w-full max-w-6xl items-center justify-center gap-8 md:flex">
+          {/* Left Side - Branding */}
+          <div className="max-w-md flex-1">
+            <div className="space-y-8">
+              {/* Logo/Brand */}
+              <div className="space-y-4">
+                <div className="flex items-center space-x-3">
+                  <div className="bg-primary flex h-12 w-12 items-center justify-center rounded-xl shadow-lg">
+                    <Package className="text-primary-foreground h-6 w-6" />
+                  </div>
+                  <div>
+                    <h1 className="text-foreground text-2xl font-bold">
+                      EstoquePro
+                    </h1>
+                    <p className="text-muted-foreground text-sm">
+                      Sistema de Controle
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Features */}
+              <div className="space-y-6">
+                <h2 className="text-foreground text-xl font-semibold">
+                  Gerencie seu estoque com eficiência
+                </h2>
+
+                <div className="space-y-4">
+                  <div className="flex items-start space-x-3">
+                    <div className="bg-chart-1/10 mt-1 flex h-8 w-8 items-center justify-center rounded-lg shadow-sm">
+                      <Package className="text-chart-1 h-4 w-4" />
+                    </div>
+                    <div>
+                      <h3 className="text-foreground font-medium">
+                        Controle de Produtos
+                      </h3>
+                      <p className="text-muted-foreground text-sm">
+                        Organize e gerencie seu inventário de forma inteligente
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start space-x-3">
+                    <div className="bg-chart-2/10 mt-1 flex h-8 w-8 items-center justify-center rounded-lg shadow-sm">
+                      <TrendingUp className="text-chart-2 h-4 w-4" />
+                    </div>
+                    <div>
+                      <h3 className="text-foreground font-medium">
+                        Relatórios Detalhados
+                      </h3>
+                      <p className="text-muted-foreground text-sm">
+                        Acompanhe vendas, estoque baixo e movimentações
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start space-x-3">
+                    <div className="bg-chart-3/10 mt-1 flex h-8 w-8 items-center justify-center rounded-lg shadow-sm">
+                      <Users className="text-chart-3 h-4 w-4" />
+                    </div>
+                    <div>
+                      <h3 className="text-foreground font-medium">
+                        Gestão de Usuários
+                      </h3>
+                      <p className="text-muted-foreground text-sm">
+                        Controle de acesso e permissões para sua equipe
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Stats */}
+              <div className="grid grid-cols-3 gap-4 pt-4">
+                <div className="bg-card/50 border-border/20 rounded-lg border p-3 text-center shadow-sm">
+                  <div className="text-chart-1 text-2xl font-bold">99%</div>
+                  <div className="text-muted-foreground text-xs">Precisão</div>
+                </div>
+                <div className="bg-card/50 border-border/20 rounded-lg border p-3 text-center shadow-sm">
+                  <div className="text-chart-2 text-2xl font-bold">24/7</div>
+                  <div className="text-muted-foreground text-xs">
+                    Disponível
+                  </div>
+                </div>
+                <div className="bg-card/50 border-border/20 rounded-lg border p-3 text-center shadow-sm">
+                  <div className="text-chart-3 text-2xl font-bold">1000+</div>
+                  <div className="text-muted-foreground text-xs">Empresas</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Side - Form */}
+          <div className="max-w-md flex-1">
+            <div className="bg-card/95 border-border/50 rounded-2xl border p-6 shadow-2xl backdrop-blur-sm">
+              <Outlet />
+            </div>
           </div>
         </div>
       </div>

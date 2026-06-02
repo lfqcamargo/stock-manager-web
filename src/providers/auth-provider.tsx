@@ -70,8 +70,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }
 
   const signUpMutation = useMutation({
-    mutationFn: ({ name, email, password }: SignUpRequest) =>
-      signUpApi({ name, email, password }),
+    mutationFn: ({
+      cnpj,
+      companyName,
+      userName,
+      email,
+      password,
+    }: SignUpRequest) =>
+      signUpApi({ cnpj, companyName, userName, email, password }),
     onSuccess: () => {
       toast.success('Email de verificação enviado com sucesso');
     },
@@ -80,8 +86,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
     },
   });
 
-  async function signUp(name: string, email: string, password: string) {
-    await signUpMutation.mutateAsync({ name, email, password });
+  async function signUp(
+    cnpj: string,
+    companyName: string,
+    userName: string,
+    email: string,
+    password: string,
+  ) {
+    await signUpMutation.mutateAsync({
+      cnpj,
+      companyName,
+      userName,
+      email,
+      password,
+    });
   }
 
   const confirmAccountMutation = useMutation({
