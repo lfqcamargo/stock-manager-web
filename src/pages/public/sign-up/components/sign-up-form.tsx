@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Building, Eye, EyeOff, Loader2, Lock, Mail, User } from 'lucide-react';
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { Link } from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';
@@ -26,7 +26,7 @@ export function SignUpForm() {
   const {
     register,
     handleSubmit,
-    watch,
+    control,
     formState: { errors },
   } = useForm<SignUpFormData>({
     resolver: zodResolver(signUpSchema),
@@ -40,12 +40,24 @@ export function SignUpForm() {
     },
   });
 
-  const cnpjWatch = watch('cnpj');
-  const companyNameWatch = watch('companyName');
-  const emailWatch = watch('email');
-  const userNameWatch = watch('userName');
-  const passwordWatch = watch('password');
-  const confirmPasswordWatch = watch('confirmPassword');
+  const [
+    cnpjWatch,
+    companyNameWatch,
+    emailWatch,
+    userNameWatch,
+    passwordWatch,
+    confirmPasswordWatch,
+  ] = useWatch({
+    control,
+    name: [
+      'cnpj',
+      'companyName',
+      'email',
+      'userName',
+      'password',
+      'confirmPassword',
+    ],
+  });
 
   const activeButton = Boolean(
     cnpjWatch &&

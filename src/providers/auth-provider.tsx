@@ -3,8 +3,8 @@ import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 import type { User } from '@/@types/user';
-import type { ConfirmAccountRequest } from '@/api/auth/confirm-account';
-import { confirmAccount as confirmAccountApi } from '@/api/auth/confirm-account';
+import type { ConfirmAccountRequest } from '@/api/auth/confirm-account-company';
+import { confirmAccountCompany as confirmAccountApi } from '@/api/auth/confirm-account-company';
 import type { ExchangePasswordForTokenRequest } from '@/api/auth/exchange-password-for-token';
 import { exchangePasswordForToken as exchangePasswordForTokenApi } from '@/api/auth/exchange-password-for-token';
 import {
@@ -113,7 +113,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     },
   });
 
-  async function confirmAccount(token: string) {
+  async function confirmAccountCompany(token: string) {
     return await confirmAccountMutation.mutateAsync({ token });
   }
 
@@ -179,7 +179,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       signOutMutation: signOutMutation,
     },
     confirmAccount: {
-      confirmAccount: confirmAccount,
+      confirmAccountCompany: confirmAccountCompany,
       confirmAccountMutation: confirmAccountMutation,
     },
     forgotPassword: {

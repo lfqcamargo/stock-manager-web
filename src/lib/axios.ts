@@ -67,7 +67,11 @@ api.interceptors.response.use(
     } catch (refreshError) {
       processQueue(refreshError);
       window.dispatchEvent(new CustomEvent('auth:unauthorized'));
-      return Promise.reject(refreshError);
+      return Promise.reject(
+        refreshError instanceof Error
+          ? refreshError
+          : new Error('Session refresh failed', { cause: refreshError }),
+      );
     } finally {
       isRefreshing = false;
     }

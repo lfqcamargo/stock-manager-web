@@ -5,7 +5,7 @@ import type { User } from '@/@types/user';
 import type {
   ConfirmAccountRequest,
   ConfirmAccountResponse,
-} from '@/api/auth/confirm-account';
+} from '@/api/auth/confirm-account-company';
 import type { ExchangePasswordForTokenRequest } from '@/api/auth/exchange-password-for-token';
 import type { ForgotPasswordRequest } from '@/api/auth/forgot-password';
 import type { SignInRequest } from '@/api/auth/sign-in';
@@ -30,7 +30,7 @@ export interface AuthContextData {
     signUpMutation: UseMutationResult<void, unknown, SignUpRequest>;
   };
   confirmAccount: {
-    confirmAccount: (token: string) => Promise<ConfirmAccountResponse>;
+    confirmAccountCompany: (token: string) => Promise<ConfirmAccountResponse>;
     confirmAccountMutation: UseMutationResult<
       ConfirmAccountResponse,
       unknown,

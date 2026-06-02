@@ -8,7 +8,7 @@ export interface ConfirmAccountResponse {
   email: string;
 }
 
-export async function confirmAccount({
+export async function confirmAccountCompany({
   token,
 }: ConfirmAccountRequest): Promise<ConfirmAccountResponse> {
   const response = await api.post<ConfirmAccountResponse>(
