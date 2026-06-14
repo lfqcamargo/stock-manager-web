@@ -1,4 +1,5 @@
 import {
+  Activity,
   ChevronRight,
   ChevronsUpDown,
   Home,
@@ -8,6 +9,8 @@ import {
   Moon,
   Package,
   Sun,
+  User,
+  Users,
   Warehouse,
 } from 'lucide-react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
@@ -79,31 +82,51 @@ const navItems: Array<
     }
 > = [
   {
-    title: 'Main',
-    items: [{ label: 'Dashboard', icon: Home, href: '/' }],
+    title: 'Principal',
+    items: [{ label: 'Painel', icon: Home, href: '/' }],
   },
   {
     title: 'Material',
     icon: Package,
     items: [
-      { label: 'Group', icon: LayoutGrid, href: '/material/group' },
-      { label: 'Material', icon: Package, href: '/material/material' },
+      { label: 'Grupos', icon: LayoutGrid, href: '/material/group' },
+      { label: 'Materiais', icon: Package, href: '/material/material' },
     ],
   },
   {
-    title: 'Addressing',
+    title: 'Endereçamento',
     icon: Warehouse,
     items: [
-      { label: 'Location', icon: Warehouse, href: '/addressing/location' },
+      { label: 'Localizações', icon: Warehouse, href: '/addressing/location' },
       {
-        label: 'Sub Location',
+        label: 'Sub-localizações',
         icon: LayoutGrid,
         href: '/addressing/sub-location',
       },
-      { label: 'Row', icon: LayoutGrid, href: '/addressing/row' },
-      { label: 'Shelf', icon: LayoutGrid, href: '/addressing/shelf' },
-      { label: 'Position', icon: LayoutGrid, href: '/addressing/position' },
-      { label: 'Addressing', icon: LayoutGrid, href: '/addressing/addressing' },
+      { label: 'Fileiras', icon: LayoutGrid, href: '/addressing/row' },
+      { label: 'Prateleiras', icon: LayoutGrid, href: '/addressing/shelf' },
+      { label: 'Posições', icon: LayoutGrid, href: '/addressing/position' },
+      { label: 'Endereços', icon: LayoutGrid, href: '/addressing/addressing' },
+    ],
+  },
+  {
+    title: 'Movimentação',
+    icon: Activity,
+    items: [
+      { label: 'Movimentações', icon: Activity, href: '/movement/movement' },
+      {
+        label: 'Tipos de Movimento',
+        icon: LayoutGrid,
+        href: '/movement/movement-types',
+      },
+    ],
+  },
+  {
+    title: 'Empresa',
+    icon: Users,
+    items: [
+      { label: 'Empresa', icon: Users, href: '/company/profile' },
+      { label: 'Usuários', icon: Users, href: '/company/users' },
     ],
   },
 ];
@@ -265,6 +288,15 @@ export function AppLayout() {
                       </p>
                     </div>
                   </DropdownMenuLabel>
+
+                  <DropdownMenuSeparator />
+
+                  <DropdownMenuItem asChild className="cursor-pointer gap-2">
+                    <Link to="/user/profile">
+                      <User className="h-4 w-4" />
+                      Meu Perfil
+                    </Link>
+                  </DropdownMenuItem>
 
                   <DropdownMenuSeparator />
 

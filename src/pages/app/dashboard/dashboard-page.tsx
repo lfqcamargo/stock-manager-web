@@ -1,4 +1,11 @@
-import { Activity, ArrowUpRight, TrendingUp, Users } from 'lucide-react';
+import {
+  Activity,
+  ArrowUpRight,
+  Package,
+  TrendingUp,
+  Users,
+  Warehouse,
+} from 'lucide-react';
 
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -14,41 +21,59 @@ import { useAuth } from '@/hooks/use-auth';
 
 const stats = [
   {
-    label: 'Usuários',
-    value: '1.240',
-    change: '+12%',
+    label: 'Materiais',
+    value: '156',
+    change: '+8',
     trend: 'up',
-    icon: Users,
+    icon: Package,
   },
   {
-    label: 'Atividade',
-    value: '3.892',
-    change: '+8%',
+    label: 'Localizações',
+    value: '24',
+    change: '+2',
+    trend: 'up',
+    icon: Warehouse,
+  },
+  {
+    label: 'Movimentos',
+    value: '342',
+    change: '+15',
     trend: 'up',
     icon: Activity,
   },
   {
-    label: 'Crescimento',
-    value: '24,5%',
-    change: '+4%',
-    trend: 'up',
-    icon: TrendingUp,
-  },
-  {
-    label: 'Conversão',
-    value: '5,2%',
-    change: '+1%',
-    trend: 'up',
-    icon: ArrowUpRight,
+    label: 'Usuários',
+    value: '5',
+    change: '0',
+    trend: 'neutral',
+    icon: Users,
   },
 ];
 
 const recentActivity = [
-  { user: 'Ana Silva', action: 'Criou uma nova conta', time: 'há 2 min' },
-  { user: 'Carlos Mendes', action: 'Atualizou o perfil', time: 'há 15 min' },
-  { user: 'Beatriz Costa', action: 'Realizou login', time: 'há 32 min' },
-  { user: 'Diego Rocha', action: 'Alterou a senha', time: 'há 1h' },
-  { user: 'Fernanda Lima', action: 'Criou uma nova conta', time: 'há 2h' },
+  {
+    user: 'João Silva',
+    action: 'Adicionou material "Parafuso Aço"',
+    time: 'há 5 min',
+  },
+  {
+    user: 'Maria Santos',
+    action: 'Realizou saída de estoque',
+    time: 'há 18 min',
+  },
+  { user: 'Ana Costa', action: 'Criou nova localização', time: 'há 45 min' },
+  { user: 'Carlos Pereira', action: 'Atualizou material', time: 'há 1h' },
+  {
+    user: 'Luiz Oliveira',
+    action: 'Realizou entrada de estoque',
+    time: 'há 2h',
+  },
+];
+
+const quickLinks = [
+  { label: 'Novo Material', href: '/material/material' },
+  { label: 'Nova Localização', href: '/addressing/location' },
+  { label: 'Nova Movimentação', href: '/movement/movement' },
 ];
 
 function getInitials(name: string) {
@@ -71,7 +96,7 @@ export function DashboardPage() {
           Olá, {user?.name?.split(' ')[0]} 👋
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Aqui está um resumo do que está acontecendo hoje.
+          Aqui está o resumo do seu estoque hoje.
         </p>
       </div>
 
@@ -94,21 +119,20 @@ export function DashboardPage() {
                 >
                   {stat.change}
                 </Badge>
-                em relação ao mês anterior
+                no mês
               </p>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      {/* Atividade recente */}
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Card className="lg:col-span-1">
+      {/* Seção principal */}
+      <div className="grid gap-4 lg:grid-cols-3">
+        {/* Atividade recente */}
+        <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle className="text-base">Atividade recente</CardTitle>
-            <CardDescription>
-              Últimas ações realizadas na plataforma
-            </CardDescription>
+            <CardDescription>Últimas ações no estoque</CardDescription>
           </CardHeader>
           <CardContent className="space-y-0">
             {recentActivity.map((item, index) => (
@@ -137,42 +161,25 @@ export function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* Card de boas-vindas / placeholder */}
-        <Card className="lg:col-span-1">
+        {/* Links rápidos */}
+        <Card>
           <CardHeader>
-            <CardTitle className="text-base">Sobre este template</CardTitle>
+            <CardTitle className="text-base">Ações rápidas</CardTitle>
             <CardDescription>
-              Ponto de partida para novos projetos
+              Acesse rapidamente as funções principais
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3">
-            <p className="text-sm text-muted-foreground">
-              Este template inclui autenticação completa, sidebar responsiva,
-              suporte a temas e uma estrutura escalável pronta para uso.
-            </p>
-            <Separator />
-            <ul className="space-y-2 text-sm text-muted-foreground">
-              <li className="flex items-center gap-2">
-                <span className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
-                React + TypeScript + Vite
-              </li>
-              <li className="flex items-center gap-2">
-                <span className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
-                shadcn/ui + Tailwind CSS
-              </li>
-              <li className="flex items-center gap-2">
-                <span className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
-                React Query + Axios
-              </li>
-              <li className="flex items-center gap-2">
-                <span className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
-                React Hook Form + Zod
-              </li>
-              <li className="flex items-center gap-2">
-                <span className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
-                React Router DOM
-              </li>
-            </ul>
+          <CardContent className="space-y-2">
+            {quickLinks.map((link, index) => (
+              <a
+                key={index}
+                href={link.href}
+                className="flex items-center gap-2 p-2 rounded-md hover:bg-accent transition-colors text-sm font-medium"
+              >
+                <ArrowUpRight className="h-4 w-4" />
+                {link.label}
+              </a>
+            ))}
           </CardContent>
         </Card>
       </div>

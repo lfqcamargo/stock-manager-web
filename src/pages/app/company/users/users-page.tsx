@@ -3,29 +3,26 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';
-import { useMovementType } from '@/hooks/use-movement-type';
 
-import { CreateMovementTypeDialog } from './components/create-movement-type-dialog';
-import { MovementTypeStatsCards } from './components/movement-type-stats-cards';
-import { MovementTypesTable } from './components/movement-types-table';
+import { UsersTable } from './components/table';
+import { UsersStatsCards } from './components/users-stats-cards';
 
-export function MovementTypesPage() {
+export function UsersPage() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 
-  const { useGetMovementTypesStats } = useMovementType();
-  const { data } = useGetMovementTypesStats();
-
-  async function handleDeleteMovementType(id: string) {
-    console.log('Delete movement type:', id);
+  async function handleDeleteUser(id: string) {
+    console.log('Delete user:', id);
   }
 
   return (
     <div className="flex-1 space-y-4 md:space-y-6">
       {/* Stats Cards */}
-      <MovementTypeStatsCards
-        totalItems={data?.meta?.totalItems || 0}
-        totalInboundTypes={data?.meta?.totalInboundTypes || 0}
-        totalOutboundTypes={data?.meta?.totalOutboundTypes || 0}
+      <UsersStatsCards
+        totalItems={5}
+        totalActive={4}
+        totalInactive={1}
+        itemCount={5}
+        lastCreated={new Date('2024-05-12').toISOString()}
       />
 
       {/* Header */}
@@ -44,10 +41,10 @@ export function MovementTypesPage() {
             </Button>
             <div className="space-y-0.5 md:space-y-1">
               <h1 className="text-xl md:text-2xl lg:text-3xl font-bold tracking-tight">
-                Tipos de Movimento
+                Usuários
               </h1>
               <p className="text-xs md:text-sm text-muted-foreground">
-                Configure os tipos de movimentação disponíveis no sistema
+                Gerencie os usuários da sua empresa
               </p>
             </div>
           </div>
@@ -56,20 +53,15 @@ export function MovementTypesPage() {
             className="rounded-lg md:rounded-xl shadow-md hover:shadow-lg transition-all duration-300 h-9 md:h-10 lg:h-11 w-full md:w-auto"
           >
             <Plus className="mr-2 h-4 w-4" />
-            <span className="md:inline">Novo Tipo</span>
+            <span className="md:inline">Novo Usuário</span>
           </Button>
         </div>
       </div>
 
       {/* Table */}
       <div className="rounded-lg md:rounded-2xl border border-border/40 bg-card/50 backdrop-blur supports-[backdrop-filter]:bg-card/50 shadow-sm overflow-hidden">
-        <MovementTypesTable onDelete={handleDeleteMovementType} />
+        <UsersTable onDelete={handleDeleteUser} />
       </div>
-
-      <CreateMovementTypeDialog
-        open={isAddDialogOpen}
-        onOpenChange={setIsAddDialogOpen}
-      />
     </div>
   );
 }

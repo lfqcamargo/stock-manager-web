@@ -1,16 +1,8 @@
-import { Plus, Search } from 'lucide-react';
+import { ArrowLeft, Plus } from 'lucide-react';
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { useMovement } from '@/hooks/use-movement';
 
 import { CreateMovementDialog } from './components/create-movement-dialog';
 import { MovementsTable } from './components/movimentacoes-table';
@@ -18,55 +10,53 @@ import { MovementsTable } from './components/movimentacoes-table';
 export function MovementPage() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 
-  const { useCreateMovement } = useMovement();
-  const { mutate: createMovementFn, isPending } = useCreateMovement();
+  async function handleDeleteMovement(id: string) {
+    console.log('Delete movement', id);
+  }
 
   return (
-    <div className="min-h-screen p-4 md:p-6 lg:p-8 space-y-6 md:space-y-8">
+    <div className="flex-1 space-y-4 md:space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="space-y-1">
-          <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
-            Movimentações de Estoque
-          </h1>
-          <p className="text-sm md:text-base text-muted-foreground">
-            Consulte e gerencie todas as movimentações do sistema
-          </p>
+      <div className="rounded-lg md:rounded-2xl border border-border/40 bg-card/50 backdrop-blur supports-[backdrop-filter]:bg-card/50 p-4 md:p-6 lg:p-8 shadow-sm">
+        <div className="flex flex-col gap-4 md:gap-6 md:flex-row md:items-start md:justify-between">
+          <div className="flex items-start gap-3 md:gap-4">
+            <Button
+              variant="outline"
+              size="icon"
+              asChild
+              className="h-9 w-9 md:h-10 md:w-10 rounded-lg md:rounded-xl shadow-sm hover:shadow transition-all duration-200"
+            >
+              <Link to="/">
+                <ArrowLeft className="h-4 w-4" />
+              </Link>
+            </Button>
+            <div className="space-y-0.5 md:space-y-1">
+              <h1 className="text-xl md:text-2xl lg:text-3xl font-bold tracking-tight">
+                Movimentações
+              </h1>
+              <p className="text-xs md:text-sm text-muted-foreground">
+                Gerencie todas as movimentações de estoque
+              </p>
+            </div>
+          </div>
+          <Button
+            onClick={() => setIsAddDialogOpen(true)}
+            className="rounded-lg md:rounded-xl shadow-md hover:shadow-lg transition-all duration-300 h-9 md:h-10 lg:h-11 w-full md:w-auto"
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            <span className="md:inline">Nova Movimentação</span>
+          </Button>
         </div>
-        <Button
-          onClick={() => setIsAddDialogOpen(true)}
-          className="shadow-lg hover:shadow-xl transition-all duration-300 w-full sm:w-auto"
-          size="lg"
-        >
-          <Plus className="mr-2 h-4 w-4 md:h-5 md:w-5" />
-          Nova Movimentação
-        </Button>
       </div>
 
-      {/* Table Card */}
-      <Card className="border-none shadow-xl bg-card/50 backdrop-blur-sm">
-        <CardHeader className="border-b bg-muted/30 backdrop-blur-sm space-y-2 px-4 md:px-6 py-4 md:py-6">
-          <CardTitle className="text-lg md:text-xl lg:text-2xl font-bold">
-            Lista de Movimentações
-          </CardTitle>
-          <CardDescription className="text-xs md:text-sm">
-            Visualize e gerencie todas as movimentações de estoque
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="p-4 md:p-6">
-          <MovementsTable onDelete={() => {}} />
-        </CardContent>
-      </Card>
+      {/* Table */}
+      <div className="rounded-lg md:rounded-2xl border border-border/40 bg-card/50 backdrop-blur supports-[backdrop-filter]:bg-card/50 shadow-sm overflow-hidden">
+        <MovementsTable onDelete={handleDeleteMovement} />
+      </div>
 
       <CreateMovementDialog
         open={isAddDialogOpen}
         onOpenChange={setIsAddDialogOpen}
-        onSubmit={(values) => {
-          createMovementFn(values, {
-            onSuccess: () => setIsAddDialogOpen(false),
-          });
-        }}
-        isLoading={isPending}
       />
     </div>
   );

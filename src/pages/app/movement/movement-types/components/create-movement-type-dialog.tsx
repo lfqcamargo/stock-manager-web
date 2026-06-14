@@ -1,5 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
+import { z } from 'zod';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -21,10 +23,12 @@ import {
 } from '@/components/ui/select';
 import { useMovementType } from '@/hooks/use-movement-type';
 
-import {
-  type CreateMovementTypeFormData,
-  CreateMovementTypeSchema,
-} from '../lib/create-validation';
+const CreateMovementTypeSchema = z.object({
+  name: z.string().min(1, 'Nome é obrigatório'),
+  direction: z.enum(['IN', 'OUT']),
+});
+
+type CreateMovementTypeFormData = z.infer<typeof CreateMovementTypeSchema>;
 
 interface CreateMovementTypeDialogProps {
   open: boolean;
@@ -52,38 +56,33 @@ export function CreateMovementTypeDialog({
   const { useCreateMovementType } = useMovementType();
   const { mutateAsync: createMovementTypeFn } = useCreateMovementType();
 
-  async function handleCreateMovementType(data: CreateMovementTypeFormData) {
+  async function onSubmit(data: CreateMovementTypeFormData) {
     await createMovementTypeFn(data);
     reset();
     onOpenChange(false);
   }
 
-  const handleCancel = () => {
-    reset();
-    onOpenChange(false);
-  };
+  useEffect(() => {
+    if (!open) reset();
+  }, [open, reset]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] p-0">
-        <form onSubmit={handleSubmit(handleCreateMovementType)}>
-          <DialogHeader className="px-6 pt-6 pb-4">
-            <DialogTitle className="text-xl font-semibold flex items-center gap-2">
-              Novo Tipo de Movimentação
-            </DialogTitle>
-            <DialogDescription className="text-muted-foreground">
-              Preencha os dados do novo tipo de movimentação
-            </DialogDescription>
-          </DialogHeader>
+      <DialogContent className="sm:max-w-[500px]">
+        <DialogHeader>
+          <DialogTitle>Novo Tipo de Movimento</DialogTitle>
+          <DialogDescription>
+            Cadastre um novo tipo de movimento no sistema
+          </DialogDescription>
+        </DialogHeader>
 
-          <div className="px-6 space-y-6">
-            {/* Nome */}
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <div className="grid gap-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Nome do Tipo</Label>
+              <Label htmlFor="name">Nome</Label>
               <Input
                 id="name"
-                placeholder="Ex: Entrada por compra"
-                className="h-11"
+                placeholder="Ex: Compra, Venda, Devolução"
                 {...register('name')}
               />
               {errors.name && (
@@ -92,8 +91,6 @@ export function CreateMovementTypeDialog({
                 </p>
               )}
             </div>
-
-            {/* Direção */}
             <div className="space-y-2">
               <Label htmlFor="direction">Direção</Label>
               <Controller
@@ -101,7 +98,7 @@ export function CreateMovementTypeDialog({
                 control={control}
                 render={({ field }) => (
                   <Select onValueChange={field.onChange} value={field.value}>
-                    <SelectTrigger className="h-11 w-full">
+                    <SelectTrigger>
                       <SelectValue placeholder="Selecione a direção" />
                     </SelectTrigger>
                     <SelectContent>
@@ -119,11 +116,11 @@ export function CreateMovementTypeDialog({
             </div>
           </div>
 
-          <DialogFooter className="px-6 py-4 gap-2">
+          <DialogFooter>
             <Button
               type="button"
               variant="outline"
-              onClick={handleCancel}
+              onClick={() => onOpenChange(false)}
               disabled={isSubmitting}
             >
               Cancelar
