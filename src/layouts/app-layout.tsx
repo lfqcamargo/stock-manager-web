@@ -1,7 +1,23 @@
-import { ChevronsUpDown, Home, LogOut, Monitor, Moon, Sun } from 'lucide-react';
+import {
+  ChevronRight,
+  ChevronsUpDown,
+  Home,
+  LayoutGrid,
+  LogOut,
+  Monitor,
+  Moon,
+  Package,
+  Sun,
+  Warehouse,
+} from 'lucide-react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,6 +39,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSubButton,
   SidebarProvider,
   SidebarRail,
   SidebarTrigger,
@@ -41,11 +58,53 @@ function getInitials(name?: string) {
     .toUpperCase();
 }
 
-// Itens de navegação — adicione novos itens aqui conforme o projeto crescer
-const navItems = [
+// Navigation items
+const navItems: Array<
+  | {
+      title: string;
+      items: Array<{
+        label: string;
+        icon: React.ElementType;
+        href: string;
+      }>;
+    }
+  | {
+      title: string;
+      icon: React.ElementType;
+      items: Array<{
+        label: string;
+        icon: React.ElementType;
+        href: string;
+      }>;
+    }
+> = [
   {
-    title: 'Principal',
+    title: 'Main',
     items: [{ label: 'Dashboard', icon: Home, href: '/' }],
+  },
+  {
+    title: 'Material',
+    icon: Package,
+    items: [
+      { label: 'Group', icon: LayoutGrid, href: '/material/group' },
+      { label: 'Material', icon: Package, href: '/material/material' },
+    ],
+  },
+  {
+    title: 'Addressing',
+    icon: Warehouse,
+    items: [
+      { label: 'Location', icon: Warehouse, href: '/addressing/location' },
+      {
+        label: 'Sub Location',
+        icon: LayoutGrid,
+        href: '/addressing/sub-location',
+      },
+      { label: 'Row', icon: LayoutGrid, href: '/addressing/row' },
+      { label: 'Shelf', icon: LayoutGrid, href: '/addressing/shelf' },
+      { label: 'Position', icon: LayoutGrid, href: '/addressing/position' },
+      { label: 'Addressing', icon: LayoutGrid, href: '/addressing/addressing' },
+    ],
   },
 ];
 
@@ -82,32 +141,85 @@ export function AppLayout() {
 
         {/* Navegação */}
         <SidebarContent>
-          {navItems.map((group) => (
-            <SidebarGroup key={group.title}>
-              <SidebarGroupLabel>{group.title}</SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {group.items.map((item) => {
-                    const isActive = location.pathname === item.href;
-                    return (
-                      <SidebarMenuItem key={item.href}>
-                        <SidebarMenuButton
-                          asChild
-                          isActive={isActive}
-                          tooltip={item.label}
-                        >
-                          <Link to={item.href}>
-                            <item.icon />
-                            <span>{item.label}</span>
-                          </Link>
+          {navItems.map((group) => {
+            const hasIcon = 'icon' in group;
+            if (hasIcon) {
+              return (
+                <Collapsible
+                  key={group.title}
+                  defaultOpen
+                  className="group/collapsible"
+                >
+                  <SidebarGroup>
+                    <SidebarGroupLabel
+                      asChild
+                      className="group/label p-0 text-foreground"
+                    >
+                      <CollapsibleTrigger asChild>
+                        <SidebarMenuButton className="w-full justify-between">
+                          <div className="flex items-center gap-2">
+                            <group.icon />
+                            <span>{group.title}</span>
+                          </div>
+                          <ChevronRight className="text-muted-foreground transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                         </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    );
-                  })}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-          ))}
+                      </CollapsibleTrigger>
+                    </SidebarGroupLabel>
+
+                    <CollapsibleContent>
+                      <SidebarGroupContent>
+                        <SidebarMenu>
+                          {group.items.map((item) => {
+                            const isActive = location.pathname === item.href;
+                            return (
+                              <SidebarMenuItem key={item.href}>
+                                <SidebarMenuSubButton
+                                  asChild
+                                  isActive={isActive}
+                                >
+                                  <Link to={item.href}>
+                                    <item.icon />
+                                    <span>{item.label}</span>
+                                  </Link>
+                                </SidebarMenuSubButton>
+                              </SidebarMenuItem>
+                            );
+                          })}
+                        </SidebarMenu>
+                      </SidebarGroupContent>
+                    </CollapsibleContent>
+                  </SidebarGroup>
+                </Collapsible>
+              );
+            }
+
+            return (
+              <SidebarGroup key={group.title}>
+                <SidebarGroupLabel>{group.title}</SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {group.items.map((item) => {
+                      const isActive = location.pathname === item.href;
+                      return (
+                        <SidebarMenuItem key={item.href}>
+                          <SidebarMenuButton
+                            asChild
+                            isActive={isActive}
+                            tooltip={item.label}
+                          >
+                            <Link to={item.href}>
+                              <item.icon />
+                              <span>{item.label}</span>
+                            </Link>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                      );
+                    })}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            );
+          })}
         </SidebarContent>
 
         {/* Footer da sidebar — usuário */}

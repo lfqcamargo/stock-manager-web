@@ -1,15 +1,11 @@
+import type { User } from '@/@types/user';
 import { api } from '@/lib/axios';
 
 export interface GetProfileResponse {
-  id: string;
-  name: string;
-  email: string;
-  photoId?: string | null;
-  createdAt: string;
-  lastLogin: string | null;
+  user: User;
 }
 
-export async function getProfile(): Promise<GetProfileResponse> {
-  const response = await api.get('/users/me');
-  return response.data;
+export async function getProfile(): Promise<User> {
+  const response = await api.get<GetProfileResponse>('/users/me');
+  return response.data.user;
 }

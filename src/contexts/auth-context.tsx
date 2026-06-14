@@ -6,7 +6,10 @@ import type {
   ConfirmAccountRequest,
   ConfirmAccountResponse,
 } from '@/api/auth/confirm-account-company';
-import type { ExchangePasswordForTokenRequest, ExchangePasswordForTokenResponse } from '@/api/auth/exchange-password-for-token';
+import type {
+  ExchangePasswordForTokenRequest,
+  ExchangePasswordForTokenResponse,
+} from '@/api/auth/exchange-password-for-token';
 import type { ForgotPasswordRequest } from '@/api/auth/forgot-password';
 import type { SignInRequest } from '@/api/auth/sign-in';
 import type { SignUpRequest } from '@/api/auth/sign-up';
