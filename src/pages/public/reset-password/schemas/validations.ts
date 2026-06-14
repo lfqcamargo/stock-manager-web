@@ -5,11 +5,8 @@ export const resetPasswordSchema = z
     password: z
       .string()
       .min(1, 'Senha é obrigatória')
-      .min(8, 'A senha deve ter pelo menos 8 caracteres')
-      .regex(
-        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
-        'A senha deve conter pelo menos uma letra maiúscula, uma minúscula, um número e um caractere especial',
-      ),
+      .min(6, 'Senha deve ter pelo menos 8 caracteres')
+      .max(50, 'Senha deve ter no máximo 100 caracteres'),
     confirmPassword: z.string().min(1, 'Confirmação de senha é obrigatória'),
   })
   .refine((data) => data.password === data.confirmPassword, {

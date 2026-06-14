@@ -14,7 +14,6 @@ if (env.VITE_ENABLE_API_DELAY) {
   });
 }
 
-// Controla se já há um refresh em andamento para evitar múltiplas chamadas simultâneas
 let isRefreshing = false;
 let failedQueue: Array<{
   resolve: (value?: unknown) => void;
@@ -45,7 +44,7 @@ api.interceptors.response.use(
     }
 
     // Evita loop infinito na própria rota de refresh
-    if (originalRequest.url?.includes('/session/refresh')) {
+    if (originalRequest.url?.includes('/auth/session/refresh')) {
       window.dispatchEvent(new CustomEvent('auth:unauthorized'));
       return Promise.reject(error);
     }
@@ -61,7 +60,7 @@ api.interceptors.response.use(
     isRefreshing = true;
 
     try {
-      await api.post('/session/refresh');
+      await api.post('/auth/session/refresh');
       processQueue(null);
       return api(originalRequest);
     } catch (refreshError) {

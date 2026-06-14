@@ -1,27 +1,27 @@
 import { api } from '@/lib/axios';
 
 export interface SignUpRequest {
-  cnpj: string;
   companyName: string;
+  companyCnpj: string;
   userName: string;
-  email: string;
-  password: string;
+  userEmail: string;
+  userPassword: string;
 }
 
 type SignUpResponse = void;
 
 export async function signUp({
-  cnpj,
   companyName,
+  companyCnpj,
   userName,
-  email,
-  password,
+  userEmail,
+  userPassword,
 }: SignUpRequest): Promise<SignUpResponse> {
-  await api.post('/auth/create-temp-user', {
-    cnpj,
+  await api.post('/auth/create-temp-company', {
     companyName,
+    companyCnpj,
     userName,
-    email,
-    password,
+    userEmail,
+    userPassword,
   });
 }

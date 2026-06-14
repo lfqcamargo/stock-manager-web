@@ -25,9 +25,12 @@ export function PublicRoutes() {
         <Route path="sign-in" element={<SignInPageWithKey />} />
         <Route path="sign-up" element={<SignUpPage />} />
         <Route path="forgot-password" element={<ForgotPasswordPage />} />
-        <Route path="reset-password" element={<ResetPasswordPage />} />
         <Route
-          path="confirm-account"
+          path="exchange-password-for-token"
+          element={<ResetPasswordPage />}
+        />
+        <Route
+          path="confirmation-create-company-and-user"
           element={<ConfirmationCreateCompanyAndUserPage />}
         />
       </Route>

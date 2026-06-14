@@ -1,7 +1,8 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ArrowLeft, Loader2, Mail } from 'lucide-react';
-import { useForm } from 'react-hook-form';
-import { Link } from 'react-router-dom';
+import { useForm, useWatch } from 'react-hook-form';
+import { Link, useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,9 +15,13 @@ import {
 } from '../schemas/validations';
 
 export function ForgotPasswordForm() {
-  const { forgotPassword } = useAuth();
+  const { forgotPasswordMutation } = useAuth();
+  const navigate = useNavigate();
+
+  const isPending = forgotPasswordMutation.isPending;
 
   const {
+    control,
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
@@ -27,17 +32,22 @@ export function ForgotPasswordForm() {
     },
   });
 
-  async function handleForgotPassword(data: ForgotPasswordFormData) {
-    await forgotPassword.forgotPassword(data.email);
-  }
+  const [emailWatch] = useWatch({ control, name: 'email' });
 
-  function onFormSubmit(data: ForgotPasswordFormData) {
-    void handleForgotPassword(data);
+  const activeButton = Boolean(!isPending && emailWatch && !isSubmitting);
+
+  async function handleForgotPassword(data: ForgotPasswordFormData) {
+    try {
+      await forgotPasswordMutation.mutateAsync({ email: data.email });
+      void navigate(`/?email=${encodeURIComponent(data.email)}`);
+    } catch {
+      toast.error('Erro ao enviar link de recuperação');
+    }
   }
 
   return (
     <form
-      onSubmit={(e) => void handleSubmit(onFormSubmit)(e)}
+      onSubmit={(e) => void handleSubmit(handleForgotPassword)(e)}
       className="space-y-4 md:space-y-6"
     >
       {/* Email */}
@@ -75,7 +85,7 @@ export function ForgotPasswordForm() {
       <Button
         type="submit"
         className="bg-primary hover:bg-primary/90 text-primary-foreground h-10 w-full rounded-xl text-sm font-medium shadow-lg transition-all duration-200 hover:shadow-xl md:h-11 md:text-base"
-        disabled={isSubmitting}
+        disabled={!activeButton}
       >
         {isSubmitting ? (
           <>

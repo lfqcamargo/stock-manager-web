@@ -9,5 +9,5 @@ export type ForgotPasswordResponse = void;
 export async function forgotPassword({
   email,
 }: ForgotPasswordRequest): Promise<ForgotPasswordResponse> {
-  await api.post(`/auth/recover-password`, { email });
+  await api.post(`/auth/generate-new-password-token`, { email });
 }

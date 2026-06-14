@@ -4,7 +4,7 @@ import { validateCNPJ } from '@/utils/validate-cnpj';
 
 export const signUpSchema = z
   .object({
-    cnpj: z
+    companyCnpj: z
       .string()
       .min(1, 'CNPJ é obrigatório')
       .max(18, 'CNPJ inválido')
@@ -44,25 +44,20 @@ export const signUpSchema = z
         name.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase()),
       ),
 
-    email: z
+    userEmail: z
       .email('Formato de email inválido')
       .min(5, 'Email deve ter pelo menos 5 caracteres')
       .max(255, 'Email deve ter no máximo 255 caracteres')
       .transform((email) => email.toLowerCase().trim()),
 
-    password: z
+    userPassword: z
       .string()
       .min(1, 'Senha é obrigatória')
-      .min(8, 'Senha deve ter pelo menos 8 caracteres')
-      .max(100, 'Senha deve ter no máximo 100 caracteres')
-      .regex(
-        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
-        'Senha deve conter pelo menos uma letra maiúscula, uma minúscula, um número e um caractere especial',
-      ),
-
+      .min(6, 'Senha deve ter pelo menos 8 caracteres')
+      .max(50, 'Senha deve ter no máximo 100 caracteres'),
     confirmPassword: z.string().min(1, 'Confirmação de senha é obrigatória'),
   })
-  .refine((data) => data.password === data.confirmPassword, {
+  .refine((data) => data.userPassword === data.confirmPassword, {
     message: 'As senhas não coincidem',
     path: ['confirmPassword'],
   });

@@ -9,5 +9,5 @@ export async function signIn({
   email,
   password,
 }: SignInRequest): Promise<void> {
-  await api.post('/session', { email, password });
+  await api.post('/auth/session', { email, password });
 }

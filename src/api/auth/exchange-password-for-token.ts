@@ -5,15 +5,18 @@ export interface ExchangePasswordForTokenRequest {
   password: string;
 }
 
-export type ExchangePasswordForTokenResponse = void;
+export interface ExchangePasswordForTokenResponse {
+  email: string;
+}
 
 export async function exchangePasswordForToken({
   token,
   password,
-}: ExchangePasswordForTokenRequest): Promise<void> {
-  const response = await api.post<ExchangePasswordForTokenResponse>(
-    `/auth/exchange-password-token/${token}`,
+}: ExchangePasswordForTokenRequest): Promise<ExchangePasswordForTokenResponse> {
+  const response = await api.patch<ExchangePasswordForTokenResponse>(
+    `/auth/exchange-password-for-token`,
     {
+      token,
       password,
     },
   );

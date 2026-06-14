@@ -1,11 +1,11 @@
-import { CheckCircle, Loader2, Mail, RefreshCw, XCircle } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Loader2, Mail, RefreshCw, XCircle } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
 
-type ConfirmationState = 'loading' | 'success' | 'error';
+type ConfirmationState = 'loading' | 'error';
 
 export function ConfirmationCreateCompanyAndUserPage() {
   const [searchParams] = useSearchParams();
@@ -13,29 +13,34 @@ export function ConfirmationCreateCompanyAndUserPage() {
   const [state, setState] = useState<ConfirmationState>(() =>
     token ? 'loading' : 'error',
   );
-  const hasExecuted = useRef(false);
-  const {
-    confirmAccount: { confirmAccountCompany, confirmAccountMutation },
-  } = useAuth();
+  const { confirmAccountMutation } = useAuth();
+  const navigate = useNavigate();
 
   const isPending = confirmAccountMutation.isPending;
 
   useEffect(() => {
-    if (hasExecuted.current || !token) {
+    const STORAGE_KEY = `confirmation-started-${token}`;
+    const hasStartedFromStorage =
+      sessionStorage.getItem(STORAGE_KEY) === 'true';
+
+    if (hasStartedFromStorage || !token || isPending) {
       return;
     }
 
-    hasExecuted.current = true;
+    sessionStorage.setItem(STORAGE_KEY, 'true');
 
     void (async () => {
       try {
-        await confirmAccountCompany(token);
-        setState('success');
+        const result = await confirmAccountMutation.mutateAsync({ token });
+        // Limpamos o storage depois do sucesso
+        sessionStorage.removeItem(STORAGE_KEY);
+        void navigate(`/?email=${encodeURIComponent(result.email)}`);
       } catch {
+        sessionStorage.removeItem(STORAGE_KEY);
         setState('error');
       }
     })();
-  }, [token, confirmAccountCompany]);
+  }, [token]);
 
   return (
     <div className="p-6 md:p-8">
@@ -55,30 +60,6 @@ export function ConfirmationCreateCompanyAndUserPage() {
             </h1>
             <p className="text-muted-foreground text-sm md:text-base">
               Aguarde enquanto confirmamos sua conta...
-            </p>
-          </div>
-        </div>
-      )}
-
-      {state === 'success' && !isPending && (
-        <div className="text-center">
-          <div className="mb-6 md:mb-8">
-            <div className="relative mx-auto mb-4 h-16 w-16 md:h-20 md:w-20">
-              <div className="bg-chart-1 flex h-16 w-16 items-center justify-center rounded-2xl shadow-lg md:h-20 md:w-20">
-                <CheckCircle className="text-white h-8 w-8 md:h-10 md:w-10" />
-              </div>
-            </div>
-            <h1 className="text-foreground mb-2 text-xl font-bold md:text-2xl">
-              E-mail Confirmado!
-            </h1>
-            <p className="text-muted-foreground text-sm md:text-base">
-              Sua conta foi confirmada com sucesso. Redirecionando...
-            </p>
-          </div>
-
-          <div className="bg-chart-1/10 border-chart-1/20 rounded-xl border p-4">
-            <p className="text-chart-1/80 text-xs md:text-sm">
-              Você será redirecionado para a página de login em instantes.
             </p>
           </div>
         </div>

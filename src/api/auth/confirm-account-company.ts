@@ -12,7 +12,8 @@ export async function confirmAccountCompany({
   token,
 }: ConfirmAccountRequest): Promise<ConfirmAccountResponse> {
   const response = await api.post<ConfirmAccountResponse>(
-    `/auth/confirmation-create-user-by-token/${token}`,
+    `/auth/confirmation-create-company/`,
+    { token },
   );
 
   return response.data;

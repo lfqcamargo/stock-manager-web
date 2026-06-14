@@ -2,7 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Building, Eye, EyeOff, Loader2, Lock, Mail, User } from 'lucide-react';
 import { useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -20,8 +20,9 @@ export function SignUpForm() {
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
 
-  const { signUp } = useAuth();
-  const isPending = signUp.signUpMutation.isPending;
+  const { signUpMutation } = useAuth();
+  const isPending = signUpMutation.isPending;
+  const navigate = useNavigate();
 
   const {
     register,
@@ -31,11 +32,11 @@ export function SignUpForm() {
   } = useForm<SignUpFormData>({
     resolver: zodResolver(signUpSchema),
     defaultValues: {
-      cnpj: '',
+      companyCnpj: '',
       companyName: '',
       userName: '',
-      email: '',
-      password: '',
+      userEmail: '',
+      userPassword: '',
       confirmPassword: '',
     },
   });
@@ -50,11 +51,11 @@ export function SignUpForm() {
   ] = useWatch({
     control,
     name: [
-      'cnpj',
+      'companyCnpj',
       'companyName',
-      'email',
+      'userEmail',
       'userName',
-      'password',
+      'userPassword',
       'confirmPassword',
     ],
   });
@@ -66,19 +67,21 @@ export function SignUpForm() {
     userNameWatch &&
     passwordWatch &&
     confirmPasswordWatch &&
+    agreeTerms &&
     !isPending,
   );
 
-  const cnpjField = register('cnpj');
+  const cnpjField = register('companyCnpj');
 
   async function handleSignUp(data: SignUpFormData) {
-    await signUp.signUpMutation.mutateAsync({
-      cnpj: data.cnpj,
+    await signUpMutation.mutateAsync({
+      companyCnpj: data.companyCnpj,
       companyName: data.companyName,
       userName: data.userName,
-      email: data.email,
-      password: data.password,
+      userEmail: data.userEmail,
+      userPassword: data.userPassword,
     });
+    void navigate(`/?email=${encodeURIComponent(data.userEmail)}`);
   }
 
   function onFormSubmit(data: SignUpFormData) {
@@ -112,9 +115,9 @@ export function SignUpForm() {
             maxLength={18}
           />
         </div>
-        {errors.cnpj && (
+        {errors.companyCnpj && (
           <p className="text-destructive mb-2 pl-1 text-sm">
-            {errors.cnpj.message}
+            {errors.companyCnpj.message}
           </p>
         )}
       </div>
@@ -184,12 +187,12 @@ export function SignUpForm() {
             className="h-10 pl-9 text-sm md:h-11 md:pl-10 md:text-base"
             placeholder="seu@email.com"
             disabled={isPending}
-            {...register('email')}
+            {...register('userEmail')}
           />
         </div>
-        {errors.email && (
+        {errors.userEmail && (
           <p className="text-destructive mb-2 pl-1 text-sm">
-            {errors.email.message}
+            {errors.userEmail.message}
           </p>
         )}
       </div>
@@ -210,7 +213,7 @@ export function SignUpForm() {
             className="h-10 pr-11 pl-9 text-sm md:h-11 md:pr-12 md:pl-10 md:text-base"
             placeholder="Mínimo 8 caracteres"
             disabled={isPending}
-            {...register('password')}
+            {...register('userPassword')}
           />
           <button
             type="button"
@@ -225,9 +228,9 @@ export function SignUpForm() {
             )}
           </button>
         </div>
-        {errors.password && (
+        {errors.userPassword && (
           <p className="text-destructive mb-2 pl-1 text-sm">
-            {errors.password.message}
+            {errors.userPassword.message}
           </p>
         )}
       </div>
@@ -285,6 +288,8 @@ export function SignUpForm() {
           onClick={() => setAgreeTerms(!agreeTerms)}
         >
           Eu concordo com os{' '}
+        </Label>
+        <Label>
           <button
             type="button"
             onClick={(e) => {
@@ -313,7 +318,7 @@ export function SignUpForm() {
       <Button
         type="submit"
         className="bg-primary hover:bg-primary/90 text-primary-foreground h-10 w-full rounded-xl text-sm font-medium shadow-lg transition-all duration-200 hover:shadow-xl md:h-11 md:text-base"
-        disabled={!activeButton || !agreeTerms}
+        disabled={!activeButton}
       >
         {isPending ? (
           <>
@@ -351,8 +356,11 @@ export function SignUpForm() {
       {/* Terms and Privacy Modal */}
       <TermsAndPrivacyModal
         isOpen={showTermsModal}
-        onClose={() => setShowTermsModal(false)}
-        onAccept={() => setAgreeTerms(true)}
+        onClose={(accepted) => {
+          setShowTermsModal(false);
+          setAgreeTerms(accepted);
+        }}
+        agreeTerms={agreeTerms}
       />
     </form>
   );

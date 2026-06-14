@@ -1,11 +1,10 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Eye, EyeOff, Loader2, Lock, Mail } from 'lucide-react';
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { Link, useSearchParams } from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/hooks/use-auth';
@@ -14,14 +13,15 @@ import type { SignInFormData } from '../schemas/sign-in-schema';
 import { signInSchema } from '../schemas/sign-in-schema';
 
 export function SignInForm() {
-  const { signIn } = useAuth();
+  const { signInMutation } = useAuth();
   const [searchParams] = useSearchParams();
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
 
   const emailFromUrl = searchParams.get('email') ?? '';
+  const isPending = signInMutation.isPending;
 
   const {
+    control,
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
@@ -34,15 +34,16 @@ export function SignInForm() {
     },
   });
 
-  async function onSubmit(data: SignInFormData) {
-    await signIn.signInMutation.mutateAsync({
+  const [email, password] = useWatch({ control, name: ['email', 'password'] });
+  const activeButton = Boolean(
+    !isSubmitting && !isPending && email && password,
+  );
+
+  async function onFormSubmit(data: SignInFormData) {
+    await signInMutation.mutateAsync({
       email: data.email,
       password: data.password,
     });
-  }
-
-  function onFormSubmit(data: SignInFormData) {
-    void onSubmit(data);
   }
 
   return (
@@ -112,22 +113,7 @@ export function SignInForm() {
         )}
       </div>
 
-      <div className="flex items-center justify-between text-sm">
-        <div className="flex items-center space-x-2">
-          <Checkbox
-            id="remember"
-            checked={rememberMe}
-            onCheckedChange={() => setRememberMe(!rememberMe)}
-            disabled={isSubmitting}
-          />
-          <Label
-            htmlFor="remember"
-            className="text-foreground cursor-pointer font-normal normal-case tracking-normal"
-            onClick={() => setRememberMe(!rememberMe)}
-          >
-            Lembrar de mim
-          </Label>
-        </div>
+      <div className="flex items-center justify-end text-sm">
         <Link
           to="/forgot-password"
           className="text-primary hover:text-primary/80 transition-colors"
@@ -139,7 +125,7 @@ export function SignInForm() {
       <Button
         type="submit"
         className="bg-primary text-primary-foreground hover:bg-primary/90 h-10 w-full rounded-xl text-sm font-medium shadow-lg transition-all duration-200 hover:shadow-xl md:h-11 md:text-base"
-        disabled={isSubmitting}
+        disabled={!activeButton}
       >
         {isSubmitting ? (
           <>

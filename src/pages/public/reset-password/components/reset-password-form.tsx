@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Eye, EyeOff, Loader2, Lock } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 
@@ -20,7 +20,7 @@ export function ResetPasswordForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const navigate = useNavigate();
-  const { exchangePasswordForToken } = useAuth();
+  const { exchangePasswordForTokenMutation } = useAuth();
 
   const token = searchParams.get('token');
 
@@ -34,6 +34,7 @@ export function ResetPasswordForm() {
   }, [token, navigate]);
 
   const {
+    control,
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
@@ -45,8 +46,20 @@ export function ResetPasswordForm() {
     },
   });
 
-  const isPending =
-    exchangePasswordForToken.exchangePasswordForTokenMutation.isPending;
+  const [password, confirmPassword] = useWatch({
+    control,
+    name: ['password', 'confirmPassword'],
+  });
+
+  const isPending = exchangePasswordForTokenMutation.isPending;
+  const activeButton = Boolean(
+    !isPending &&
+    !isSubmitting &&
+    password &&
+    confirmPassword &&
+    token &&
+    password === confirmPassword,
+  );
 
   async function handleResetPassword(data: ResetPasswordFormData) {
     if (!token) {
@@ -54,20 +67,20 @@ export function ResetPasswordForm() {
       return;
     }
 
-    await exchangePasswordForToken.exchangePasswordForToken(
-      token,
-      data.password,
-    );
-    void navigate('/');
-  }
-
-  function onFormSubmit(data: ResetPasswordFormData) {
-    void handleResetPassword(data);
+    try {
+      const { email } = await exchangePasswordForTokenMutation.mutateAsync({
+        token,
+        password: data.password,
+      });
+      void navigate(`/?email=${encodeURIComponent(email)}`);
+    } catch {
+      toast.error('Erro ao redefinir senha');
+    }
   }
 
   return (
     <form
-      onSubmit={(e) => void handleSubmit(onFormSubmit)(e)}
+      onSubmit={(e) => void handleSubmit(handleResetPassword)(e)}
       className="space-y-4 md:space-y-6"
     >
       {/* Password */}
@@ -146,25 +159,11 @@ export function ResetPasswordForm() {
         )}
       </div>
 
-      {/* Password Requirements */}
-      <div className="bg-chart-1/10 border-chart-1/20 rounded-xl border p-4">
-        <p className="text-chart-1/80 mb-2 text-xs font-medium md:text-sm">
-          Sua senha deve conter:
-        </p>
-        <ul className="text-chart-1/70 list-inside list-disc space-y-1 text-xs md:text-sm">
-          <li>Pelo menos 8 caracteres</li>
-          <li>Uma letra minúscula</li>
-          <li>Uma letra maiúscula</li>
-          <li>Um número</li>
-          <li>Um caractere especial (@$!%*?&)</li>
-        </ul>
-      </div>
-
       {/* Reset Button */}
       <Button
         type="submit"
         className="bg-primary hover:bg-primary/90 text-primary-foreground h-10 w-full rounded-xl text-sm font-medium shadow-lg transition-all duration-200 hover:shadow-xl md:h-11 md:text-base"
-        disabled={isSubmitting || isPending || !token}
+        disabled={!activeButton}
       >
         {isSubmitting || isPending ? (
           <>

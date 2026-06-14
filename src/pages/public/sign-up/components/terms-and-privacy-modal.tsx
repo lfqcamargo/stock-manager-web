@@ -1,5 +1,5 @@
 import { Check, FileText, Shield, X } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -13,29 +13,39 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface TermsAndPrivacyModalProps {
   isOpen: boolean;
-  onClose: () => void;
-  onAccept: () => void;
+  onClose: (accepted: boolean) => void;
+  agreeTerms: boolean;
 }
 
 export function TermsAndPrivacyModal({
   isOpen,
   onClose,
-  onAccept,
+  agreeTerms,
 }: TermsAndPrivacyModalProps) {
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [acceptedPrivacy, setAcceptedPrivacy] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setAcceptedTerms(agreeTerms);
+      setAcceptedPrivacy(agreeTerms);
+    }
+  }, [isOpen, agreeTerms]);
 
   const canAccept = acceptedTerms && acceptedPrivacy;
 
   const handleAccept = () => {
     if (canAccept) {
-      onAccept();
-      onClose();
+      onClose(true);
     }
   };
 
+  const handleClose = () => {
+    onClose(acceptedTerms && acceptedPrivacy);
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-h-[90vh] max-w-4xl overflow-hidden">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -208,7 +218,7 @@ export function TermsAndPrivacyModal({
         </Tabs>
 
         <div className="flex justify-end space-x-2 border-t pt-4">
-          <Button variant="outline" onClick={onClose}>
+          <Button variant="outline" onClick={handleClose}>
             <X className="mr-2 h-4 w-4" />
             Cancelar
           </Button>

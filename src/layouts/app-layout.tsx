@@ -50,15 +50,12 @@ const navItems = [
 ];
 
 export function AppLayout() {
-  const {
-    user,
-    signOut: { signOut },
-  } = useAuth();
+  const { user, signOutMutation } = useAuth();
   const { theme, setTheme } = useTheme();
   const location = useLocation();
 
   function handleSignOut() {
-    void signOut();
+    void signOutMutation.mutateAsync();
   }
 
   return (
