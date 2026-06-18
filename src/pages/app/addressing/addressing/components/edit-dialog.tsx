@@ -227,9 +227,11 @@ export function EditAddressingDialog({
                     <SelectValue placeholder="Selecione o local" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value={addressing?.location?.id || ''}>
-                      {addressing?.location?.name || ''}
-                    </SelectItem>
+                    {addressing?.location?.id ? (
+                      <SelectItem value={addressing.location.id}>
+                        {addressing.location.name}
+                      </SelectItem>
+                    ) : null}
                   </SelectContent>
                 </Select>
               </div>
@@ -242,9 +244,11 @@ export function EditAddressingDialog({
                     <SelectValue placeholder="Selecione o sub-local" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value={addressing?.subLocation?.id || ''}>
-                      {addressing?.subLocation?.name || ''}
-                    </SelectItem>
+                    {addressing?.subLocation?.id ? (
+                      <SelectItem value={addressing.subLocation.id}>
+                        {addressing.subLocation.name}
+                      </SelectItem>
+                    ) : null}
                   </SelectContent>
                 </Select>
               </div>
@@ -260,9 +264,11 @@ export function EditAddressingDialog({
                     <SelectValue placeholder="Selecione a fileira" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value={addressing?.row?.id || ''}>
-                      {addressing?.row?.name || ''}
-                    </SelectItem>
+                    {addressing?.row?.id ? (
+                      <SelectItem value={addressing.row.id}>
+                        {addressing.row.name}
+                      </SelectItem>
+                    ) : null}
                   </SelectContent>
                 </Select>
               </div>
@@ -275,9 +281,11 @@ export function EditAddressingDialog({
                     <SelectValue placeholder="Selecione a prateleira" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value={addressing?.shelf?.id || ''}>
-                      {addressing?.shelf?.name || ''}
-                    </SelectItem>
+                    {addressing?.shelf?.id ? (
+                      <SelectItem value={addressing.shelf.id}>
+                        {addressing.shelf.name}
+                      </SelectItem>
+                    ) : null}
                   </SelectContent>
                 </Select>
               </div>
@@ -293,9 +301,11 @@ export function EditAddressingDialog({
                     <SelectValue placeholder="Selecione a posição" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value={addressing?.position?.id || ''}>
-                      {addressing?.position?.name || ''}
-                    </SelectItem>
+                    {addressing?.position?.id ? (
+                      <SelectItem value={addressing.position.id}>
+                        {addressing.position.name}
+                      </SelectItem>
+                    ) : null}
                   </SelectContent>
                 </Select>
               </div>

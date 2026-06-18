@@ -21,6 +21,11 @@ export function ToastError(error: unknown) {
     const data = response.data as AxiosErrorResponseData;
     const statusCode = response.status;
 
+    // Log error details in development
+    if (import.meta.env.DEV) {
+      console.log('Error details:', { data, statusCode, error });
+    }
+
     if (statusCode === 400 && data.errors) {
       const errorMessage =
         typeof data.errors === 'object' && 'message' in data.errors

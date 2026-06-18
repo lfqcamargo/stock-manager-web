@@ -55,7 +55,7 @@ export function GroupPage() {
       </div>
 
       {/* Table */}
-      <div className="rounded-lg md:rounded-2xl border border-border/40 bg-card/50 backdrop-blur supports-[backdrop-filter]:bg-card/50 shadow-sm overflow-hidden">
+      <div className="rounded-lg md:rounded-2xl border border-border/40 bg-card/50 backdrop-blur supports-backdrop-filter:bg-card/50 shadow-sm overflow-hidden">
         <GroupsTable
           onDelete={handleDeleteGroup}
           searchTerm={searchTerm}

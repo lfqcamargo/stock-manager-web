@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   Collapsible,
   CollapsibleContent,
@@ -42,14 +42,17 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarMenuSubButton,
   SidebarProvider,
   SidebarRail,
   SidebarTrigger,
+  useSidebar,
 } from '@/components/ui/sidebar';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/hooks/use-auth';
+import { useCompany } from '@/hooks/use-company';
 import { useTheme } from '@/hooks/use-theme';
 import { cn } from '@/lib/utils';
+import { formatRole } from '@/utils/format-role';
 
 function getInitials(name?: string) {
   if (!name) return '?';
@@ -61,28 +64,30 @@ function getInitials(name?: string) {
     .toUpperCase();
 }
 
+function getShortName(name?: string) {
+  if (!name) return '';
+  const parts = name.split(' ').filter((part) => part.trim().length > 0);
+  if (parts.length <= 2) return name;
+  return `${parts[0]} ${parts[parts.length - 1]}`;
+}
+
 // Navigation items
-const navItems: Array<
-  | {
-      title: string;
-      items: Array<{
-        label: string;
-        icon: React.ElementType;
-        href: string;
-      }>;
-    }
-  | {
-      title: string;
-      icon: React.ElementType;
-      items: Array<{
-        label: string;
-        icon: React.ElementType;
-        href: string;
-      }>;
-    }
-> = [
+interface NavItem {
+  label: string;
+  icon: React.ElementType;
+  href: string;
+}
+
+interface NavGroup {
+  title: string;
+  icon?: React.ElementType;
+  items: NavItem[];
+}
+
+const navItems: NavGroup[] = [
   {
     title: 'Principal',
+    icon: Home,
     items: [{ label: 'Painel', icon: Home, href: '/' }],
   },
   {
@@ -131,31 +136,55 @@ const navItems: Array<
   },
 ];
 
-export function AppLayout() {
+function AppLayoutContent() {
   const { user, signOutMutation } = useAuth();
+  const { company, isLoading: isCompanyLoading } = useCompany();
   const { theme, setTheme } = useTheme();
   const location = useLocation();
+  const { state } = useSidebar();
 
   function handleSignOut() {
     void signOutMutation.mutateAsync();
   }
 
   return (
-    <SidebarProvider>
+    <>
       <Sidebar collapsible="icon">
-        {/* Header da sidebar — logo */}
+        {/* Header da sidebar — company logo */}
         <SidebarHeader>
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton size="lg" asChild>
                 <Link to="/">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shrink-0">
-                    <span className="text-sm font-bold">T</span>
-                  </div>
-                  <div className="flex flex-col leading-tight">
-                    <span className="text-sm font-semibold">Template</span>
-                    <span className="text-xs text-muted-foreground">React</span>
-                  </div>
+                  {isCompanyLoading ? (
+                    <>
+                      <Skeleton className="h-8 w-8 rounded-lg" />
+                      <div className="flex flex-col leading-tight">
+                        <Skeleton className="h-4 w-16" />
+                        <Skeleton className="h-3 w-12 mt-1" />
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <Avatar className="h-8 w-8 rounded-lg shrink-0">
+                        <AvatarImage
+                          src={company?.photo ?? ''}
+                          alt={company?.name}
+                        />
+                        <AvatarFallback className="rounded-lg bg-primary text-primary-foreground text-xs">
+                          {getInitials(company?.name)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex flex-col leading-tight">
+                        <span className="text-sm font-semibold">
+                          {company?.name}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          Empresa
+                        </span>
+                      </div>
+                    </>
+                  )}
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -164,65 +193,15 @@ export function AppLayout() {
 
         {/* Navegação */}
         <SidebarContent>
-          {navItems.map((group) => {
-            const hasIcon = 'icon' in group;
-            if (hasIcon) {
-              return (
-                <Collapsible
-                  key={group.title}
-                  defaultOpen
-                  className="group/collapsible"
-                >
-                  <SidebarGroup>
-                    <SidebarGroupLabel
-                      asChild
-                      className="group/label p-0 text-foreground"
-                    >
-                      <CollapsibleTrigger asChild>
-                        <SidebarMenuButton className="w-full justify-between">
-                          <div className="flex items-center gap-2">
-                            <group.icon />
-                            <span>{group.title}</span>
-                          </div>
-                          <ChevronRight className="text-muted-foreground transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-                        </SidebarMenuButton>
-                      </CollapsibleTrigger>
-                    </SidebarGroupLabel>
-
-                    <CollapsibleContent>
-                      <SidebarGroupContent>
-                        <SidebarMenu>
-                          {group.items.map((item) => {
-                            const isActive = location.pathname === item.href;
-                            return (
-                              <SidebarMenuItem key={item.href}>
-                                <SidebarMenuSubButton
-                                  asChild
-                                  isActive={isActive}
-                                >
-                                  <Link to={item.href}>
-                                    <item.icon />
-                                    <span>{item.label}</span>
-                                  </Link>
-                                </SidebarMenuSubButton>
-                              </SidebarMenuItem>
-                            );
-                          })}
-                        </SidebarMenu>
-                      </SidebarGroupContent>
-                    </CollapsibleContent>
-                  </SidebarGroup>
-                </Collapsible>
-              );
-            }
-
-            return (
-              <SidebarGroup key={group.title}>
-                <SidebarGroupLabel>{group.title}</SidebarGroupLabel>
-                <SidebarGroupContent>
-                  <SidebarMenu>
-                    {group.items.map((item) => {
+          {state === 'collapsed' ? (
+            // Quando a sidebar está recolhida, mostra todos os itens diretamente
+            <SidebarGroup>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {navItems.flatMap((group) =>
+                    group.items.map((item) => {
                       const isActive = location.pathname === item.href;
+                      const ItemIcon = item.icon;
                       return (
                         <SidebarMenuItem key={item.href}>
                           <SidebarMenuButton
@@ -231,18 +210,103 @@ export function AppLayout() {
                             tooltip={item.label}
                           >
                             <Link to={item.href}>
-                              <item.icon />
+                              <ItemIcon />
                               <span>{item.label}</span>
                             </Link>
                           </SidebarMenuButton>
                         </SidebarMenuItem>
                       );
-                    })}
-                  </SidebarMenu>
-                </SidebarGroupContent>
-              </SidebarGroup>
-            );
-          })}
+                    }),
+                  )}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          ) : (
+            // Quando a sidebar está expandida, mostra a estrutura original com grupos e colapsíveis
+            navItems.map((group) => {
+              const hasIcon = !!group.icon;
+              if (hasIcon) {
+                const GroupIcon = group.icon as React.ElementType;
+                return (
+                  <Collapsible
+                    key={group.title}
+                    defaultOpen
+                    className="group/collapsible"
+                  >
+                    <SidebarGroup>
+                      <SidebarGroupLabel
+                        asChild
+                        className="group/label p-0 text-foreground"
+                      >
+                        <CollapsibleTrigger asChild>
+                          <SidebarMenuButton className="w-full justify-between">
+                            <div className="flex items-center gap-2">
+                              <GroupIcon />
+                              <span>{group.title}</span>
+                            </div>
+                            <ChevronRight className="text-muted-foreground transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                          </SidebarMenuButton>
+                        </CollapsibleTrigger>
+                      </SidebarGroupLabel>
+
+                      <CollapsibleContent>
+                        <SidebarGroupContent>
+                          <SidebarMenu>
+                            {group.items.map((item) => {
+                              const isActive = location.pathname === item.href;
+                              const ItemIcon = item.icon;
+                              return (
+                                <SidebarMenuItem key={item.href}>
+                                  <SidebarMenuButton
+                                    asChild
+                                    isActive={isActive}
+                                    tooltip={item.label}
+                                  >
+                                    <Link to={item.href}>
+                                      <ItemIcon />
+                                      <span>{item.label}</span>
+                                    </Link>
+                                  </SidebarMenuButton>
+                                </SidebarMenuItem>
+                              );
+                            })}
+                          </SidebarMenu>
+                        </SidebarGroupContent>
+                      </CollapsibleContent>
+                    </SidebarGroup>
+                  </Collapsible>
+                );
+              }
+
+              return (
+                <SidebarGroup key={group.title}>
+                  <SidebarGroupLabel>{group.title}</SidebarGroupLabel>
+                  <SidebarGroupContent>
+                    <SidebarMenu>
+                      {group.items.map((item) => {
+                        const isActive = location.pathname === item.href;
+                        const ItemIcon = item.icon;
+                        return (
+                          <SidebarMenuItem key={item.href}>
+                            <SidebarMenuButton
+                              asChild
+                              isActive={isActive}
+                              tooltip={item.label}
+                            >
+                              <Link to={item.href}>
+                                <ItemIcon />
+                                <span>{item.label}</span>
+                              </Link>
+                            </SidebarMenuButton>
+                          </SidebarMenuItem>
+                        );
+                      })}
+                    </SidebarMenu>
+                  </SidebarGroupContent>
+                </SidebarGroup>
+              );
+            })
+          )}
         </SidebarContent>
 
         {/* Footer da sidebar — usuário */}
@@ -256,16 +320,17 @@ export function AppLayout() {
                     className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                   >
                     <Avatar className="h-8 w-8 rounded-lg shrink-0">
+                      <AvatarImage src={user?.photo ?? ''} alt={user?.name} />
                       <AvatarFallback className="rounded-lg bg-primary text-primary-foreground text-xs">
                         {getInitials(user?.name)}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex flex-col leading-tight text-left">
                       <span className="text-sm font-medium truncate">
-                        {user?.name}
+                        {getShortName(user?.name)}
                       </span>
                       <span className="text-xs text-muted-foreground truncate">
-                        {user?.email}
+                        {user?.role ? formatRole(user.role) : user?.email}
                       </span>
                     </div>
                     <ChevronsUpDown className="ml-auto size-4 shrink-0" />
@@ -286,6 +351,11 @@ export function AppLayout() {
                       <p className="text-xs leading-none text-muted-foreground truncate">
                         {user?.email}
                       </p>
+                      {user?.role && (
+                        <p className="text-xs leading-none text-muted-foreground truncate">
+                          {formatRole(user.role)}
+                        </p>
+                      )}
                     </div>
                   </DropdownMenuLabel>
 
@@ -369,6 +439,14 @@ export function AppLayout() {
           <Outlet />
         </div>
       </SidebarInset>
+    </>
+  );
+}
+
+export function AppLayout() {
+  return (
+    <SidebarProvider>
+      <AppLayoutContent />
     </SidebarProvider>
   );
 }

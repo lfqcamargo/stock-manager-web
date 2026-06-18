@@ -13,6 +13,7 @@ import type {
 import type { ForgotPasswordRequest } from '@/api/auth/forgot-password';
 import type { SignInRequest } from '@/api/auth/sign-in';
 import type { SignUpRequest } from '@/api/auth/sign-up';
+import type { EditUserBody } from '@/api/user/edit-user';
 
 export interface AuthContextData {
   isAuthenticated: boolean;
@@ -36,6 +37,7 @@ export interface AuthContextData {
     unknown,
     ExchangePasswordForTokenRequest
   >;
+  updateProfileMutation: UseMutationResult<User, unknown, EditUserBody>;
 }
 
 export const AuthContext = createContext<AuthContextData>(

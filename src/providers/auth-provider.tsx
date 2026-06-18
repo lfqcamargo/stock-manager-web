@@ -9,6 +9,8 @@ import { forgotPassword as forgotPasswordApi } from '@/api/auth/forgot-password'
 import { signIn as signInApi } from '@/api/auth/sign-in';
 import { signOut as signOutApi } from '@/api/auth/sign-out';
 import { signUp as signUpApi } from '@/api/auth/sign-up';
+import type { EditUserBody } from '@/api/user/edit-user';
+import { editUser } from '@/api/user/edit-user';
 import { getProfile } from '@/api/user/get-profile';
 import { ToastError } from '@/components/toast-error';
 import { AuthContext, type AuthContextData } from '@/contexts/auth-context';
@@ -105,6 +107,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
     },
   });
 
+  const updateProfileMutation = useMutation<User, unknown, EditUserBody>({
+    mutationFn: async (data) => {
+      if (!user) throw new Error('Usuário não autenticado');
+      await editUser(user.id, data);
+      return await getProfile();
+    },
+    onSuccess: (userData) => {
+      setUser(userData);
+      toast.success('Perfil atualizado com sucesso');
+    },
+    onError: (error) => {
+      ToastError(error);
+    },
+  });
+
   const value: AuthContextData = {
     user,
     isAuthenticated,
@@ -115,6 +132,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     confirmAccountMutation,
     forgotPasswordMutation,
     exchangePasswordForTokenMutation,
+    updateProfileMutation,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

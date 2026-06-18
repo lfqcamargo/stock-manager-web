@@ -3,6 +3,6 @@ export interface Company {
   name: string;
   cnpj: string;
   photo?: string | null;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: string | null;
+  updatedAt: string | null;
 }

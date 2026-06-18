@@ -1,6 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import type { GetMovementTypesResponse, MovementType } from '@/api/stock/fetch-movement-types';
+import type {
+  GetMovementTypesResponse,
+  MovementType,
+} from '@/api/stock/fetch-movement-types';
 
 // Mock data
 const mockMovementTypesData: GetMovementTypesResponse = {
@@ -78,10 +81,7 @@ export function useMovementType() {
 
   const useCreateMovementType = () => {
     return useMutation({
-      mutationFn: async (data: {
-        name: string;
-        direction: 'IN' | 'OUT';
-      }) => {
+      mutationFn: async (data: { name: string; direction: 'IN' | 'OUT' }) => {
         await new Promise((resolve) => setTimeout(resolve, 500));
         console.log('Creating movement type:', data);
       },

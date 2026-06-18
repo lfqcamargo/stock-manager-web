@@ -1,5 +1,7 @@
-import { ArrowLeft, Camera, Save } from 'lucide-react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { ArrowLeft, Camera, Mail, Save, User } from 'lucide-react';
 import { useState } from 'react';
+import { useForm, useWatch } from 'react-hook-form';
 import { Link } from 'react-router-dom';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -7,32 +9,117 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/hooks/use-auth';
+import { formatRole } from '@/utils/format-role';
+import { getInitials } from '@/utils/get-initials';
 
-function getInitials(name?: string) {
-  if (!name) return '?';
-  return name
-    .split(' ')
-    .slice(0, 2)
-    .map((n) => n[0])
-    .join('')
-    .toUpperCase();
-}
+import {
+  type UpdateProfileFormData,
+  updateProfileSchema,
+} from './schemas/validations';
 
 export function UserProfilePage() {
-  const { user } = useAuth();
+  const { user, isLoading, updateProfileMutation } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
-  const [name, setName] = useState(user?.name ?? '');
+  const [previewPhoto, setPreviewPhoto] = useState<string | null>(null);
 
-  if (!user) return null;
+  const {
+    register,
+    handleSubmit,
+    reset,
+    setValue,
+    control,
+    formState: { errors, isSubmitting },
+  } = useForm<UpdateProfileFormData>({
+    resolver: zodResolver(updateProfileSchema),
+    defaultValues: {
+      name: '',
+      photo: null,
+    },
+  });
 
-  const handleSave = () => {
-    // TODO: Save changes
+  const watchName = useWatch({ control, name: 'name' });
+  const watchPhoto = useWatch({ control, name: 'photo' });
+
+  const onSubmit = handleSubmit(async (data) => {
+    await updateProfileMutation.mutateAsync(data);
     setIsEditing(false);
+    setPreviewPhoto(null);
+  });
+
+  const handleEditClick = () => {
+    if (user) {
+      setValue('name', user.name);
+      setValue('photo', user.photo ?? null);
+      setPreviewPhoto(user.photo ?? null);
+    }
+    setIsEditing(true);
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const result = event.target?.result as string;
+        setPreviewPhoto(result);
+        setValue('photo', result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  if (isLoading || !user) {
+    return (
+      <div className="flex-1 space-y-8">
+        <div className="flex items-center gap-4">
+          <Button variant="outline" size="icon" asChild>
+            <Link to="/">
+              <ArrowLeft className="h-4 w-4" />
+            </Link>
+          </Button>
+          <Skeleton className="h-8 w-48" />
+        </div>
+
+        <div className="mx-auto max-w-2xl space-y-6">
+          <Card className="p-6">
+            <CardHeader className="text-center pb-2">
+              <div className="flex justify-center">
+                <Skeleton className="h-24 w-24 rounded-full" />
+              </div>
+              <Skeleton className="mt-4 h-7 w-48 mx-auto" />
+            </CardHeader>
+          </Card>
+
+          <Card className="p-6">
+            <CardHeader className="pb-2">
+              <Skeleton className="h-6 w-32" />
+            </CardHeader>
+            <CardContent className="space-y-4 pt-2">
+              <div className="grid gap-2">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+              <div className="grid gap-2">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+              <div className="grid gap-2">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  const displayPhoto = previewPhoto ?? (isEditing ? watchPhoto : user.photo);
+
   return (
-    <div className="flex-1 space-y-6">
+    <div className="flex-1 space-y-8">
       <div className="flex items-center gap-4">
         <Button variant="outline" size="icon" asChild>
           <Link to="/">
@@ -42,85 +129,119 @@ export function UserProfilePage() {
         <h1 className="text-2xl font-bold tracking-tight">Meu Perfil</h1>
       </div>
 
-      <div className="grid gap-6">
+      <div className="mx-auto max-w-2xl space-y-6">
         {/* Avatar Card */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Foto de Perfil</CardTitle>
-          </CardHeader>
-          <CardContent className="flex items-center gap-6">
-            <div className="relative group">
-              <Avatar className="h-24 w-24">
-                <AvatarImage src={user.photo ?? ''} alt={user.name} />
-                <AvatarFallback className="text-2xl bg-primary text-primary-foreground">
-                  {getInitials(user.name)}
+        <Card className="overflow-hidden">
+          <CardContent className="p-8 text-center">
+            <div className="relative inline-block group">
+              <Avatar className="h-28 w-28">
+                <AvatarImage src={displayPhoto ?? ''} alt={user.name} />
+                <AvatarFallback className="text-3xl bg-primary text-primary-foreground">
+                  {getInitials(isEditing ? watchName : user.name)}
                 </AvatarFallback>
               </Avatar>
-              <label className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-full cursor-pointer">
-                <Camera className="h-8 w-8 text-white" />
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="sr-only"
-                  onChange={() => {
-                    // TODO: Handle image upload
-                  }}
-                />
-              </label>
+              {isEditing && (
+                <label className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-100 transition-opacity rounded-full cursor-pointer">
+                  <Camera className="h-9 w-9 text-white" />
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="sr-only"
+                    onChange={handleFileChange}
+                  />
+                </label>
+              )}
             </div>
-            <div className="space-y-1">
-              <p className="text-sm text-muted-foreground">
-                Clique na imagem para alterar sua foto
-              </p>
-              <p className="text-xs text-muted-foreground">
-                PNG, JPG ou WEBP de até 5MB
-              </p>
+            <div className="mt-4 space-y-1">
+              <h2 className="text-2xl font-bold">
+                {isEditing ? watchName : user.name}
+              </h2>
+              <p className="text-muted-foreground">{user.email}</p>
             </div>
           </CardContent>
         </Card>
 
         {/* User Info Card */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Informações Pessoais</CardTitle>
+        <Card className="overflow-hidden">
+          <CardHeader className="flex flex-row items-center justify-between px-8 pt-8">
+            <CardTitle>Informações Básicas</CardTitle>
             {!isEditing ? (
-              <Button size="sm" onClick={() => setIsEditing(true)}>
+              <Button
+                onClick={handleEditClick}
+                disabled={updateProfileMutation.isPending}
+              >
                 Editar
               </Button>
             ) : (
               <div className="flex gap-2">
                 <Button
                   variant="outline"
-                  size="sm"
-                  onClick={() => setIsEditing(false)}
+                  onClick={() => {
+                    reset();
+                    setIsEditing(false);
+                    setPreviewPhoto(null);
+                  }}
+                  disabled={updateProfileMutation.isPending}
                 >
                   Cancelar
                 </Button>
-                <Button size="sm" onClick={handleSave}>
+                <Button
+                  onClick={(e) => void onSubmit(e as any)}
+                  disabled={isSubmitting || updateProfileMutation.isPending}
+                >
                   <Save className="mr-2 h-4 w-4" />
-                  Salvar
+                  {updateProfileMutation.isPending ? 'Salvando...' : 'Salvar'}
                 </Button>
               </div>
             )}
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid gap-2">
-              <Label htmlFor="user-name">Nome</Label>
-              <Input
-                id="user-name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                disabled={!isEditing}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="user-email">E-mail</Label>
-              <Input id="user-email" value={user.email} disabled />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="user-role">Cargo</Label>
-              <Input id="user-role" value={user.role} disabled />
-            </div>
+          <CardContent className="px-8 pb-8 pt-2 space-y-6">
+            {isEditing ? (
+              <div className="space-y-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="userName">Nome Completo</Label>
+                  <Input
+                    id="userName"
+                    placeholder="Nome completo"
+                    disabled={isSubmitting || updateProfileMutation.isPending}
+                    aria-invalid={!!errors.name}
+                    {...register('name')}
+                  />
+                  {errors.name && (
+                    <p className="text-destructive text-sm">
+                      {errors.name.message}
+                    </p>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <Label className="text-muted-foreground text-xs uppercase tracking-wider">
+                    Nome Completo
+                  </Label>
+                  <div className="text-lg font-medium">{user.name}</div>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-muted-foreground text-xs uppercase tracking-wider">
+                    E-mail
+                  </Label>
+                  <div className="flex items-center gap-2 text-lg">
+                    <Mail className="h-5 w-5 text-muted-foreground" />
+                    <span>{user.email}</span>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-muted-foreground text-xs uppercase tracking-wider">
+                    Cargo
+                  </Label>
+                  <div className="flex items-center gap-2 text-lg">
+                    <User className="h-5 w-5 text-muted-foreground" />
+                    <span>{formatRole(user.role)}</span>
+                  </div>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

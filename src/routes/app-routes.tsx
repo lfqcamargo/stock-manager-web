@@ -12,9 +12,9 @@ import { UsersPage } from '@/pages/app/company/users/users-page';
 import { DashboardPage } from '@/pages/app/dashboard/dashboard-page';
 import { GroupPage } from '@/pages/app/material/group/group-page';
 import { MaterialPage } from '@/pages/app/material/material-page';
-import { UserProfilePage } from '@/pages/app/user/profile/user-profile-page';
 import { MovementPage } from '@/pages/app/movement/movement/movement-page';
 import { MovementTypesPage } from '@/pages/app/movement/movement-types/movement-types-page';
+import { UserProfilePage } from '@/pages/app/user/profile/user-profile-page';
 
 export function AppRoutes() {
   return (
@@ -33,7 +33,10 @@ export function AppRoutes() {
         <Route path="/company/profile" element={<CompanyProfilePage />} />
         <Route path="/user/profile" element={<UserProfilePage />} />
         <Route path="/movement/movement" element={<MovementPage />} />
-        <Route path="/movement/movement-types" element={<MovementTypesPage />} />
+        <Route
+          path="/movement/movement-types"
+          element={<MovementTypesPage />}
+        />
       </Route>
 
       {/* Default redirect */}

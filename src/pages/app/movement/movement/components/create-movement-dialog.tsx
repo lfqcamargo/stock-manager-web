@@ -160,11 +160,7 @@ export function CreateMovementDialog({
               </div>
               <div className="space-y-2">
                 <Label htmlFor="date">Data</Label>
-                <Input
-                  type="date"
-                  id="date"
-                  {...register('date')}
-                />
+                <Input type="date" id="date" {...register('date')} />
                 {errors.date && (
                   <p className="text-sm text-destructive">
                     {errors.date.message}

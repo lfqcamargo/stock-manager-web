@@ -1,6 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import type { GetMovementsResponse, Movement } from '@/api/stock/fetch-movements';
+import type {
+  GetMovementsResponse,
+  Movement,
+} from '@/api/stock/fetch-movements';
 
 // Mock data
 const mockMovementsData: GetMovementsResponse = {

@@ -57,7 +57,9 @@ type SortField = 'material' | 'tipo' | 'quantidade' | 'data' | 'dataCriacao';
 type SortDirection = 'asc' | 'desc';
 
 export function MovementsTable({ onDelete }: MovementsTableProps) {
-  const [selectedMovement, setSelectedMovement] = useState<Movement | null>(null);
+  const [selectedMovement, setSelectedMovement] = useState<Movement | null>(
+    null,
+  );
   const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
   const [materialFilter, setMaterialFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');

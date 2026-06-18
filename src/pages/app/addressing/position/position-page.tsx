@@ -21,7 +21,7 @@ export function PositionPage() {
   return (
     <div className="flex-1 space-y-4 md:space-y-6">
       {/* Header */}
-      <div className="rounded-lg md:rounded-2xl border border-border/40 bg-card/50 backdrop-blur supports-[backdrop-filter]:bg-card/50 p-4 md:p-6 lg:p-8 shadow-sm">
+      <div className="rounded-lg md:rounded-2xl border border-border/40 bg-card/50 backdrop-blur supports-backdrop-filter:bg-card/50 p-4 md:p-6 lg:p-8 shadow-sm">
         <div className="flex flex-col gap-4 md:gap-6 md:flex-row md:items-start md:justify-between">
           <div className="flex items-start gap-3 md:gap-4">
             <Button
@@ -54,7 +54,7 @@ export function PositionPage() {
       </div>
 
       {/* Table */}
-      <div className="rounded-lg md:rounded-2xl border border-border/40 bg-card/50 backdrop-blur supports-[backdrop-filter]:bg-card/50 shadow-sm overflow-hidden">
+      <div className="rounded-lg md:rounded-2xl border border-border/40 bg-card/50 backdrop-blur supports-backdrop-filter:bg-card/50 shadow-sm overflow-hidden">
         <PositionsTable onDelete={handleDelete} />
       </div>
 

@@ -1,23 +1,45 @@
-import { Calendar, TrendingUp, UserCheck, Users, UserX } from 'lucide-react';
+import {
+  Calendar,
+  Shield,
+  TrendingUp,
+  User,
+  UserCheck,
+  UserCog,
+  Users,
+  UserX,
+} from 'lucide-react';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatDate, formatRelativeTime } from '@/utils/format-date';
+import { formatRole } from '@/utils/format-role';
 
 interface UsersStatsCardsProps {
   totalItems?: number;
   totalActive?: number;
   totalInactive?: number;
-  itemCount?: number;
   lastCreated?: string;
+  countByRole?: Record<string, number>;
 }
 
 export function UsersStatsCards({
   totalItems = 0,
   totalActive = 0,
   totalInactive = 0,
-  itemCount = 0,
   lastCreated,
+  countByRole = {},
 }: UsersStatsCardsProps) {
+  const roleIcons: Record<string, React.ReactNode> = {
+    ADMIN: <Shield className="h-8 w-8" />,
+    MANAGER: <UserCog className="h-8 w-8" />,
+    EMPLOYEE: <User className="h-8 w-8" />,
+  };
+
+  const roleColors: Record<string, string> = {
+    ADMIN: 'text-purple-600',
+    MANAGER: 'text-blue-600',
+    EMPLOYEE: 'text-green-600',
+  };
+
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       {/* Total de Usuários */}
@@ -33,7 +55,7 @@ export function UsersStatsCards({
             <Users className="h-8 w-8 text-primary mx-auto" />
             <div className="text-3xl font-bold">{totalItems}</div>
             <div className="text-xs text-muted-foreground">
-              {itemCount} cadastrados na empresa
+              {totalItems} cadastrados na empresa
             </div>
           </div>
         </CardContent>
@@ -76,14 +98,18 @@ export function UsersStatsCards({
           <Users className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-center space-y-2">
-            <Users className="h-8 w-8 text-blue-600 mx-auto" />
-            <div className="text-2xl font-bold text-blue-600">
-              {totalActive + totalInactive}
-            </div>
-            <div className="text-xs text-muted-foreground">
-              Usuários organizados
-            </div>
+          <div className="grid grid-cols-3 gap-4">
+            {['ADMIN', 'MANAGER', 'EMPLOYEE'].map((role) => (
+              <div key={role} className="flex flex-col items-center gap-2">
+                <div className={roleColors[role]}>{roleIcons[role]}</div>
+                <span className={`text-lg font-bold ${roleColors[role]}`}>
+                  {countByRole[role] || 0}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {formatRole(role)}
+                </span>
+              </div>
+            ))}
           </div>
         </CardContent>
       </Card>

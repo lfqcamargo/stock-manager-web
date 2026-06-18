@@ -1,20 +1,22 @@
+import type { UseMutationResult } from '@tanstack/react-query';
 import {
-  ArrowUpDown,
   Edit,
   MoreHorizontal,
   Search,
   Trash2,
   User as UserIcon,
 } from 'lucide-react';
-import { useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { z } from 'zod';
+import { useState } from 'react';
+import type { DateRange } from 'react-day-picker';
 
 import type { User } from '@/@types/user';
+import type { EditUserBody } from '@/api/user/edit-user';
+import type { FetchUsersResponse } from '@/api/user/fetch-users';
 import { Pagination } from '@/components/pagination';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { DateRangePicker } from '@/components/ui/date-range-picker';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,6 +26,13 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Table,
@@ -33,186 +42,60 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { useDebounce } from '@/hooks/use-debounce';
 import { formatDate } from '@/utils/format-date';
+import { formatRole } from '@/utils/format-role';
+import { getInitials } from '@/utils/get-initials';
 
-// Mock data
-const mockUsers: User[] = [
-  {
-    id: '1',
-    name: 'João Silva',
-    email: 'joao.silva@empresa.com',
-    role: 'Admin',
-    active: true,
-    photo: null,
-    createdAt: new Date('2024-01-15').toISOString(),
-    updatedAt: new Date('2024-01-15').toISOString(),
-    lastLogin: new Date('2024-06-14').toISOString(),
-    companyId: '1',
-  },
-  {
-    id: '2',
-    name: 'Maria Santos',
-    email: 'maria.santos@empresa.com',
-    role: 'User',
-    active: true,
-    photo: null,
-    createdAt: new Date('2024-02-20').toISOString(),
-    updatedAt: new Date('2024-02-20').toISOString(),
-    lastLogin: new Date('2024-06-13').toISOString(),
-    companyId: '1',
-  },
-  {
-    id: '3',
-    name: 'Carlos Pereira',
-    email: 'carlos.pereira@empresa.com',
-    role: 'User',
-    active: false,
-    photo: null,
-    createdAt: new Date('2024-03-10').toISOString(),
-    updatedAt: new Date('2024-03-10').toISOString(),
-    lastLogin: new Date('2024-05-20').toISOString(),
-    companyId: '1',
-  },
-  {
-    id: '4',
-    name: 'Ana Costa',
-    email: 'ana.costa@empresa.com',
-    role: 'Manager',
-    active: true,
-    photo: null,
-    createdAt: new Date('2024-04-05').toISOString(),
-    updatedAt: new Date('2024-04-05').toISOString(),
-    lastLogin: new Date('2024-06-14').toISOString(),
-    companyId: '1',
-  },
-  {
-    id: '5',
-    name: 'Luiz Oliveira',
-    email: 'luiz.oliveira@empresa.com',
-    role: 'User',
-    active: true,
-    photo: null,
-    createdAt: new Date('2024-05-12').toISOString(),
-    updatedAt: new Date('2024-05-12').toISOString(),
-    lastLogin: new Date('2024-06-12').toISOString(),
-    companyId: '1',
-  },
-];
+import { EditUserDialog } from './edit-user-dialog';
 
 interface UsersTableProps {
   onDelete: (id: string) => void;
   isLoading?: boolean;
+  editUserMutation: UseMutationResult<
+    void,
+    Error,
+    { id: string; data: EditUserBody }
+  >;
+  users: User[];
+  meta?: FetchUsersResponse['meta'];
+  dateRange?: DateRange;
+  nameFilter: string;
+  emailFilter: string;
+  roleFilter: string;
+  activeFilter: string;
+  onDateRangeChange: (range: DateRange | undefined) => void;
+  onUpdateSearchParams: (updates: Record<string, string | null>) => void;
+  onPaginate: (newPage: number) => void;
+  onClearFilters: () => void;
 }
 
-type SortField = 'nome' | 'email' | 'dataCriacao';
-type SortDirection = 'asc' | 'desc';
-
-function getInitials(name?: string) {
-  if (!name) return '?';
-  return name
-    .split(' ')
-    .slice(0, 2)
-    .map((n) => n[0])
-    .join('')
-    .toUpperCase();
-}
-
-export function UsersTable({ onDelete }: UsersTableProps) {
+export function UsersTable({
+  onDelete,
+  isLoading: externalLoading,
+  editUserMutation,
+  users,
+  meta,
+  dateRange,
+  nameFilter,
+  emailFilter,
+  roleFilter,
+  activeFilter,
+  onDateRangeChange,
+  onUpdateSearchParams,
+  onPaginate,
+  onClearFilters,
+}: UsersTableProps) {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [nameFilter, setNameFilter] = useState<string>('');
-  const [emailFilter, setEmailFilter] = useState<string>('');
-  const [sortField, setSortField] = useState<SortField>('nome');
-  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
-  const [searchParams, setSearchParams] = useSearchParams();
-
-  const page = z.coerce
-    .number()
-    .transform((page) => page - 1)
-    .parse(searchParams.get('page') ?? '1');
   const itemsPerPage = 20;
 
-  // Aplicar debounce nos filtros de texto
-  const debouncedNameFilter = useDebounce(nameFilter, 2000);
-  const debouncedEmailFilter = useDebounce(emailFilter, 2000);
+  const loading = externalLoading || false;
 
-  const processedData = useMemo(() => {
-    // Filtrar dados
-    let filtered = [...mockUsers];
-
-    if (debouncedNameFilter) {
-      filtered = filtered.filter((user) =>
-        user.name.toLowerCase().includes(debouncedNameFilter.toLowerCase()),
-      );
-    }
-
-    if (debouncedEmailFilter) {
-      filtered = filtered.filter((user) =>
-        user.email.toLowerCase().includes(debouncedEmailFilter.toLowerCase()),
-      );
-    }
-
-    // Ordenar dados
-    filtered.sort((a, b) => {
-      let comparison = 0;
-
-      if (sortField === 'nome') {
-        comparison = a.name.localeCompare(b.name);
-      } else if (sortField === 'email') {
-        comparison = a.email.localeCompare(b.email);
-      } else if (sortField === 'dataCriacao') {
-        comparison =
-          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-      }
-
-      return sortDirection === 'asc' ? comparison : -comparison;
-    });
-
-    const totalItems = filtered.length;
-    const totalPages = Math.ceil(totalItems / itemsPerPage);
-
-    // Paginar
-    const startIndex = page * itemsPerPage;
-    const paginated = filtered.slice(startIndex, startIndex + itemsPerPage);
-
-    return {
-      filteredUsers: paginated,
-      totalPages,
-      totalItems,
-    };
-  }, [
-    debouncedNameFilter,
-    debouncedEmailFilter,
-    sortField,
-    sortDirection,
-    page,
-  ]);
-
-  function handlePaginate(page: number) {
-    setSearchParams((state) => {
-      state.set('page', (page + 1).toString());
-      return state;
-    });
-  }
-
-  function handleSort(field: SortField) {
-    if (sortField === field) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortField(field);
-      setSortDirection('asc');
-    }
-    setSearchParams((state) => {
-      state.set('page', '1');
-      return state;
-    });
-  }
-
-  function handleClearFilters() {
-    setNameFilter('');
-    setEmailFilter('');
-  }
+  const roleColors: Record<string, string> = {
+    ADMIN: 'text-purple-600',
+    MANAGER: 'text-blue-600',
+    EMPLOYEE: 'text-green-600',
+  };
 
   function handleEdit(user: User) {
     setSelectedUser(user);
@@ -221,92 +104,131 @@ export function UsersTable({ onDelete }: UsersTableProps) {
 
   return (
     <div className="space-y-6">
-      {/* Search and Filters */}
       <div className="flex flex-col gap-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Nome do usuário..."
-              className="pl-10 h-11"
+              className="pl-10 h-10"
               value={nameFilter}
-              onChange={(e) => setNameFilter(e.target.value)}
+              onChange={(e) =>
+                onUpdateSearchParams({ name: e.target.value || null })
+              }
             />
           </div>
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="E-mail..."
-              className="pl-10 h-11"
+              className="pl-10 h-10"
               value={emailFilter}
-              onChange={(e) => setEmailFilter(e.target.value)}
+              onChange={(e) =>
+                onUpdateSearchParams({ email: e.target.value || null })
+              }
             />
+          </div>
+          <Select
+            value={roleFilter}
+            onValueChange={(value) =>
+              onUpdateSearchParams({ role: value === 'all' ? null : value })
+            }
+          >
+            <SelectTrigger className="h-10">
+              <SelectValue placeholder="Todos os cargos" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os cargos</SelectItem>
+              <SelectItem value="ADMIN">Administrador</SelectItem>
+              <SelectItem value="MANAGER">Gerente</SelectItem>
+              <SelectItem value="EMPLOYEE">Funcionário</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select
+            value={activeFilter}
+            onValueChange={(value) =>
+              onUpdateSearchParams({ active: value === 'all' ? null : value })
+            }
+          >
+            <SelectTrigger className="h-10">
+              <SelectValue placeholder="Todos os status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os status</SelectItem>
+              <SelectItem value="true">Ativo</SelectItem>
+              <SelectItem value="false">Inativo</SelectItem>
+            </SelectContent>
+          </Select>
+          <div className="flex items-center gap-2 col-span-1 xl:col-span-2">
+            <DateRangePicker
+              date={dateRange}
+              onDateChange={onDateRangeChange}
+              placeholder="Selecione o período"
+              className="h-10 flex-1"
+            />
+            {(nameFilter ||
+              emailFilter ||
+              roleFilter !== 'all' ||
+              activeFilter !== 'all' ||
+              dateRange) && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onClearFilters}
+                className="h-10 w-10 flex-shrink-0"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="lucide lucide-x"
+                >
+                  <path d="M18 6 6 18" />
+                  <path d="m6 6 12 12" />
+                </svg>
+              </Button>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Results Summary */}
       <div className="flex items-center justify-between text-sm text-muted-foreground">
         <div className="flex items-center gap-2">
           <UserIcon className="h-4 w-4" />
           <span>
-            Mostrando {processedData.filteredUsers.length} de{' '}
-            {processedData.totalItems} usuários
-            {processedData.totalPages > 1 &&
-              ` • Página ${page + 1} de ${processedData.totalPages}`}
+            Mostrando {users.length} de {meta?.totalItems ?? 0} usuários
+            {meta &&
+              meta.totalPages > 1 &&
+              ` • Página ${meta.page} de ${meta.totalPages}`}
           </span>
-        </div>
-        <div className="h-3.5">
-          {(nameFilter || emailFilter) && (
-            <Button variant="ghost" size="sm" onClick={handleClearFilters}>
-              Limpar filtros
-            </Button>
-          )}
         </div>
       </div>
 
-      {/* Table */}
       <div className="rounded-md border">
         <Table>
           <TableHeader>
             <TableRow className="hover:bg-transparent">
-              <TableHead>
-                <Button
-                  variant="ghost"
-                  className="h-auto p-0 font-semibold hover:bg-transparent"
-                  onClick={() => handleSort('nome')}
-                >
-                  Usuário
-                  <ArrowUpDown className="ml-2 h-4 w-4" />
-                </Button>
-              </TableHead>
-              <TableHead className="hidden lg:table-cell">
-                <Button
-                  variant="ghost"
-                  className="h-auto p-0 font-semibold hover:bg-transparent"
-                  onClick={() => handleSort('email')}
-                >
-                  E-mail
-                  <ArrowUpDown className="ml-2 h-4 w-4" />
-                </Button>
-              </TableHead>
+              <TableHead>Usuário</TableHead>
+              <TableHead className="hidden lg:table-cell">E-mail</TableHead>
               <TableHead className="hidden md:table-cell">Cargo</TableHead>
               <TableHead className="hidden md:table-cell">Status</TableHead>
               <TableHead className="hidden lg:table-cell">
-                <Button
-                  variant="ghost"
-                  className="h-auto p-0 font-semibold hover:bg-transparent"
-                  onClick={() => handleSort('dataCriacao')}
-                >
-                  Data Criação
-                  <ArrowUpDown className="ml-2 h-4 w-4" />
-                </Button>
+                Data Criação
+              </TableHead>
+              <TableHead className="hidden xl:table-cell">
+                Último Login
               </TableHead>
               <TableHead className="text-right w-20">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {false // isLoading
+            {loading
               ? Array.from({ length: 5 }).map((_, index) => (
                   <TableRow key={index}>
                     <TableCell>
@@ -329,12 +251,15 @@ export function UsersTable({ onDelete }: UsersTableProps) {
                     <TableCell className="hidden lg:table-cell">
                       <Skeleton className="h-4 w-20" />
                     </TableCell>
+                    <TableCell className="hidden xl:table-cell">
+                      <Skeleton className="h-4 w-20" />
+                    </TableCell>
                     <TableCell className="text-right">
                       <Skeleton className="h-8 w-8 rounded" />
                     </TableCell>
                   </TableRow>
                 ))
-              : processedData.filteredUsers.map((user: User) => (
+              : users.map((user: User) => (
                   <TableRow key={user.id} className="group">
                     <TableCell>
                       <div className="flex items-center gap-3">
@@ -352,8 +277,11 @@ export function UsersTable({ onDelete }: UsersTableProps) {
                       </div>
                     </TableCell>
                     <TableCell className="hidden md:table-cell">
-                      <Badge variant="secondary" className="text-xs">
-                        {user.role}
+                      <Badge
+                        variant="secondary"
+                        className={`text-xs ${roleColors[user.role]}`}
+                      >
+                        {formatRole(user.role)}
                       </Badge>
                     </TableCell>
                     <TableCell className="hidden md:table-cell">
@@ -368,6 +296,11 @@ export function UsersTable({ onDelete }: UsersTableProps) {
                       <div className="flex items-center gap-2 text-sm">
                         <UserIcon className="h-4 w-4 text-muted-foreground" />
                         {formatDate(user.createdAt)}
+                      </div>
+                    </TableCell>
+                    <TableCell className="hidden xl:table-cell">
+                      <div className="text-sm text-muted-foreground">
+                        {user.lastLogin ? formatDate(user.lastLogin) : 'Nunca'}
                       </div>
                     </TableCell>
                     <TableCell className="text-right">
@@ -404,14 +337,18 @@ export function UsersTable({ onDelete }: UsersTableProps) {
         </Table>
       </div>
 
-      {/* Dialogs */}
-      {selectedUser && null /* Edit dialog placeholder */}
-      {processedData.totalPages > 0 && (
+      <EditUserDialog
+        user={selectedUser}
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        editUserMutation={editUserMutation}
+      />
+      {meta && meta.totalPages > 0 && (
         <Pagination
-          currentPage={page}
-          itemCount={processedData.totalItems}
+          currentPage={meta.page}
+          itemCount={meta.totalItems}
           itemsPerPage={itemsPerPage}
-          onPageChange={handlePaginate}
+          onPageChange={onPaginate}
         />
       )}
     </div>
