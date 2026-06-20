@@ -1,19 +1,27 @@
 import { parse } from 'date-fns';
 import { ptBR } from 'date-fns/locale/pt-BR';
+import { LayoutGrid, Table } from 'lucide-react';
+import { useState } from 'react';
 import type { DateRange } from 'react-day-picker';
 import { useSearchParams } from 'react-router-dom';
 
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useDebounce } from '@/hooks/use-debounce';
 import { useUsers } from '@/hooks/use-users';
 
 import { UsersTable } from './components/table';
+import { UsersCards } from './components/users-cards';
+import { UsersFilters } from './components/users-filters';
 import { UsersStatsCards } from './components/users-stats-cards';
 
 export function UsersPage() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
 
   // Initialize filters from searchParams
-  const page = parseInt(searchParams.get('page') ?? '1', 10);
+  const rawPage = searchParams.get('page');
+  const parsedPage = parseInt(rawPage ?? '1', 10);
+  const page = isNaN(parsedPage) || parsedPage < 1 ? 1 : parsedPage;
   const itemsPerPage = 20;
   const nameFilter = searchParams.get('name') ?? '';
   const emailFilter = searchParams.get('email') ?? '';
@@ -23,6 +31,21 @@ export function UsersPage() {
   const createdAtEndStr = searchParams.get('createdAtEnd');
   const sortBy = searchParams.get('sortBy') ?? 'name';
   const sortDirection = searchParams.get('sortDirection') ?? 'asc';
+
+  // Parse date strings to Date objects for DateRangePicker first
+  const dateRange: DateRange | undefined =
+    createdAtStartStr || createdAtEndStr
+      ? {
+          from: createdAtStartStr
+            ? parse(createdAtStartStr, 'yyyy-MM-dd', new Date(), {
+                locale: ptBR,
+              })
+            : undefined,
+          to: createdAtEndStr
+            ? parse(createdAtEndStr, 'yyyy-MM-dd', new Date(), { locale: ptBR })
+            : undefined,
+        }
+      : undefined;
 
   const debouncedNameFilter = useDebounce(nameFilter);
   const debouncedEmailFilter = useDebounce(emailFilter);
@@ -52,6 +75,12 @@ export function UsersPage() {
   const totalActive = users.filter((u) => u.active).length;
   const totalInactive = users.length - totalActive;
   const lastCreated = users[0]?.createdAt;
+  const hasFilters =
+    !!nameFilter ||
+    !!emailFilter ||
+    roleFilter !== 'all' ||
+    activeFilter !== 'all' ||
+    !!dateRange;
 
   const countByRole = users.reduce(
     (acc, user) => {
@@ -60,21 +89,6 @@ export function UsersPage() {
     },
     {} as Record<string, number>,
   );
-
-  // Parse date strings to Date objects for DateRangePicker
-  const dateRange: DateRange | undefined =
-    createdAtStartStr || createdAtEndStr
-      ? {
-          from: createdAtStartStr
-            ? parse(createdAtStartStr, 'yyyy-MM-dd', new Date(), {
-                locale: ptBR,
-              })
-            : undefined,
-          to: createdAtEndStr
-            ? parse(createdAtEndStr, 'yyyy-MM-dd', new Date(), { locale: ptBR })
-            : undefined,
-        }
-      : undefined;
 
   // Update searchParams when filters change
   const updateSearchParams = (updates: Record<string, string | null>) => {
@@ -103,8 +117,9 @@ export function UsersPage() {
   };
 
   const handlePaginate = (newPage: number) => {
+    const validPage = Math.max(1, newPage);
     setSearchParams((state) => {
-      state.set('page', newPage.toString());
+      state.set('page', validPage.toString());
       return state;
     });
   };
@@ -133,24 +148,62 @@ export function UsersPage() {
       />
 
       <div className="rounded-lg md:rounded-2xl border border-border/40 bg-card/50 backdrop-blur supports-[backdrop-filter]:bg-card/50 shadow-sm overflow-hidden">
-        <UsersTable
-          onDelete={(id) => deleteUserMutation.mutate(id)}
-          isLoading={isLoading}
-          editUserMutation={editUserMutation}
-          users={users}
-          meta={meta}
-          dateRange={dateRange}
-          nameFilter={nameFilter}
-          emailFilter={emailFilter}
-          roleFilter={roleFilter}
-          activeFilter={activeFilter}
-          sortBy={sortBy}
-          sortDirection={sortDirection}
-          onDateRangeChange={handleDateRangeChange}
-          onUpdateSearchParams={updateSearchParams}
-          onPaginate={handlePaginate}
-          onClearFilters={handleClearFilters}
-        />
+        <div className="px-6 py-4 border-b border-border/50 flex items-center justify-between">
+          <h2 className="font-semibold text-lg">Usuários</h2>
+          <Tabs
+            value={viewMode}
+            onValueChange={(v) => setViewMode(v as 'table' | 'cards')}
+            className="w-auto"
+          >
+            <TabsList>
+              <TabsTrigger value="table" className="flex items-center gap-2">
+                <Table className="h-4 w-4" />
+                <span className="hidden sm:inline">Tabela</span>
+              </TabsTrigger>
+              <TabsTrigger value="cards" className="flex items-center gap-2">
+                <LayoutGrid className="h-4 w-4" />
+                <span className="hidden sm:inline">Cards</span>
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
+
+        <div className="p-6 space-y-6">
+          <UsersFilters
+            nameFilter={nameFilter}
+            emailFilter={emailFilter}
+            roleFilter={roleFilter}
+            activeFilter={activeFilter}
+            dateRange={dateRange}
+            onDateRangeChange={handleDateRangeChange}
+            onUpdateSearchParams={updateSearchParams}
+            onClearFilters={handleClearFilters}
+            hasFilters={hasFilters}
+          />
+
+          {viewMode === 'table' ? (
+            <UsersTable
+              onDelete={(id) => deleteUserMutation.mutate(id)}
+              isLoading={isLoading}
+              editUserMutation={editUserMutation}
+              users={users}
+              meta={meta}
+              sortBy={sortBy}
+              sortDirection={sortDirection}
+              onUpdateSearchParams={updateSearchParams}
+              onPaginate={handlePaginate}
+            />
+          ) : (
+            <UsersCards
+              onDelete={(id) => deleteUserMutation.mutate(id)}
+              isLoading={isLoading}
+              editUserMutation={editUserMutation}
+              users={users}
+              meta={meta}
+              onPaginate={handlePaginate}
+            />
+          )}
+        </div>
       </div>
     </div>
   );

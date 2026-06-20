@@ -22,14 +22,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Table,
@@ -41,23 +33,16 @@ import {
 } from '@/components/ui/table';
 
 import { EditGroupDialog } from './edit-group-dialog';
-import { GroupStatsCards } from './group-stats-cards';
 
 interface GroupsTableProps {
   onDelete: (id: string) => void;
   isLoading?: boolean;
   groups: Group[];
   meta?: GetGroupsResponse['meta'];
-  statsData?: GetGroupsResponse;
-  codeFilter: string;
-  nameFilter: string;
-  descriptionFilter: string;
-  activeFilter: string;
   sortBy: string;
   sortDirection: string;
   onUpdateSearchParams: (updates: Record<string, string | null>) => void;
   onPaginate: (newPage: number) => void;
-  onClearFilters: () => void;
 }
 
 type SortField = 'codigo' | 'nome' | 'descricao' | 'status';
@@ -85,16 +70,10 @@ export function GroupsTable({
   isLoading,
   groups,
   meta,
-  statsData,
-  codeFilter,
-  nameFilter,
-  descriptionFilter,
-  activeFilter,
   sortBy,
   sortDirection,
   onUpdateSearchParams,
   onPaginate,
-  onClearFilters,
 }: GroupsTableProps) {
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -120,59 +99,8 @@ export function GroupsTable({
     setIsEditDialogOpen(true);
   }
 
-  const hasFilters =
-    activeFilter !== 'all' || codeFilter || nameFilter || descriptionFilter;
-
   return (
     <div className="space-y-6">
-      <GroupStatsCards
-        totalItems={statsData?.meta.totalItems}
-        totalActiveGroups={statsData?.meta.totalActiveGroups}
-        totalEmptyGroups={statsData?.meta.totalEmptyGroups}
-      />
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Input
-          placeholder="Código"
-          className="h-11"
-          value={codeFilter}
-          onChange={(e) =>
-            onUpdateSearchParams({ code: e.target.value || null })
-          }
-        />
-        <Input
-          placeholder="Nome"
-          className="h-11"
-          value={nameFilter}
-          onChange={(e) =>
-            onUpdateSearchParams({ name: e.target.value || null })
-          }
-        />
-        <Input
-          placeholder="Descrição"
-          className="h-11"
-          value={descriptionFilter}
-          onChange={(e) =>
-            onUpdateSearchParams({ description: e.target.value || null })
-          }
-        />
-        <Select
-          value={activeFilter}
-          onValueChange={(value) =>
-            onUpdateSearchParams({ active: value === 'all' ? null : value })
-          }
-        >
-          <SelectTrigger className="h-11">
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos</SelectItem>
-            <SelectItem value="true">Ativo</SelectItem>
-            <SelectItem value="false">Inativo</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
       <div className="flex items-center justify-between text-sm text-muted-foreground">
         <div className="flex items-center gap-2">
           <Boxes className="h-4 w-4 text-muted-foreground" />
@@ -182,13 +110,6 @@ export function GroupsTable({
               meta.totalPages > 1 &&
               ` • Página ${meta.currentPage || 1} de ${meta.totalPages}`}
           </span>
-        </div>
-        <div className="h-3.5">
-          {hasFilters && (
-            <Button variant="ghost" size="sm" onClick={onClearFilters}>
-              Limpar filtros
-            </Button>
-          )}
         </div>
       </div>
 

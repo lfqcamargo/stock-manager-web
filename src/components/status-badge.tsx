@@ -13,7 +13,8 @@ export function StatusBadge({
 }: StatusBadgeProps) {
   return (
     <Badge
-      className={status ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}
+      variant={status ? 'default' : 'destructive'}
+      className="text-xs"
     >
       {status ? activeLabel : inactiveLabel}
     </Badge>

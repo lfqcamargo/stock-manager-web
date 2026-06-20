@@ -22,18 +22,18 @@ export function Pagination({
       <Button
         variant="outline"
         size="sm"
-        disabled={currentPage === 0}
+        disabled={currentPage === 1}
         onClick={() => onPageChange(currentPage - 1)}
       >
         Anterior
       </Button>
       <div className="text-sm text-muted-foreground">
-        Página {currentPage + 1} de {totalPages}
+        Página {currentPage} de {totalPages}
       </div>
       <Button
         variant="outline"
         size="sm"
-        disabled={currentPage === totalPages - 1}
+        disabled={currentPage === totalPages}
         onClick={() => onPageChange(currentPage + 1)}
       >
         Próximo

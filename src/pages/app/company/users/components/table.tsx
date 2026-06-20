@@ -5,12 +5,10 @@ import {
   ArrowUpDown,
   Edit,
   MoreHorizontal,
-  Search,
   Trash2,
   User as UserIcon,
 } from 'lucide-react';
 import { useState } from 'react';
-import type { DateRange } from 'react-day-picker';
 
 import type { User } from '@/@types/user';
 import type { EditUserBody } from '@/api/user/edit-user';
@@ -19,7 +17,6 @@ import { Pagination } from '@/components/pagination';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { DateRangePicker } from '@/components/ui/date-range-picker';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,14 +25,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Table,
@@ -61,17 +50,10 @@ interface UsersTableProps {
   >;
   users: User[];
   meta?: FetchUsersResponse['meta'];
-  dateRange?: DateRange;
-  nameFilter: string;
-  emailFilter: string;
-  roleFilter: string;
-  activeFilter: string;
   sortBy: string;
   sortDirection: string;
-  onDateRangeChange: (range: DateRange | undefined) => void;
   onUpdateSearchParams: (updates: Record<string, string | null>) => void;
   onPaginate: (newPage: number) => void;
-  onClearFilters: () => void;
 }
 
 type SortField = 'nome' | 'email' | 'cargo' | 'status' | 'dataCriacao';
@@ -102,17 +84,10 @@ export function UsersTable({
   editUserMutation,
   users,
   meta,
-  dateRange,
-  nameFilter,
-  emailFilter,
-  roleFilter,
-  activeFilter,
   sortBy,
   sortDirection,
-  onDateRangeChange,
   onUpdateSearchParams,
   onPaginate,
-  onClearFilters,
 }: UsersTableProps) {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -149,100 +124,6 @@ export function UsersTable({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Nome do usuário..."
-              className="pl-10 h-10"
-              value={nameFilter}
-              onChange={(e) =>
-                onUpdateSearchParams({ name: e.target.value || null })
-              }
-            />
-          </div>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="E-mail..."
-              className="pl-10 h-10"
-              value={emailFilter}
-              onChange={(e) =>
-                onUpdateSearchParams({ email: e.target.value || null })
-              }
-            />
-          </div>
-          <Select
-            value={roleFilter}
-            onValueChange={(value) =>
-              onUpdateSearchParams({ role: value === 'all' ? null : value })
-            }
-          >
-            <SelectTrigger className="h-10">
-              <SelectValue placeholder="Todos os cargos" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos os cargos</SelectItem>
-              <SelectItem value="ADMIN">Administrador</SelectItem>
-              <SelectItem value="MANAGER">Gerente</SelectItem>
-              <SelectItem value="EMPLOYEE">Funcionário</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select
-            value={activeFilter}
-            onValueChange={(value) =>
-              onUpdateSearchParams({ active: value === 'all' ? null : value })
-            }
-          >
-            <SelectTrigger className="h-10">
-              <SelectValue placeholder="Todos os status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos os status</SelectItem>
-              <SelectItem value="true">Ativo</SelectItem>
-              <SelectItem value="false">Inativo</SelectItem>
-            </SelectContent>
-          </Select>
-          <div className="flex items-center gap-2 col-span-1 xl:col-span-2">
-            <DateRangePicker
-              date={dateRange}
-              onDateChange={onDateRangeChange}
-              placeholder="Selecione o período"
-              className="h-10 flex-1"
-            />
-            {(nameFilter ||
-              emailFilter ||
-              roleFilter !== 'all' ||
-              activeFilter !== 'all' ||
-              dateRange) && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={onClearFilters}
-                className="h-10 w-10 flex-shrink-0"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="lucide lucide-x"
-                >
-                  <path d="M18 6 6 18" />
-                  <path d="m6 6 12 12" />
-                </svg>
-              </Button>
-            )}
-          </div>
-        </div>
-      </div>
-
       <div className="flex items-center justify-between text-sm text-muted-foreground">
         <div className="flex items-center gap-2">
           <UserIcon className="h-4 w-4" />
@@ -250,7 +131,7 @@ export function UsersTable({
             Mostrando {users.length} de {meta?.totalItems ?? 0} usuários
             {meta &&
               meta.totalPages > 1 &&
-              ` • Página ${meta.page} de ${meta.totalPages}`}
+              ` • Página ${meta.currentPage ?? meta.page} de ${meta.totalPages}`}
           </span>
         </div>
       </div>
@@ -376,9 +257,6 @@ export function UsersTable({
                     <TableCell className="hidden lg:table-cell">
                       <Skeleton className="h-4 w-20" />
                     </TableCell>
-                    <TableCell className="hidden xl:table-cell">
-                      <Skeleton className="h-4 w-20" />
-                    </TableCell>
                     <TableCell className="text-right">
                       <Skeleton className="h-8 w-8 rounded" />
                     </TableCell>
@@ -465,7 +343,7 @@ export function UsersTable({
       />
       {meta && meta.totalPages > 0 && (
         <Pagination
-          currentPage={meta.page}
+          currentPage={meta.currentPage ?? meta.page ?? 1}
           itemCount={meta.totalItems}
           itemsPerPage={itemsPerPage}
           onPageChange={onPaginate}

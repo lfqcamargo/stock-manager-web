@@ -1,16 +1,21 @@
-import { ArrowLeft, Plus } from 'lucide-react';
+import { ArrowLeft, LayoutGrid, Plus, Table } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useDebounce } from '@/hooks/use-debounce';
 import { useGroup } from '@/hooks/use-group';
 
 import { CreateGroupDialog } from './components/create-group-dialog';
+import { GroupStatsCards } from './components/group-stats-cards';
+import { GroupsCards } from './components/groups-cards';
+import { GroupsFilters } from './components/groups-filters';
 import { GroupsTable } from './components/groups-table';
 
 export function GroupPage() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
   const [searchParams, setSearchParams] = useSearchParams();
 
   // Initialize filters from searchParams
@@ -80,10 +85,16 @@ export function GroupPage() {
     });
   };
 
+  const hasFilters =
+    !!codeFilter ||
+    !!nameFilter ||
+    !!descriptionFilter ||
+    activeFilter !== 'all';
+
   return (
     <div className="flex-1 space-y-4 md:space-y-6">
       {/* Header */}
-      <div className="rounded-lg md:rounded-2xl border border-border/40 bg-card/50 backdrop-blur supports-[backdrop-filter]:bg-card/50 p-4 md:p-6 lg:p-8 shadow-sm">
+      <div className="rounded-lg md:rounded-2xl border border-border/40 bg-card/50 backdrop-blur supports-[backdrop-filter]:bg-card/50 shadow-sm p-4 md:p-6 lg:p-8">
         <div className="flex flex-col gap-4 md:gap-6 md:flex-row md:items-start md:justify-between">
           <div className="flex items-start gap-3 md:gap-4">
             <Button
@@ -115,24 +126,66 @@ export function GroupPage() {
         </div>
       </div>
 
-      {/* Table */}
-      <div className="rounded-lg md:rounded-2xl border border-border/40 bg-card/50 backdrop-blur supports-backdrop-filter:bg-card/50 shadow-sm overflow-hidden">
-        <GroupsTable
-          onDelete={handleDeleteGroup}
-          isLoading={isLoading}
-          groups={groupsData?.groups || []}
-          meta={groupsData?.meta}
-          statsData={statsData}
-          codeFilter={codeFilter}
-          nameFilter={nameFilter}
-          descriptionFilter={descriptionFilter}
-          activeFilter={activeFilter}
-          sortBy={sortBy}
-          sortDirection={sortDirection}
-          onUpdateSearchParams={updateSearchParams}
-          onPaginate={handlePaginate}
-          onClearFilters={handleClearFilters}
-        />
+      <GroupStatsCards
+        totalItems={statsData?.meta.totalItems}
+        totalActiveGroups={statsData?.meta.totalActiveGroups}
+        totalEmptyGroups={statsData?.meta.totalEmptyGroups}
+      />
+
+      {/* View Toggle & Content */}
+      <div className="rounded-lg md:rounded-2xl border border-border/40 bg-card/50 backdrop-blur supports-[backdrop-filter]:bg-card/50 shadow-sm overflow-hidden">
+        <div className="px-6 py-4 border-b border-border/50 flex items-center justify-between">
+          <h2 className="font-semibold text-lg">Lista de Grupos</h2>
+          <Tabs
+            value={viewMode}
+            onValueChange={(v) => setViewMode(v as 'table' | 'cards')}
+            className="w-auto"
+          >
+            <TabsList>
+              <TabsTrigger value="table" className="flex items-center gap-2">
+                <Table className="h-4 w-4" />
+                <span className="hidden sm:inline">Tabela</span>
+              </TabsTrigger>
+              <TabsTrigger value="cards" className="flex items-center gap-2">
+                <LayoutGrid className="h-4 w-4" />
+                <span className="hidden sm:inline">Cards</span>
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
+
+        <div className="p-6 space-y-6">
+          <GroupsFilters
+            codeFilter={codeFilter}
+            nameFilter={nameFilter}
+            descriptionFilter={descriptionFilter}
+            activeFilter={activeFilter}
+            onUpdateSearchParams={updateSearchParams}
+            onClearFilters={handleClearFilters}
+            hasFilters={hasFilters}
+          />
+
+          {viewMode === 'table' ? (
+            <GroupsTable
+              onDelete={handleDeleteGroup}
+              isLoading={isLoading}
+              groups={groupsData?.groups || []}
+              meta={groupsData?.meta}
+              sortBy={sortBy}
+              sortDirection={sortDirection}
+              onUpdateSearchParams={updateSearchParams}
+              onPaginate={handlePaginate}
+            />
+          ) : (
+            <GroupsCards
+              onDelete={handleDeleteGroup}
+              isLoading={isLoading}
+              groups={groupsData?.groups || []}
+              meta={groupsData?.meta}
+              onPaginate={handlePaginate}
+            />
+          )}
+        </div>
       </div>
 
       <CreateGroupDialog

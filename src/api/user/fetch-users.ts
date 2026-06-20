@@ -18,7 +18,8 @@ export interface FetchUsersQueryParams {
 export interface FetchUsersResponse {
   users: User[];
   meta: {
-    page: number;
+    page?: number;
+    currentPage: number;
     itemsPerPage: number;
     totalItems: number;
     totalPages: number;

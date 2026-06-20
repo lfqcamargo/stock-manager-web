@@ -9,11 +9,10 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 
-import type { Group } from '@/api/stock/fetch-groups';
 import type { MaterialDetails } from '@/api/stock/fetch-materials';
 import type { GetMaterialsResponse } from '@/api/stock/fetch-materials';
 import { Pagination } from '@/components/pagination';
-import { Badge } from '@/components/ui/badge';
+import { StatusBadge } from '@/components/status-badge';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -23,14 +22,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Table,
@@ -42,25 +33,16 @@ import {
 } from '@/components/ui/table';
 
 import { EditMaterialDialog } from './edit-material-dialog';
-import { MaterialStatsCards } from './material-stats-cards';
 
 interface MateriaisTableProps {
   onDelete: (id: string) => void;
   isLoading?: boolean;
   materials: MaterialDetails[];
   meta?: GetMaterialsResponse['meta'];
-  statsData?: GetMaterialsResponse;
-  groups: Group[];
-  codeFilter: string;
-  nameFilter: string;
-  descriptionFilter: string;
-  groupIdFilter: string;
-  activeFilter: string;
   sortBy: string;
   sortDirection: string;
   onUpdateSearchParams: (updates: Record<string, string | null>) => void;
   onPaginate: (newPage: number) => void;
-  onClearFilters: () => void;
 }
 
 type SortField = 'codigo' | 'nome' | 'grupo' | 'unidade' | 'status';
@@ -90,18 +72,10 @@ export function MateriaisTable({
   isLoading,
   materials,
   meta,
-  statsData,
-  groups,
-  codeFilter,
-  nameFilter,
-  descriptionFilter,
-  groupIdFilter,
-  activeFilter,
   sortBy,
   sortDirection,
   onUpdateSearchParams,
   onPaginate,
-  onClearFilters,
 }: MateriaisTableProps) {
   const [selectedMaterial, setSelectedMaterial] =
     useState<MaterialDetails | null>(null);
@@ -128,81 +102,8 @@ export function MateriaisTable({
     setIsEditDialogOpen(true);
   }
 
-  const hasFilters =
-    activeFilter !== 'all' ||
-    codeFilter ||
-    nameFilter ||
-    descriptionFilter ||
-    groupIdFilter !== 'all';
-
   return (
     <div className="space-y-6">
-      <MaterialStatsCards
-        totalItems={statsData?.meta.totalItems}
-        totalActive={statsData?.meta.totalActiveMaterials}
-        itemCount={statsData?.meta.itemCount}
-      />
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-        <Input
-          placeholder="Código"
-          className="h-11"
-          value={codeFilter}
-          onChange={(e) =>
-            onUpdateSearchParams({ code: e.target.value || null })
-          }
-        />
-        <Input
-          placeholder="Nome"
-          className="h-11"
-          value={nameFilter}
-          onChange={(e) =>
-            onUpdateSearchParams({ name: e.target.value || null })
-          }
-        />
-        <Input
-          placeholder="Descrição"
-          className="h-11"
-          value={descriptionFilter}
-          onChange={(e) =>
-            onUpdateSearchParams({ description: e.target.value || null })
-          }
-        />
-        <Select
-          value={groupIdFilter}
-          onValueChange={(value) =>
-            onUpdateSearchParams({ groupId: value === 'all' ? null : value })
-          }
-        >
-          <SelectTrigger className="h-11">
-            <SelectValue placeholder="Grupo" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos os grupos</SelectItem>
-            {groups.map((group) => (
-              <SelectItem key={group.id} value={group.id}>
-                {group.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select
-          value={activeFilter}
-          onValueChange={(value) =>
-            onUpdateSearchParams({ active: value === 'all' ? null : value })
-          }
-        >
-          <SelectTrigger className="h-11">
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos</SelectItem>
-            <SelectItem value="true">Ativo</SelectItem>
-            <SelectItem value="false">Inativo</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
       <div className="flex items-center justify-between text-sm text-muted-foreground">
         <div className="flex items-center gap-2">
           <Package className="h-4 w-4" />
@@ -212,13 +113,6 @@ export function MateriaisTable({
               meta.totalPages > 1 &&
               ` • Página ${meta.currentPage || 1} de ${meta.totalPages}`}
           </span>
-        </div>
-        <div className="h-3.5">
-          {hasFilters && (
-            <Button variant="ghost" size="sm" onClick={onClearFilters}>
-              Limpar filtros
-            </Button>
-          )}
         </div>
       </div>
 
@@ -356,13 +250,7 @@ export function MateriaisTable({
                     <TableCell>{material.group}</TableCell>
                     <TableCell>{material.unit}</TableCell>
                     <TableCell>
-                      {material.active ? (
-                        <Badge className="bg-green-100 text-green-800">
-                          Ativo
-                        </Badge>
-                      ) : (
-                        <Badge variant="secondary">Inativo</Badge>
-                      )}
+                      <StatusBadge status={material.active} />
                     </TableCell>
                     <TableCell className="text-right">
                       <DropdownMenu>
