@@ -1,5 +1,4 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useEffect } from 'react';
 import { Controller, useController, useForm } from 'react-hook-form';
 
 import { Button } from '@/components/ui/button';
@@ -56,6 +55,7 @@ export function CreateMaterialDialog({
       unit: 'UN',
       active: true,
     },
+    mode: 'onChange',
   });
 
   const {
@@ -71,22 +71,15 @@ export function CreateMaterialDialog({
   const { useCreateMaterial } = useMaterial();
   const { mutate: createMaterialFn, isPending } = useCreateMaterial();
 
-  function onSubmit({
-    groupId,
-    code,
-    name,
-    description,
-    unit,
-    active,
-  }: CreateMaterialFormData) {
+  const handleCreateMaterial = handleSubmit((data) => {
     createMaterialFn(
       {
-        groupId,
-        code,
-        name,
-        description,
-        unit,
-        active,
+        groupId: data.groupId,
+        code: data.code,
+        name: data.name,
+        description: data.description,
+        unit: data.unit,
+        active: data.active,
       },
       {
         onSuccess: () => {
@@ -95,11 +88,12 @@ export function CreateMaterialDialog({
         },
       },
     );
-  }
+  });
 
-  useEffect(() => {
-    if (!open) reset();
-  }, [open, reset]);
+  const handleCancel = () => {
+    reset();
+    onOpenChange(false);
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -111,136 +105,133 @@ export function CreateMaterialDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={void handleSubmit(onSubmit)}>
-          <div className="grid gap-4 py-4">
-            {/* Grupo */}
+        <form
+          onSubmit={(e) => {
+            void handleCreateMaterial(e);
+          }}
+          className="space-y-5"
+        >
+          {/* Grupo */}
+          <div className="space-y-2">
+            <Label htmlFor="groupId">Grupo</Label>
+            <Controller
+              name="groupId"
+              control={control}
+              render={({ field }) => (
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione um grupo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {groupsData?.groups?.map((group) => (
+                      <SelectItem key={group.id} value={group.id}>
+                        {group.code} - {group.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
+            {errors.groupId && (
+              <p className="text-sm text-destructive">
+                {errors.groupId.message}
+              </p>
+            )}
+          </div>
+
+          {/* Código e Unidade na mesma linha */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Código */}
             <div className="space-y-2">
-              <Label htmlFor="groupId">Grupo</Label>
+              <Label htmlFor="code">Código</Label>
+              <Input id="code" placeholder="Ex: PAR001" {...register('code')} />
+              {errors.code && (
+                <p className="text-sm text-destructive">
+                  {errors.code.message}
+                </p>
+              )}
+            </div>
+
+            {/* Unidade */}
+            <div className="space-y-2 col-span-1">
+              <Label htmlFor="unit">Unidade</Label>
               <Controller
-                name="groupId"
+                name="unit"
                 control={control}
                 render={({ field }) => (
                   <Select onValueChange={field.onChange} value={field.value}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Selecione um grupo" />
+                      <SelectValue placeholder="Unidade" />
                     </SelectTrigger>
                     <SelectContent>
-                      {groupsData?.groups?.map((group) => (
-                        <SelectItem key={group.id} value={group.id}>
-                          {group.code} - {group.name}
+                      {Object.entries(unitMeasure).map(([value, label]) => (
+                        <SelectItem key={value} value={value}>
+                          {value} - {label}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 )}
               />
-              {errors.groupId && (
+              {errors.unit && (
                 <p className="text-sm text-destructive">
-                  {errors.groupId.message}
+                  {errors.unit.message}
                 </p>
               )}
             </div>
+          </div>
 
-            {/* Código e Unidade na mesma linha */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* Código */}
-              <div className="space-y-2">
-                <Label htmlFor="code">Código</Label>
-                <Input
-                  id="code"
-                  placeholder="Ex: PAR001"
-                  {...register('code')}
-                />
-                {errors.code && (
-                  <p className="text-sm text-destructive">
-                    {errors.code.message}
-                  </p>
-                )}
-              </div>
+          {/* Nome */}
+          <div className="space-y-2">
+            <Label htmlFor="name">Nome do Material</Label>
+            <Input
+              id="name"
+              placeholder="Ex: Parafuso M6x20"
+              {...register('name')}
+            />
+            {errors.name && (
+              <p className="text-sm text-destructive">{errors.name.message}</p>
+            )}
+          </div>
 
-              {/* Unidade */}
-              <div className="space-y-2 col-span-1">
-                <Label htmlFor="unit">Unidade</Label>
-                <Controller
-                  name="unit"
-                  control={control}
-                  render={({ field }) => (
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Unidade" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Object.entries(unitMeasure).map(([value, label]) => (
-                          <SelectItem key={value} value={value}>
-                            {value} - {label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-                {errors.unit && (
-                  <p className="text-sm text-destructive">
-                    {errors.unit.message}
-                  </p>
-                )}
-              </div>
+          {/* Descrição */}
+          <div className="space-y-2">
+            <Label htmlFor="description">Descrição</Label>
+            <Textarea
+              id="description"
+              placeholder="Descrição detalhada do material..."
+              rows={3}
+              {...register('description')}
+            />
+            {errors.description && (
+              <p className="text-sm text-destructive">
+                {errors.description.message}
+              </p>
+            )}
+          </div>
+
+          {/* Ativo */}
+          <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg">
+            <div className="space-y-0.5">
+              <Label htmlFor="active">Status do Material</Label>
+              <p className="text-sm text-muted-foreground">
+                {active
+                  ? 'Material está ativo e pode ser utilizado'
+                  : 'Material está inativo e não pode ser utilizado'}
+              </p>
             </div>
-
-            {/* Nome */}
-            <div className="space-y-2">
-              <Label htmlFor="name">Nome do Material</Label>
-              <Input
-                id="name"
-                placeholder="Ex: Parafuso M6x20"
-                {...register('name')}
+            <div className="flex items-center gap-3">
+              <span
+                className={`text-sm font-medium ${active ? 'text-green-600' : 'text-destructive'}`}
+              >
+                {active ? 'Ativo' : 'Inativo'}
+              </span>
+              <Switch
+                id="active"
+                checked={active}
+                onCheckedChange={setActive}
+                disabled={isPending}
               />
-              {errors.name && (
-                <p className="text-sm text-destructive">
-                  {errors.name.message}
-                </p>
-              )}
-            </div>
-
-            {/* Descrição */}
-            <div className="space-y-2">
-              <Label htmlFor="description">Descrição</Label>
-              <Textarea
-                id="description"
-                placeholder="Descrição detalhada do material..."
-                rows={3}
-                {...register('description')}
-              />
-              {errors.description && (
-                <p className="text-sm text-destructive">
-                  {errors.description.message}
-                </p>
-              )}
-            </div>
-
-            {/* Ativo */}
-            <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg">
-              <div className="space-y-0.5">
-                <Label htmlFor="active">Status do Material</Label>
-                <p className="text-sm text-muted-foreground">
-                  {active
-                    ? 'Material está ativo e pode ser utilizado'
-                    : 'Material está inativo e não pode ser utilizado'}
-                </p>
-              </div>
-              <div className="flex items-center gap-3">
-                <span
-                  className={`text-sm font-medium ${active ? 'text-green-600' : 'text-destructive'}`}
-                >
-                  {active ? 'Ativo' : 'Inativo'}
-                </span>
-                <Switch
-                  id="active"
-                  checked={active}
-                  onCheckedChange={setActive}
-                  disabled={isPending}
-                />
-              </div>
             </div>
           </div>
 
@@ -248,7 +239,7 @@ export function CreateMaterialDialog({
             <Button
               type="button"
               variant="outline"
-              onClick={() => onOpenChange(false)}
+              onClick={handleCancel}
               disabled={isPending}
             >
               Cancelar

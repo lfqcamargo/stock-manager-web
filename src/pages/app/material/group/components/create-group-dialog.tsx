@@ -45,6 +45,7 @@ export function CreateGroupDialog({
       description: '',
       active: true,
     },
+    mode: 'onChange',
   });
 
   const {
@@ -57,7 +58,7 @@ export function CreateGroupDialog({
   const { useCreateGroup } = useGroup();
   const { mutate: createGroupFn, isPending } = useCreateGroup();
 
-  function handleCreateGroup(data: CreateGroupFormData) {
+  const handleCreateGroup = handleSubmit((data) => {
     createGroupFn(
       {
         code: data.code,
@@ -72,7 +73,7 @@ export function CreateGroupDialog({
         },
       },
     );
-  }
+  });
 
   const handleCancel = () => {
     reset();
@@ -81,120 +82,112 @@ export function CreateGroupDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] p-0">
-        <form onSubmit={void handleSubmit(handleCreateGroup)}>
-          <DialogHeader className="px-6 pt-6 pb-4">
-            <DialogTitle className="text-xl font-semibold flex items-center gap-2">
-              <FolderPlus className="h-5 w-5 text-primary" />
-              Novo Grupo de Material
-            </DialogTitle>
-            <DialogDescription className="text-muted-foreground">
-              Preencha os dados do novo grupo para organizá-los no sistema
-            </DialogDescription>
-          </DialogHeader>
+      <DialogContent className="sm:max-w-[500px]">
+        <DialogHeader>
+          <DialogTitle className="text-xl font-semibold flex items-center gap-2">
+            <FolderPlus className="h-5 w-5 text-primary" />
+            Novo Grupo de Material
+          </DialogTitle>
+          <DialogDescription className="text-muted-foreground">
+            Preencha os dados do novo grupo para organizá-los no sistema
+          </DialogDescription>
+        </DialogHeader>
 
-          <div className="px-6 space-y-6">
-            {/* Código */}
-            <div className="space-y-2">
-              <Label htmlFor="code">Código</Label>
-              <Input
-                id="code"
-                maxLength={10}
-                placeholder="Ex: FIX"
-                className="h-11"
-                {...register('code')}
-              />
-              {errors.code && (
-                <p className="text-sm text-destructive">
-                  {errors.code.message}
-                </p>
-              )}
+        <form
+          onSubmit={(e) => {
+            void handleCreateGroup(e);
+          }}
+          className="space-y-5"
+        >
+          {/* Código */}
+          <div className="space-y-2">
+            <Label htmlFor="code">Código</Label>
+            <Input
+              id="code"
+              maxLength={10}
+              placeholder="Ex: FIX"
+              className="h-11"
+              {...register('code')}
+            />
+            {errors.code && (
+              <p className="text-sm text-destructive">{errors.code.message}</p>
+            )}
+          </div>
+
+          {/* Nome */}
+          <div className="space-y-2">
+            <Label htmlFor="name">Nome do Grupo</Label>
+            <Input
+              id="name"
+              placeholder="Ex: Fixação"
+              className="h-11"
+              {...register('name')}
+            />
+            {errors.name && (
+              <p className="text-sm text-destructive">{errors.name.message}</p>
+            )}
+          </div>
+
+          {/* Descrição */}
+          <div className="space-y-2">
+            <Label htmlFor="description">Descrição</Label>
+            <Textarea
+              id="description"
+              placeholder="Descrição do grupo de materiais..."
+              rows={3}
+              {...register('description')}
+            />
+            {errors.description && (
+              <p className="text-sm text-destructive">
+                {errors.description.message}
+              </p>
+            )}
+          </div>
+
+          {/* Ativo */}
+          <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg">
+            <div className="space-y-0.5">
+              <Label htmlFor="active">Status do Grupo</Label>
+              <p className="text-sm text-muted-foreground">
+                {active
+                  ? 'Grupo está ativo e pode ser utilizado'
+                  : 'Grupo está inativo e não pode ser utilizado'}
+              </p>
             </div>
-
-            {/* Nome */}
-            <div className="space-y-2">
-              <Label htmlFor="name">Nome do Grupo</Label>
-              <Input
-                id="name"
-                placeholder="Ex: Fixação"
-                className="h-11"
-                {...register('name')}
+            <div className="flex items-center gap-3">
+              <span
+                className={`text-sm font-medium ${active ? 'text-green-600' : 'text-destructive'}`}
+              >
+                {active ? 'Ativo' : 'Inativo'}
+              </span>
+              <Switch
+                id="active"
+                checked={active}
+                onCheckedChange={setActive}
+                disabled={isPending}
               />
-              {errors.name && (
-                <p className="text-sm text-destructive">
-                  {errors.name.message}
-                </p>
-              )}
-            </div>
-
-            {/* Descrição */}
-            <div className="space-y-2">
-              <Label htmlFor="description">Descrição</Label>
-              <Textarea
-                id="description"
-                placeholder="Descrição do grupo de materiais..."
-                rows={3}
-                {...register('description')}
-              />
-              {errors.description && (
-                <p className="text-sm text-destructive">
-                  {errors.description.message}
-                </p>
-              )}
-            </div>
-
-            {/* Ativo */}
-            <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg">
-              <div className="space-y-0.5">
-                <Label htmlFor="active">Status do Grupo</Label>
-                <p className="text-sm text-muted-foreground">
-                  {active
-                    ? 'Grupo está ativo e pode ser utilizado'
-                    : 'Grupo está inativo e não pode ser utilizado'}
-                </p>
-              </div>
-              <div className="flex items-center gap-3">
-                <span
-                  className={`text-sm font-medium ${active ? 'text-green-600' : 'text-destructive'}`}
-                >
-                  {active ? 'Ativo' : 'Inativo'}
-                </span>
-                <Switch
-                  id="active"
-                  checked={active}
-                  onCheckedChange={setActive}
-                  disabled={isPending}
-                />
-              </div>
             </div>
           </div>
 
-          <DialogFooter className="px-6 py-4 bg-muted/30 mt-6">
-            <div className="flex gap-3 w-full sm:w-auto">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleCancel}
-                className="flex-1 sm:flex-none"
-                disabled={isPending}
-              >
-                Cancelar
-              </Button>
-              <Button
-                type="submit"
-                className="flex-1 sm:flex-none"
-                disabled={isPending}
-              >
-                {isPending ? (
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    Salvando...
-                  </div>
-                ) : (
-                  'Salvar Grupo'
-                )}
-              </Button>
-            </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleCancel}
+              disabled={isPending}
+            >
+              Cancelar
+            </Button>
+            <Button type="submit" disabled={isPending}>
+              {isPending ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  Salvando...
+                </div>
+              ) : (
+                'Salvar Grupo'
+              )}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>
