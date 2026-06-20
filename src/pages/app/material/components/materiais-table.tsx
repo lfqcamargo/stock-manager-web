@@ -402,6 +402,7 @@ export function MateriaisTable({
 
       {selectedMaterial && (
         <EditMaterialDialog
+          key={selectedMaterial.id}
           open={isEditDialogOpen}
           onOpenChange={(open) => {
             setIsEditDialogOpen(open);

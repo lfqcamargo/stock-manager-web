@@ -36,7 +36,7 @@ export function CreateGroupDialog({
     handleSubmit,
     control,
     reset,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm<CreateGroupFormData>({
     resolver: zodResolver(CreateGroupSchema),
     defaultValues: {
@@ -55,17 +55,23 @@ export function CreateGroupDialog({
   });
 
   const { useCreateGroup } = useGroup();
-  const { mutateAsync: createGroupFn } = useCreateGroup();
+  const { mutate: createGroupFn, isPending } = useCreateGroup();
 
-  async function handleCreateGroup(data: CreateGroupFormData) {
-    await createGroupFn({
-      code: data.code,
-      name: data.name,
-      description: data.description,
-      active: data.active,
-    });
-    reset();
-    onOpenChange(false);
+  function handleCreateGroup(data: CreateGroupFormData) {
+    createGroupFn(
+      {
+        code: data.code,
+        name: data.name,
+        description: data.description,
+        active: data.active,
+      },
+      {
+        onSuccess: () => {
+          reset();
+          onOpenChange(false);
+        },
+      },
+    );
   }
 
   const handleCancel = () => {
@@ -76,7 +82,7 @@ export function CreateGroupDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px] p-0">
-        <form onSubmit={handleSubmit(handleCreateGroup)}>
+        <form onSubmit={void handleSubmit(handleCreateGroup)}>
           <DialogHeader className="px-6 pt-6 pb-4">
             <DialogTitle className="text-xl font-semibold flex items-center gap-2">
               <FolderPlus className="h-5 w-5 text-primary" />
@@ -157,7 +163,7 @@ export function CreateGroupDialog({
                   id="active"
                   checked={active}
                   onCheckedChange={setActive}
-                  disabled={isSubmitting}
+                  disabled={isPending}
                 />
               </div>
             </div>
@@ -170,16 +176,16 @@ export function CreateGroupDialog({
                 variant="outline"
                 onClick={handleCancel}
                 className="flex-1 sm:flex-none"
-                disabled={isSubmitting}
+                disabled={isPending}
               >
                 Cancelar
               </Button>
               <Button
                 type="submit"
                 className="flex-1 sm:flex-none"
-                disabled={isSubmitting}
+                disabled={isPending}
               >
-                {isSubmitting ? (
+                {isPending ? (
                   <div className="flex items-center gap-2">
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                     Salvando...

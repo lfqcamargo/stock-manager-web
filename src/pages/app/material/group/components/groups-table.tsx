@@ -345,6 +345,7 @@ export function GroupsTable({
 
       {selectedGroup && (
         <EditGroupDialog
+          key={selectedGroup.id}
           open={isEditDialogOpen}
           onOpenChange={(open) => {
             setIsEditDialogOpen(open);

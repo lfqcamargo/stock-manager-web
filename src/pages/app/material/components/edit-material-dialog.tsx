@@ -1,5 +1,4 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useEffect } from 'react';
 import { Controller, useController, useForm } from 'react-hook-form';
 
 import type { MaterialDetails } from '@/api/stock/fetch-materials';
@@ -48,7 +47,7 @@ export function EditMaterialDialog({
     handleSubmit,
     control,
     reset,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm<EditMaterialFormData>({
     resolver: zodResolver(EditMaterialSchema),
     defaultValues: {
@@ -72,34 +71,26 @@ export function EditMaterialDialog({
   const { data: groupsData } = useGetGroups(0, 100);
 
   const { useEditMaterial } = useMaterial();
-  const { mutateAsync: editMaterialFn } = useEditMaterial();
+  const { mutate: editMaterialFn, isPending } = useEditMaterial();
 
-  // Reset form when dialog opens
-  useEffect(() => {
-    if (open) {
-      reset({
-        code: material.code,
-        name: material.name,
-        description: material.description ?? undefined,
-        groupId: material.groupId,
-        unit: material.unit,
-        active: material.active,
-      });
-    }
-  }, [open, material, reset]);
-
-  async function handleEditMaterial(data: EditMaterialFormData) {
-    await editMaterialFn({
-      id: material.id,
-      groupId: data.groupId,
-      code: data.code,
-      name: data.name,
-      description: data.description,
-      unit: data.unit,
-      active: data.active,
-    });
-    reset();
-    onOpenChange(false);
+  function handleEditMaterial(data: EditMaterialFormData) {
+    editMaterialFn(
+      {
+        id: material.id,
+        groupId: data.groupId,
+        code: data.code,
+        name: data.name,
+        description: data.description,
+        unit: data.unit,
+        active: data.active,
+      },
+      {
+        onSuccess: () => {
+          reset();
+          onOpenChange(false);
+        },
+      },
+    );
   }
 
   const handleCancel = () => {
@@ -115,7 +106,7 @@ export function EditMaterialDialog({
           <DialogDescription>Atualize os dados do material</DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(handleEditMaterial)}>
+        <form onSubmit={void handleSubmit(handleEditMaterial)}>
           <div className="grid gap-4 py-4">
             {/* Grupo */}
             <div className="space-y-2">
@@ -242,7 +233,7 @@ export function EditMaterialDialog({
                   id="active"
                   checked={active}
                   onCheckedChange={setActive}
-                  disabled={isSubmitting}
+                  disabled={isPending}
                 />
               </div>
             </div>
@@ -253,12 +244,12 @@ export function EditMaterialDialog({
               type="button"
               variant="outline"
               onClick={() => handleCancel()}
-              disabled={isSubmitting}
+              disabled={isPending}
             >
               Cancelar
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Salvando...' : 'Salvar Material'}
+            <Button type="submit" disabled={isPending}>
+              {isPending ? 'Salvando...' : 'Salvar Material'}
             </Button>
           </DialogFooter>
         </form>

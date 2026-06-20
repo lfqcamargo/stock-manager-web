@@ -40,10 +40,10 @@ export function GroupPage() {
     orderDirection: sortDirection as 'asc' | 'desc',
   });
   const { data: statsData } = useGetGroupsStats();
-  const { mutateAsync: deleteGroupFn } = useDeleteGroup();
+  const { mutate: deleteGroupFn } = useDeleteGroup();
 
-  async function handleDeleteGroup(id: string) {
-    await deleteGroupFn({ id });
+  function handleDeleteGroup(id: string) {
+    deleteGroupFn({ id });
   }
 
   // Update searchParams when filters change

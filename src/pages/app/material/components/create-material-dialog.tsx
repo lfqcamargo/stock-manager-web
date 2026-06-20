@@ -45,7 +45,7 @@ export function CreateMaterialDialog({
     handleSubmit,
     control,
     reset,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm<CreateMaterialFormData>({
     resolver: zodResolver(CreateMaterialSchema),
     defaultValues: {
@@ -69,19 +69,32 @@ export function CreateMaterialDialog({
   const { data: groupsData } = useGetGroups(0, 100);
 
   const { useCreateMaterial } = useMaterial();
-  const { mutateAsync: createMaterialFn } = useCreateMaterial();
+  const { mutate: createMaterialFn, isPending } = useCreateMaterial();
 
-  async function onSubmit(data: CreateMaterialFormData) {
-    await createMaterialFn({
-      groupId: data.groupId,
-      code: data.code,
-      name: data.name,
-      description: data.description,
-      unit: data.unit,
-      active: data.active,
-    });
-    reset();
-    onOpenChange(false);
+  function onSubmit({
+    groupId,
+    code,
+    name,
+    description,
+    unit,
+    active,
+  }: CreateMaterialFormData) {
+    createMaterialFn(
+      {
+        groupId,
+        code,
+        name,
+        description,
+        unit,
+        active,
+      },
+      {
+        onSuccess: () => {
+          reset();
+          onOpenChange(false);
+        },
+      },
+    );
   }
 
   useEffect(() => {
@@ -98,7 +111,7 @@ export function CreateMaterialDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <form onSubmit={void handleSubmit(onSubmit)}>
           <div className="grid gap-4 py-4">
             {/* Grupo */}
             <div className="space-y-2">
@@ -225,7 +238,7 @@ export function CreateMaterialDialog({
                   id="active"
                   checked={active}
                   onCheckedChange={setActive}
-                  disabled={isSubmitting}
+                  disabled={isPending}
                 />
               </div>
             </div>
@@ -236,12 +249,12 @@ export function CreateMaterialDialog({
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
-              disabled={isSubmitting}
+              disabled={isPending}
             >
               Cancelar
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Salvando...' : 'Salvar Material'}
+            <Button type="submit" disabled={isPending}>
+              {isPending ? 'Salvando...' : 'Salvar Material'}
             </Button>
           </DialogFooter>
         </form>

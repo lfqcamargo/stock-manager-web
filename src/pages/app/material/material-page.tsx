@@ -47,10 +47,10 @@ export function MaterialPage() {
   });
   const { data: statsData } = useGetMaterialsStats();
   const { data: groupsData } = useGetGroups(0, 9999);
-  const { mutateAsync: deleteMaterialFn } = useDeleteMaterial();
+  const { mutate: deleteMaterialFn } = useDeleteMaterial();
 
-  async function handleDeleteMaterial(id: string) {
-    await deleteMaterialFn({ id });
+  function handleDeleteMaterial(id: string) {
+    deleteMaterialFn({ id });
   }
 
   // Update searchParams when filters change
