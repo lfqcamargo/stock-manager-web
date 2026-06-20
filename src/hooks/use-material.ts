@@ -1,45 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import type { GetMaterialsResponse } from '@/api/stock/fetch-materials';
+import { createMaterial } from '@/api/stock/create-material';
+import { deleteMaterial } from '@/api/stock/delete-material';
+import { editMaterial } from '@/api/stock/edit-material';
+import { fetchMaterials } from '@/api/stock/fetch-materials';
 import type { UnitMeasure } from '@/lib/unit-measure-enum';
-
-// Mock data
-const mockMaterialsData: GetMaterialsResponse = {
-  materials: [
-    {
-      id: '1',
-      code: 'MAT001',
-      name: 'Mouse Wireless',
-      description: 'Mouse sem fio',
-      groupId: '1',
-      group: 'Eletrônicos',
-      unit: 'UN',
-      active: true,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-    {
-      id: '2',
-      code: 'MAT002',
-      name: 'Teclado Mecânico',
-      description: 'Teclado mecânico',
-      groupId: '1',
-      group: 'Eletrônicos',
-      unit: 'UN',
-      active: true,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-  ],
-  meta: {
-    totalItems: 2,
-    totalPages: 1,
-    itemsPerPage: 20,
-    totalActiveMaterials: 2,
-    itemCount: 2,
-    lastCreated: new Date().toISOString(),
-  },
-};
 
 export function useMaterial() {
   const queryClient = useQueryClient();
@@ -48,32 +13,25 @@ export function useMaterial() {
     page: number = 0,
     limit: number = 20,
     params?: {
-      orderBy?: string;
+      orderBy?: 'name' | 'code' | 'unit' | 'active' | 'groupId';
       orderDirection?: 'asc' | 'desc';
-      search?: string;
       active?: boolean;
       groupId?: string;
       code?: string;
       name?: string;
+      description?: string;
     },
   ) => {
     return useQuery({
       queryKey: ['materials', page, limit, params],
-      queryFn: async () => {
-        // Simulate API call
-        await new Promise((resolve) => setTimeout(resolve, 500));
-        return mockMaterialsData;
-      },
+      queryFn: async () => await fetchMaterials(page, limit, params),
     });
   };
 
   const useGetMaterialsStats = () => {
     return useQuery({
       queryKey: ['materials-stats'],
-      queryFn: async () => {
-        await new Promise((resolve) => setTimeout(resolve, 300));
-        return mockMaterialsData;
-      },
+      queryFn: async () => await fetchMaterials(0, 1),
     });
   };
 
@@ -86,12 +44,9 @@ export function useMaterial() {
         description?: string;
         unit: UnitMeasure;
         active: boolean;
-      }) => {
-        await new Promise((resolve) => setTimeout(resolve, 500));
-        console.log('Creating material:', data);
-      },
+      }) => await createMaterial(data),
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['materials'] });
+        void queryClient.invalidateQueries({ queryKey: ['materials'] });
       },
     });
   };
@@ -106,24 +61,18 @@ export function useMaterial() {
         description?: string;
         unit: UnitMeasure;
         active: boolean;
-      }) => {
-        await new Promise((resolve) => setTimeout(resolve, 500));
-        console.log('Editing material:', data);
-      },
+      }) => await editMaterial(data),
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['materials'] });
+        void queryClient.invalidateQueries({ queryKey: ['materials'] });
       },
     });
   };
 
   const useDeleteMaterial = () => {
     return useMutation({
-      mutationFn: async (data: { id: string }) => {
-        await new Promise((resolve) => setTimeout(resolve, 500));
-        console.log('Deleting material:', data);
-      },
+      mutationFn: async (data: { id: string }) => await deleteMaterial(data.id),
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['materials'] });
+        void queryClient.invalidateQueries({ queryKey: ['materials'] });
       },
     });
   };

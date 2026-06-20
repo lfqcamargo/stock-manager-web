@@ -1,9 +1,8 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useEffect, useState } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { useEffect } from 'react';
+import { Controller, useController, useForm } from 'react-hook-form';
 
 import type { MaterialDetails } from '@/api/stock/fetch-materials';
-import { GroupSearchDialog } from '@/components/group-search-dialog';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -24,12 +23,6 @@ import {
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
 import { useGroup } from '@/hooks/use-group';
 import { useMaterial } from '@/hooks/use-material';
 import { unitMeasure } from '@/utils/unit-measure';
@@ -55,7 +48,6 @@ export function EditMaterialDialog({
     handleSubmit,
     control,
     reset,
-    getValues,
     formState: { errors, isSubmitting },
   } = useForm<EditMaterialFormData>({
     resolver: zodResolver(EditMaterialSchema),
@@ -69,25 +61,32 @@ export function EditMaterialDialog({
     },
   });
 
+  const {
+    field: { value: active, onChange: setActive },
+  } = useController({
+    name: 'active',
+    control,
+  });
+
   const { useGetGroups } = useGroup();
-  const { data: groupsData } = useGetGroups(0, 9999);
+  const { data: groupsData } = useGetGroups(0, 100);
 
   const { useEditMaterial } = useMaterial();
   const { mutateAsync: editMaterialFn } = useEditMaterial();
 
-  const [groupDialogOpen, setGroupDialogOpen] = useState(false);
-  const [selectedGroup, setSelectedGroup] = useState<{
-    id: string;
-    name: string;
-  } | null>(null);
-
-  // Atualiza selectedGroup quando groupsData ou material.groupId mudarem
+  // Reset form when dialog opens
   useEffect(() => {
-    if (material.groupId && groupsData?.groups) {
-      const g = groupsData.groups.find((g) => g.id === material.groupId);
-      setSelectedGroup(g ? { id: g.id, name: g.name } : null);
+    if (open) {
+      reset({
+        code: material.code,
+        name: material.name,
+        description: material.description ?? undefined,
+        groupId: material.groupId,
+        unit: material.unit,
+        active: material.active,
+      });
     }
-  }, [groupsData, material.groupId]);
+  }, [open, material, reset]);
 
   async function handleEditMaterial(data: EditMaterialFormData) {
     await editMaterialFn({
@@ -112,69 +111,38 @@ export function EditMaterialDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>Novo Material</DialogTitle>
-          <DialogDescription>
-            Cadastre um novo material no sistema de estoque
-          </DialogDescription>
+          <DialogTitle>Editar Material</DialogTitle>
+          <DialogDescription>Atualize os dados do material</DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(handleEditMaterial)}>
           <div className="grid gap-4 py-4">
-            {/* Grupo - linha separada no início do formulário */}
-            <div className="flex flex-col sm:flex-row gap-2 items-end w-full">
-              <div className="flex-1">
-                <Label htmlFor="groupId">Grupo</Label>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Controller
-                        name="groupId"
-                        control={control}
-                        render={() => (
-                          <Input
-                            placeholder="Selecione um grupo"
-                            value={selectedGroup ? selectedGroup.name : ''}
-                            readOnly
-                            onClick={() => setGroupDialogOpen(true)}
-                            className="cursor-pointer bg-white w-full truncate"
-                          />
-                        )}
-                      />
-                    </TooltipTrigger>
-                    {selectedGroup && (
-                      <TooltipContent>{selectedGroup.name}</TooltipContent>
-                    )}
-                  </Tooltip>
-                </TooltipProvider>
-                {errors.groupId && (
-                  <p className="text-sm text-destructive">
-                    {errors.groupId.message}
-                  </p>
+            {/* Grupo */}
+            <div className="space-y-2">
+              <Label htmlFor="groupId">Grupo</Label>
+              <Controller
+                name="groupId"
+                control={control}
+                render={({ field }) => (
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione um grupo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {groupsData?.groups?.map((group) => (
+                        <SelectItem key={group.id} value={group.id}>
+                          {group.code} - {group.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 )}
-              </div>
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => setGroupDialogOpen(true)}
-                className="h-11 mt-6 sm:mt-0 w-full sm:w-auto"
-              >
-                Buscar grupo
-              </Button>
-              <GroupSearchDialog
-                open={groupDialogOpen}
-                onOpenChange={setGroupDialogOpen}
-                onSelect={(group) => {
-                  setSelectedGroup(group);
-                  reset({ ...getValues(), groupId: group.id });
-                }}
-                selectedGroup={
-                  selectedGroup
-                    ? (groupsData?.groups?.find(
-                        (g) => g.id === selectedGroup.id,
-                      ) ?? null)
-                    : null
-                }
               />
+              {errors.groupId && (
+                <p className="text-sm text-destructive">
+                  {errors.groupId.message}
+                </p>
+              )}
             </div>
 
             {/* Código e Unidade na mesma linha */}
@@ -193,8 +161,6 @@ export function EditMaterialDialog({
                   </p>
                 )}
               </div>
-
-              {/* Grupo removido (seleção via diálogo acima) */}
 
               {/* Unidade */}
               <div className="space-y-2 col-span-1">
@@ -255,20 +221,30 @@ export function EditMaterialDialog({
                 </p>
               )}
             </div>
+
             {/* Ativo */}
-            <div className="flex items-center space-x-3 pt-2">
-              <Controller
-                name="active"
-                control={control}
-                render={({ field }) => (
-                  <Switch
-                    id="active"
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                )}
-              />
-              <Label htmlFor="active">Material ativo</Label>
+            <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg">
+              <div className="space-y-0.5">
+                <Label htmlFor="active">Status do Material</Label>
+                <p className="text-sm text-muted-foreground">
+                  {active
+                    ? 'Material está ativo e pode ser utilizado'
+                    : 'Material está inativo e não pode ser utilizado'}
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                <span
+                  className={`text-sm font-medium ${active ? 'text-green-600' : 'text-destructive'}`}
+                >
+                  {active ? 'Ativo' : 'Inativo'}
+                </span>
+                <Switch
+                  id="active"
+                  checked={active}
+                  onCheckedChange={setActive}
+                  disabled={isSubmitting}
+                />
+              </div>
             </div>
           </div>
 

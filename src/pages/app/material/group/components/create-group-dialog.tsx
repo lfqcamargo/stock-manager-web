@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { FolderPlus } from 'lucide-react';
-import { Controller, useForm } from 'react-hook-form';
+import { useController, useForm } from 'react-hook-form';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -45,6 +45,13 @@ export function CreateGroupDialog({
       description: '',
       active: true,
     },
+  });
+
+  const {
+    field: { value: active, onChange: setActive },
+  } = useController({
+    name: 'active',
+    control,
   });
 
   const { useCreateGroup } = useGroup();
@@ -131,19 +138,28 @@ export function CreateGroupDialog({
             </div>
 
             {/* Ativo */}
-            <div className="flex items-center space-x-3 pt-2">
-              <Controller
-                name="active"
-                control={control}
-                render={({ field }) => (
-                  <Switch
-                    id="active"
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                )}
-              />
-              <Label htmlFor="active">Grupo ativo</Label>
+            <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg">
+              <div className="space-y-0.5">
+                <Label htmlFor="active">Status do Grupo</Label>
+                <p className="text-sm text-muted-foreground">
+                  {active
+                    ? 'Grupo está ativo e pode ser utilizado'
+                    : 'Grupo está inativo e não pode ser utilizado'}
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                <span
+                  className={`text-sm font-medium ${active ? 'text-green-600' : 'text-destructive'}`}
+                >
+                  {active ? 'Ativo' : 'Inativo'}
+                </span>
+                <Switch
+                  id="active"
+                  checked={active}
+                  onCheckedChange={setActive}
+                  disabled={isSubmitting}
+                />
+              </div>
             </div>
           </div>
 

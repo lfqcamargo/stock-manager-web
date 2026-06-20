@@ -1,30 +1,20 @@
-import {
-  Boxes,
-  Calendar,
-  Package,
-  PackageCheck,
-  PackageX,
-  TrendingUp,
-} from 'lucide-react';
+import { Boxes, Package, PackageCheck, PackageX } from 'lucide-react';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { formatDate, formatRelativeTime } from '@/utils/format-date';
 
 interface GroupStatsCardsProps {
   totalItems?: number;
   totalActiveGroups?: number;
   totalEmptyGroups?: number;
-  lastCreated?: string;
 }
 
 export function GroupStatsCards({
   totalItems = 0,
   totalActiveGroups = 0,
   totalEmptyGroups = 0,
-  lastCreated,
 }: GroupStatsCardsProps) {
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       {/* Total de Grupos */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -93,27 +83,6 @@ export function GroupStatsCards({
                 {totalItems - totalActiveGroups}
               </div>
               <div className="text-xs text-muted-foreground">Inativos</div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Atividade Recente */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">
-            Atividade Recente
-          </CardTitle>
-          <TrendingUp className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-center space-y-2">
-            <Calendar className="h-8 w-8 text-indigo-600 mx-auto" />
-            <div className="text-2xl font-bold text-indigo-600">
-              {lastCreated && formatDate(lastCreated).split(' ')[0]}
-            </div>
-            <div className="text-xs text-muted-foreground">
-              Último cadastro {lastCreated && formatRelativeTime(lastCreated)}
             </div>
           </div>
         </CardContent>

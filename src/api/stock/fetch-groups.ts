@@ -6,8 +6,6 @@ export interface Group {
   name: string;
   description?: string;
   active: boolean;
-  createdAt: string;
-  updatedAt: string;
 }
 
 export interface GetGroupsResponse {
@@ -18,6 +16,7 @@ export interface GetGroupsResponse {
     itemsPerPage: number;
     totalActiveGroups: number;
     totalEmptyGroups: number;
+    currentPage: number;
     lastCreated?: string;
   };
 }
@@ -26,16 +25,18 @@ export async function fetchGroups(
   page: number = 0,
   limit: number = 20,
   params?: {
-    orderBy?: keyof Group;
+    orderBy?: 'name' | 'description' | 'code' | 'active';
     orderDirection?: 'asc' | 'desc';
-    search?: string;
+    code?: string;
+    name?: string;
+    description?: string;
     active?: boolean;
   },
 ): Promise<GetGroupsResponse> {
-  const response = await api.get<GetGroupsResponse>('/stock/groups', {
+  const response = await api.get<GetGroupsResponse>('/groups', {
     params: {
       page: page + 1,
-      limit,
+      itemsPerPage: limit,
       ...params,
     },
   });

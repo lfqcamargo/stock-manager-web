@@ -10,8 +10,6 @@ export interface MaterialDetails {
   group: string;
   unit: UnitMeasure;
   active: boolean;
-  createdAt: string;
-  updatedAt: string;
 }
 
 export interface GetMaterialsResponse {
@@ -22,6 +20,7 @@ export interface GetMaterialsResponse {
     itemsPerPage: number;
     totalActiveMaterials: number;
     itemCount: number;
+    currentPage: number;
     lastCreated?: string;
   };
 }
@@ -30,19 +29,19 @@ export async function fetchMaterials(
   page: number = 0,
   limit: number = 20,
   params?: {
-    orderBy?: keyof MaterialDetails;
+    orderBy?: 'name' | 'code' | 'unit' | 'active' | 'groupId';
     orderDirection?: 'asc' | 'desc';
-    search?: string;
-    active?: boolean;
     groupId?: string;
     code?: string;
     name?: string;
+    description?: string;
+    active?: boolean;
   },
 ): Promise<GetMaterialsResponse> {
-  const response = await api.get<GetMaterialsResponse>('/stock/materials', {
+  const response = await api.get<GetMaterialsResponse>('/materials', {
     params: {
       page: page + 1,
-      limit,
+      itemsPerPage: limit,
       ...params,
     },
   });

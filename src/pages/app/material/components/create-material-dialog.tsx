@@ -1,9 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect } from 'react';
-import { useState } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useController, useForm } from 'react-hook-form';
 
-import { GroupSearchDialog } from '@/components/group-search-dialog';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -24,12 +22,6 @@ import {
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
 import { useGroup } from '@/hooks/use-group';
 import { useMaterial } from '@/hooks/use-material';
 import { unitMeasure } from '@/utils/unit-measure';
@@ -53,7 +45,6 @@ export function CreateMaterialDialog({
     handleSubmit,
     control,
     reset,
-    getValues,
     formState: { errors, isSubmitting },
   } = useForm<CreateMaterialFormData>({
     resolver: zodResolver(CreateMaterialSchema),
@@ -67,17 +58,18 @@ export function CreateMaterialDialog({
     },
   });
 
-  const { useGetGroupsStats } = useGroup();
-  const { data: groupsData } = useGetGroupsStats();
+  const {
+    field: { value: active, onChange: setActive },
+  } = useController({
+    name: 'active',
+    control,
+  });
+
+  const { useGetGroups } = useGroup();
+  const { data: groupsData } = useGetGroups(0, 100);
 
   const { useCreateMaterial } = useMaterial();
   const { mutateAsync: createMaterialFn } = useCreateMaterial();
-
-  const [groupDialogOpen, setGroupDialogOpen] = useState(false);
-  const [selectedGroup, setSelectedGroup] = useState<{
-    id: string;
-    name: string;
-  } | null>(null);
 
   async function onSubmit(data: CreateMaterialFormData) {
     await createMaterialFn({
@@ -89,7 +81,6 @@ export function CreateMaterialDialog({
       active: data.active,
     });
     reset();
-    setSelectedGroup(null);
     onOpenChange(false);
   }
 
@@ -109,67 +100,38 @@ export function CreateMaterialDialog({
 
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="grid gap-4 py-4">
-            {/* Grupo - linha separada no início do formulário */}
-            <div className="flex flex-col sm:flex-row gap-2 items-end w-full">
-              <div className="flex-1">
-                <Label htmlFor="groupId">Grupo</Label>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Controller
-                        name="groupId"
-                        control={control}
-                        render={() => (
-                          <Input
-                            placeholder="Selecione um grupo"
-                            value={selectedGroup ? selectedGroup.name : ''}
-                            readOnly
-                            onClick={() => setGroupDialogOpen(true)}
-                            className="cursor-pointer bg-white w-full truncate"
-                          />
-                        )}
-                      />
-                    </TooltipTrigger>
-                    {selectedGroup && (
-                      <TooltipContent>{selectedGroup.name}</TooltipContent>
-                    )}
-                  </Tooltip>
-                </TooltipProvider>
-                {errors.groupId && (
-                  <p className="text-sm text-destructive">
-                    {errors.groupId.message}
-                  </p>
+            {/* Grupo */}
+            <div className="space-y-2">
+              <Label htmlFor="groupId">Grupo</Label>
+              <Controller
+                name="groupId"
+                control={control}
+                render={({ field }) => (
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione um grupo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {groupsData?.groups?.map((group) => (
+                        <SelectItem key={group.id} value={group.id}>
+                          {group.code} - {group.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 )}
-              </div>
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => setGroupDialogOpen(true)}
-                className="h-11 mt-6 sm:mt-0 w-full sm:w-auto"
-              >
-                Buscar grupo
-              </Button>
-              <GroupSearchDialog
-                open={groupDialogOpen}
-                onOpenChange={setGroupDialogOpen}
-                onSelect={(group) => {
-                  setSelectedGroup({ id: group.id, name: group.name });
-                  reset({ ...getValues(), groupId: group.id });
-                }}
-                selectedGroup={
-                  selectedGroup
-                    ? (groupsData?.groups?.find(
-                        (g) => g.id === selectedGroup.id,
-                      ) ?? null)
-                    : null
-                }
               />
+              {errors.groupId && (
+                <p className="text-sm text-destructive">
+                  {errors.groupId.message}
+                </p>
+              )}
             </div>
 
-            {/* Código */}
-            <div className="grid grid-cols-3 gap-4">
+            {/* Código e Unidade na mesma linha */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Código */}
-              <div className="space-y-2 col-span-1">
+              <div className="space-y-2">
                 <Label htmlFor="code">Código</Label>
                 <Input
                   id="code"
@@ -182,8 +144,6 @@ export function CreateMaterialDialog({
                   </p>
                 )}
               </div>
-
-              {/* Grupo removido (seleção via diálogo acima) */}
 
               {/* Unidade */}
               <div className="space-y-2 col-span-1">
@@ -244,20 +204,30 @@ export function CreateMaterialDialog({
                 </p>
               )}
             </div>
+
             {/* Ativo */}
-            <div className="flex items-center space-x-3 pt-2">
-              <Controller
-                name="active"
-                control={control}
-                render={({ field }) => (
-                  <Switch
-                    id="active"
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                )}
-              />
-              <Label htmlFor="active">Material ativo</Label>
+            <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg">
+              <div className="space-y-0.5">
+                <Label htmlFor="active">Status do Material</Label>
+                <p className="text-sm text-muted-foreground">
+                  {active
+                    ? 'Material está ativo e pode ser utilizado'
+                    : 'Material está inativo e não pode ser utilizado'}
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                <span
+                  className={`text-sm font-medium ${active ? 'text-green-600' : 'text-destructive'}`}
+                >
+                  {active ? 'Ativo' : 'Inativo'}
+                </span>
+                <Switch
+                  id="active"
+                  checked={active}
+                  onCheckedChange={setActive}
+                  disabled={isSubmitting}
+                />
+              </div>
             </div>
           </div>
 

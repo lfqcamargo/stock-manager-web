@@ -1,38 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import type { GetGroupsResponse } from '@/api/stock/fetch-groups';
-
-// Mock data
-const mockGroupsData: GetGroupsResponse = {
-  groups: [
-    {
-      id: '1',
-      code: 'GRP001',
-      name: 'Eletrônicos',
-      description: 'Produtos eletrônicos',
-      active: true,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-    {
-      id: '2',
-      code: 'GRP002',
-      name: 'Móveis',
-      description: 'Móveis para escritório',
-      active: true,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-  ],
-  meta: {
-    totalItems: 2,
-    totalPages: 1,
-    itemsPerPage: 20,
-    totalActiveGroups: 2,
-    totalEmptyGroups: 0,
-    lastCreated: new Date().toISOString(),
-  },
-};
+import { createGroup } from '@/api/stock/create-group';
+import { deleteGroup } from '@/api/stock/delete-group';
+import { editGroup } from '@/api/stock/edit-group';
+import { fetchGroups } from '@/api/stock/fetch-groups';
 
 export function useGroup() {
   const queryClient = useQueryClient();
@@ -41,29 +12,24 @@ export function useGroup() {
     page: number = 0,
     limit: number = 20,
     params?: {
-      orderBy?: string;
+      orderBy?: 'name' | 'description' | 'code' | 'active';
       orderDirection?: 'asc' | 'desc';
-      search?: string;
+      code?: string;
+      name?: string;
+      description?: string;
       active?: boolean;
     },
   ) => {
     return useQuery({
       queryKey: ['groups', page, limit, params],
-      queryFn: async () => {
-        // Simulate API call
-        await new Promise((resolve) => setTimeout(resolve, 500));
-        return mockGroupsData;
-      },
+      queryFn: async () => await fetchGroups(page, limit, params),
     });
   };
 
   const useGetGroupsStats = () => {
     return useQuery({
       queryKey: ['groups-stats'],
-      queryFn: async () => {
-        await new Promise((resolve) => setTimeout(resolve, 300));
-        return mockGroupsData;
-      },
+      queryFn: async () => await fetchGroups(0, 1),
     });
   };
 
@@ -74,12 +40,9 @@ export function useGroup() {
         name: string;
         description?: string;
         active: boolean;
-      }) => {
-        await new Promise((resolve) => setTimeout(resolve, 500));
-        console.log('Creating group:', data);
-      },
+      }) => await createGroup(data),
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['groups'] });
+        void queryClient.invalidateQueries({ queryKey: ['groups'] });
       },
     });
   };
@@ -92,24 +55,18 @@ export function useGroup() {
         name: string;
         description?: string;
         active: boolean;
-      }) => {
-        await new Promise((resolve) => setTimeout(resolve, 500));
-        console.log('Editing group:', data);
-      },
+      }) => await editGroup(data),
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['groups'] });
+        void queryClient.invalidateQueries({ queryKey: ['groups'] });
       },
     });
   };
 
   const useDeleteGroup = () => {
     return useMutation({
-      mutationFn: async (data: { id: string }) => {
-        await new Promise((resolve) => setTimeout(resolve, 500));
-        console.log('Deleting group:', data);
-      },
+      mutationFn: async (data: { id: string }) => await deleteGroup(data.id),
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['groups'] });
+        void queryClient.invalidateQueries({ queryKey: ['groups'] });
       },
     });
   };

@@ -1,8 +1,9 @@
 import { ArrowLeft, Plus } from 'lucide-react';
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';
+import { useDebounce } from '@/hooks/use-debounce';
 import { useGroup } from '@/hooks/use-group';
 
 import { CreateGroupDialog } from './components/create-group-dialog';
@@ -10,14 +11,74 @@ import { GroupsTable } from './components/groups-table';
 
 export function GroupPage() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  const { useDeleteGroup } = useGroup();
+  // Initialize filters from searchParams
+  const page = parseInt(searchParams.get('page') ?? '1', 10);
+  const codeFilter = searchParams.get('code') ?? '';
+  const nameFilter = searchParams.get('name') ?? '';
+  const descriptionFilter = searchParams.get('description') ?? '';
+  const activeFilter = searchParams.get('active') ?? 'all';
+  const sortBy = searchParams.get('sortBy') ?? 'name';
+  const sortDirection = searchParams.get('sortDirection') ?? 'asc';
+
+  const debouncedCodeFilter = useDebounce(codeFilter);
+  const debouncedNameFilter = useDebounce(nameFilter);
+  const debouncedDescriptionFilter = useDebounce(descriptionFilter);
+  const debouncedActiveFilter = useDebounce(activeFilter);
+
+  const { useGetGroups, useGetGroupsStats, useDeleteGroup } = useGroup();
+  const { data: groupsData, isLoading } = useGetGroups(page - 1, 20, {
+    code: debouncedCodeFilter || undefined,
+    name: debouncedNameFilter || undefined,
+    description: debouncedDescriptionFilter || undefined,
+    active:
+      debouncedActiveFilter === 'all'
+        ? undefined
+        : debouncedActiveFilter === 'true',
+    orderBy: sortBy as 'name' | 'description' | 'code' | 'active',
+    orderDirection: sortDirection as 'asc' | 'desc',
+  });
+  const { data: statsData } = useGetGroupsStats();
   const { mutateAsync: deleteGroupFn } = useDeleteGroup();
 
   async function handleDeleteGroup(id: string) {
     await deleteGroupFn({ id });
   }
+
+  // Update searchParams when filters change
+  const updateSearchParams = (updates: Record<string, string | null>) => {
+    setSearchParams((state) => {
+      const newParams = new URLSearchParams(state);
+      Object.entries(updates).forEach(([key, value]) => {
+        if (value) {
+          newParams.set(key, value);
+        } else {
+          newParams.delete(key);
+        }
+      });
+      newParams.set('page', '1');
+      return newParams;
+    });
+  };
+
+  const handlePaginate = (newPage: number) => {
+    setSearchParams((state) => {
+      state.set('page', newPage.toString());
+      return state;
+    });
+  };
+
+  const handleClearFilters = () => {
+    updateSearchParams({
+      code: null,
+      name: null,
+      description: null,
+      active: null,
+      sortBy: null,
+      sortDirection: null,
+    });
+  };
 
   return (
     <div className="flex-1 space-y-4 md:space-y-6">
@@ -58,8 +119,19 @@ export function GroupPage() {
       <div className="rounded-lg md:rounded-2xl border border-border/40 bg-card/50 backdrop-blur supports-backdrop-filter:bg-card/50 shadow-sm overflow-hidden">
         <GroupsTable
           onDelete={handleDeleteGroup}
-          searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
+          isLoading={isLoading}
+          groups={groupsData?.groups || []}
+          meta={groupsData?.meta}
+          statsData={statsData}
+          codeFilter={codeFilter}
+          nameFilter={nameFilter}
+          descriptionFilter={descriptionFilter}
+          activeFilter={activeFilter}
+          sortBy={sortBy}
+          sortDirection={sortDirection}
+          onUpdateSearchParams={updateSearchParams}
+          onPaginate={handlePaginate}
+          onClearFilters={handleClearFilters}
         />
       </div>
 

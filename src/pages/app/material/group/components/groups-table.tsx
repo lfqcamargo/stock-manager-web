@@ -1,16 +1,16 @@
 import {
+  ArrowDown,
+  ArrowUp,
   ArrowUpDown,
   Boxes,
   Edit,
   MoreHorizontal,
-  Search,
   Trash2,
 } from 'lucide-react';
-import { useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { z } from 'zod';
+import { useState } from 'react';
 
-import { type Group } from '@/api/stock/fetch-groups';
+import type { Group } from '@/api/stock/fetch-groups';
+import type { GetGroupsResponse } from '@/api/stock/fetch-groups';
 import { Pagination } from '@/components/pagination';
 import { StatusBadge } from '@/components/status-badge';
 import { Button } from '@/components/ui/button';
@@ -39,117 +39,80 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { useGroup } from '@/hooks/use-group';
-import { formatDate } from '@/utils/format-date';
 
 import { EditGroupDialog } from './edit-group-dialog';
 import { GroupStatsCards } from './group-stats-cards';
 
 interface GroupsTableProps {
   onDelete: (id: string) => void;
-  searchTerm: string;
-  onSearchChange: (term: string) => void;
   isLoading?: boolean;
+  groups: Group[];
+  meta?: GetGroupsResponse['meta'];
+  statsData?: GetGroupsResponse;
+  codeFilter: string;
+  nameFilter: string;
+  descriptionFilter: string;
+  activeFilter: string;
+  sortBy: string;
+  sortDirection: string;
+  onUpdateSearchParams: (updates: Record<string, string | null>) => void;
+  onPaginate: (newPage: number) => void;
+  onClearFilters: () => void;
 }
 
-type SortField = 'codigo' | 'nome' | 'descricao' | 'status' | 'dataCriacao';
+type SortField = 'codigo' | 'nome' | 'descricao' | 'status';
 type SortDirection = 'asc' | 'desc';
+
+const sortFieldMapping: Record<
+  SortField,
+  'code' | 'name' | 'description' | 'active'
+> = {
+  codigo: 'code',
+  nome: 'name',
+  descricao: 'description',
+  status: 'active',
+};
+
+const reverseSortFieldMapping: Record<string, SortField> = {
+  code: 'codigo',
+  name: 'nome',
+  description: 'descricao',
+  active: 'status',
+};
 
 export function GroupsTable({
   onDelete,
-  searchTerm,
-  onSearchChange,
+  isLoading,
+  groups,
+  meta,
+  statsData,
+  codeFilter,
+  nameFilter,
+  descriptionFilter,
+  activeFilter,
+  sortBy,
+  sortDirection,
+  onUpdateSearchParams,
+  onPaginate,
+  onClearFilters,
 }: GroupsTableProps) {
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [sortField, setSortField] = useState<SortField>('nome');
-  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
-  const [searchParams, setSearchParams] = useSearchParams();
 
-  const page = z.coerce
-    .number()
-    .transform((page) => page - 1)
-    .parse(searchParams.get('page') ?? '1');
-
-  const { useGetGroups, useGetGroupsStats } = useGroup();
-  const orderByMap: Record<
-    SortField,
-    'name' | 'description' | 'code' | 'createdAt' | 'active'
-  > = {
-    nome: 'name',
-    descricao: 'description',
-    codigo: 'code',
-    dataCriacao: 'createdAt',
-    status: 'active',
-  } as const;
-  const { data: groupsData, isLoading } = useGetGroups(page, 20, {
-    orderBy: orderByMap[sortField],
-    orderDirection: sortDirection,
-  });
-  const { data: statsData } = useGetGroupsStats();
-
-  const processedData = useMemo(() => {
-    if (!groupsData?.groups) return { filteredGroups: [], totalPages: 0 };
-
-    let filteredGroups = [...groupsData.groups];
-
-    if (searchTerm) {
-      filteredGroups = filteredGroups.filter(
-        (group) =>
-          group.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          group.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (group.description &&
-            group.description.toLowerCase().includes(searchTerm.toLowerCase())),
-      );
-    }
-
-    if (statusFilter !== 'all') {
-      const isActive = statusFilter === 'ativo';
-      filteredGroups = filteredGroups.filter(
-        (group) => group.active === isActive,
-      );
-    }
-
-    // Nenhuma ordenação local: tudo via servidor
-
-    return {
-      filteredGroups,
-      totalPages: groupsData.meta.totalPages,
-    };
-  }, [
-    groupsData?.groups,
-    groupsData?.meta?.totalPages,
-    searchTerm,
-    statusFilter,
-    sortField,
-    sortDirection,
-  ]);
-
-  function handlePaginate(page: number) {
-    setSearchParams((state) => {
-      state.set('page', (page + 1).toString());
-      return state;
-    });
-  }
+  const currentSortField = reverseSortFieldMapping[sortBy] || 'nome';
+  const currentSortDirection = sortDirection as SortDirection;
 
   function handleSort(field: SortField) {
-    if (sortField === field) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortField(field);
-      setSortDirection('asc');
-    }
-    // Resetar para primeira página ao alterar ordenação
-    setSearchParams((state) => {
-      state.set('page', '1');
-      return state;
-    });
-  }
+    const newSortBy = sortFieldMapping[field];
+    const newSortDirection =
+      currentSortField === field && currentSortDirection === 'asc'
+        ? 'desc'
+        : 'asc';
 
-  function handleClearFilters() {
-    setStatusFilter('all');
-    onSearchChange('');
+    onUpdateSearchParams({
+      sortBy: newSortBy,
+      sortDirection: newSortDirection,
+    });
   }
 
   function handleEdit(group: Group) {
@@ -157,63 +120,78 @@ export function GroupsTable({
     setIsEditDialogOpen(true);
   }
 
+  const hasFilters =
+    activeFilter !== 'all' || codeFilter || nameFilter || descriptionFilter;
+
   return (
     <div className="space-y-6">
-      {/* Stats Cards */}
       <GroupStatsCards
         totalItems={statsData?.meta.totalItems}
         totalActiveGroups={statsData?.meta.totalActiveGroups}
         totalEmptyGroups={statsData?.meta.totalEmptyGroups}
-        lastCreated={statsData?.meta.lastCreated}
       />
 
-      {/* Search and Filters */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar por código, nome ou descrição..."
-            className="pl-10 h-11"
-            value={searchTerm}
-            onChange={(e) => onSearchChange(e.target.value)}
-          />
-        </div>
-        <div className="flex gap-2">
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-32">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos</SelectItem>
-              <SelectItem value="ativo">Ativo</SelectItem>
-              <SelectItem value="inativo">Inativo</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Input
+          placeholder="Código"
+          className="h-11"
+          value={codeFilter}
+          onChange={(e) =>
+            onUpdateSearchParams({ code: e.target.value || null })
+          }
+        />
+        <Input
+          placeholder="Nome"
+          className="h-11"
+          value={nameFilter}
+          onChange={(e) =>
+            onUpdateSearchParams({ name: e.target.value || null })
+          }
+        />
+        <Input
+          placeholder="Descrição"
+          className="h-11"
+          value={descriptionFilter}
+          onChange={(e) =>
+            onUpdateSearchParams({ description: e.target.value || null })
+          }
+        />
+        <Select
+          value={activeFilter}
+          onValueChange={(value) =>
+            onUpdateSearchParams({ active: value === 'all' ? null : value })
+          }
+        >
+          <SelectTrigger className="h-11">
+            <SelectValue placeholder="Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos</SelectItem>
+            <SelectItem value="true">Ativo</SelectItem>
+            <SelectItem value="false">Inativo</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
-      {/* Results Summary */}
       <div className="flex items-center justify-between text-sm text-muted-foreground">
         <div className="flex items-center gap-2">
-          <Boxes className="h-4 w-4" />
+          <Boxes className="h-4 w-4 text-muted-foreground" />
           <span>
-            Mostrando {processedData.filteredGroups.length} de{' '}
-            {groupsData?.meta.totalItems} grupos
-            {processedData.totalPages > 1 &&
-              ` • Página ${page + 1} de ${processedData.totalPages}`}
-            {statusFilter !== 'all' || searchTerm}
+            Mostrando {groups.length} de {meta?.totalItems || 0} grupos
+            {meta &&
+              meta.totalPages > 1 &&
+              ` • Página ${meta.currentPage || 1} de ${meta.totalPages}`}
           </span>
         </div>
         <div className="h-3.5">
-          {(statusFilter !== 'all' || searchTerm) && (
-            <Button variant="ghost" size="sm" onClick={handleClearFilters}>
+          {hasFilters && (
+            <Button variant="ghost" size="sm" onClick={onClearFilters}>
               Limpar filtros
             </Button>
           )}
         </div>
       </div>
 
-      {/* Table */}
       <div className="rounded-md border">
         <Table>
           <TableHeader>
@@ -225,7 +203,15 @@ export function GroupsTable({
                   onClick={() => handleSort('codigo')}
                 >
                   Código
-                  <ArrowUpDown className="ml-2 h-4 w-4" />
+                  {currentSortField === 'codigo' ? (
+                    currentSortDirection === 'asc' ? (
+                      <ArrowUp className="ml-2 h-4 w-4" />
+                    ) : (
+                      <ArrowDown className="ml-2 h-4 w-4" />
+                    )
+                  ) : (
+                    <ArrowUpDown className="ml-2 h-4 w-4" />
+                  )}
                 </Button>
               </TableHead>
               <TableHead>
@@ -235,7 +221,15 @@ export function GroupsTable({
                   onClick={() => handleSort('nome')}
                 >
                   Nome
-                  <ArrowUpDown className="ml-2 h-4 w-4" />
+                  {currentSortField === 'nome' ? (
+                    currentSortDirection === 'asc' ? (
+                      <ArrowUp className="ml-2 h-4 w-4" />
+                    ) : (
+                      <ArrowDown className="ml-2 h-4 w-4" />
+                    )
+                  ) : (
+                    <ArrowUpDown className="ml-2 h-4 w-4" />
+                  )}
                 </Button>
               </TableHead>
               <TableHead className="hidden lg:table-cell">
@@ -245,7 +239,15 @@ export function GroupsTable({
                   onClick={() => handleSort('descricao')}
                 >
                   Descrição
-                  <ArrowUpDown className="ml-2 h-4 w-4" />
+                  {currentSortField === 'descricao' ? (
+                    currentSortDirection === 'asc' ? (
+                      <ArrowUp className="ml-2 h-4 w-4" />
+                    ) : (
+                      <ArrowDown className="ml-2 h-4 w-4" />
+                    )
+                  ) : (
+                    <ArrowUpDown className="ml-2 h-4 w-4" />
+                  )}
                 </Button>
               </TableHead>
               <TableHead>
@@ -255,17 +257,15 @@ export function GroupsTable({
                   onClick={() => handleSort('status')}
                 >
                   Status
-                  <ArrowUpDown className="ml-2 h-4 w-4" />
-                </Button>
-              </TableHead>
-              <TableHead className="hidden md:table-cell">
-                <Button
-                  variant="ghost"
-                  className="h-auto p-0 font-semibold hover:bg-transparent"
-                  onClick={() => handleSort('dataCriacao')}
-                >
-                  Data Criação
-                  <ArrowUpDown className="ml-2 h-4 w-4" />
+                  {currentSortField === 'status' ? (
+                    currentSortDirection === 'asc' ? (
+                      <ArrowUp className="ml-2 h-4 w-4" />
+                    ) : (
+                      <ArrowDown className="ml-2 h-4 w-4" />
+                    )
+                  ) : (
+                    <ArrowUpDown className="ml-2 h-4 w-4" />
+                  )}
                 </Button>
               </TableHead>
               <TableHead className="text-right w-20">Ações</TableHead>
@@ -287,15 +287,12 @@ export function GroupsTable({
                     <TableCell>
                       <Skeleton className="h-6 w-16 rounded-full" />
                     </TableCell>
-                    <TableCell className="hidden md:table-cell">
-                      <Skeleton className="h-4 w-20" />
-                    </TableCell>
                     <TableCell className="text-right">
                       <Skeleton className="h-8 w-8 rounded" />
                     </TableCell>
                   </TableRow>
                 ))
-              : processedData.filteredGroups.map((group: Group) => (
+              : groups.map((group: Group) => (
                   <TableRow key={group.id} className="group">
                     <TableCell className="font-medium">{group.code}</TableCell>
                     <TableCell>
@@ -311,12 +308,6 @@ export function GroupsTable({
                     </TableCell>
                     <TableCell>
                       <StatusBadge status={group.active} />
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell">
-                      <div className="flex items-center gap-2 text-sm">
-                        <Boxes className="h-4 w-4 text-muted-foreground" />
-                        {formatDate(group.createdAt)}
-                      </div>
                     </TableCell>
                     <TableCell className="text-right">
                       <DropdownMenu>
@@ -352,7 +343,6 @@ export function GroupsTable({
         </Table>
       </div>
 
-      {/* Dialogs */}
       {selectedGroup && (
         <EditGroupDialog
           open={isEditDialogOpen}
@@ -363,12 +353,12 @@ export function GroupsTable({
           group={selectedGroup}
         />
       )}
-      {processedData.totalPages > 0 && (
+      {meta && meta.totalPages > 0 && (
         <Pagination
-          currentPage={page}
-          itemCount={groupsData?.meta.totalItems || 0}
-          itemsPerPage={groupsData?.meta.itemsPerPage || 0}
-          onPageChange={handlePaginate}
+          currentPage={meta.currentPage || 1}
+          itemCount={meta.totalItems || 0}
+          itemsPerPage={meta.itemsPerPage || 20}
+          onPageChange={onPaginate}
         />
       )}
     </div>
