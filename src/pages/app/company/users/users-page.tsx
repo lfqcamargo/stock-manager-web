@@ -21,6 +21,8 @@ export function UsersPage() {
   const activeFilter = searchParams.get('active') ?? 'all';
   const createdAtStartStr = searchParams.get('createdAtStart');
   const createdAtEndStr = searchParams.get('createdAtEnd');
+  const sortBy = searchParams.get('sortBy') ?? 'name';
+  const sortDirection = searchParams.get('sortDirection') ?? 'asc';
 
   const debouncedNameFilter = useDebounce(nameFilter);
   const debouncedEmailFilter = useDebounce(emailFilter);
@@ -43,6 +45,8 @@ export function UsersPage() {
         debouncedActiveFilter === 'all' ? undefined : debouncedActiveFilter,
       createdAtStart: debouncedCreatedAtStartFilter || undefined,
       createdAtEnd: debouncedCreatedAtEndFilter || undefined,
+      orderBy: sortBy as 'name' | 'email' | 'role' | 'active' | 'createdAt',
+      orderDirection: sortDirection as 'asc' | 'desc',
     });
 
   const totalActive = users.filter((u) => u.active).length;
@@ -113,6 +117,8 @@ export function UsersPage() {
       active: null,
       createdAtStart: null,
       createdAtEnd: null,
+      sortBy: null,
+      sortDirection: null,
     });
   };
 
@@ -138,6 +144,8 @@ export function UsersPage() {
           emailFilter={emailFilter}
           roleFilter={roleFilter}
           activeFilter={activeFilter}
+          sortBy={sortBy}
+          sortDirection={sortDirection}
           onDateRangeChange={handleDateRangeChange}
           onUpdateSearchParams={updateSearchParams}
           onPaginate={handlePaginate}

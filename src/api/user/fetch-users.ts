@@ -10,8 +10,9 @@ export interface FetchUsersQueryParams {
   active?: string;
   createdAtStart?: string;
   createdAtEnd?: string;
-  lastLogin?: string;
   deletedAt?: string;
+  orderBy?: 'name' | 'email' | 'role' | 'active' | 'createdAt';
+  orderDirection?: 'asc' | 'desc';
 }
 
 export interface FetchUsersResponse {

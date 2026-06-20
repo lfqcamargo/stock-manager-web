@@ -1,5 +1,8 @@
 import type { UseMutationResult } from '@tanstack/react-query';
 import {
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
   Edit,
   MoreHorizontal,
   Search,
@@ -63,11 +66,35 @@ interface UsersTableProps {
   emailFilter: string;
   roleFilter: string;
   activeFilter: string;
+  sortBy: string;
+  sortDirection: string;
   onDateRangeChange: (range: DateRange | undefined) => void;
   onUpdateSearchParams: (updates: Record<string, string | null>) => void;
   onPaginate: (newPage: number) => void;
   onClearFilters: () => void;
 }
+
+type SortField = 'nome' | 'email' | 'cargo' | 'status' | 'dataCriacao';
+type SortDirection = 'asc' | 'desc';
+
+const sortFieldMapping: Record<
+  SortField,
+  'name' | 'email' | 'role' | 'active' | 'createdAt'
+> = {
+  nome: 'name',
+  email: 'email',
+  cargo: 'role',
+  status: 'active',
+  dataCriacao: 'createdAt',
+};
+
+const reverseSortFieldMapping: Record<string, SortField> = {
+  name: 'nome',
+  email: 'email',
+  role: 'cargo',
+  active: 'status',
+  createdAt: 'dataCriacao',
+};
 
 export function UsersTable({
   onDelete,
@@ -80,6 +107,8 @@ export function UsersTable({
   emailFilter,
   roleFilter,
   activeFilter,
+  sortBy,
+  sortDirection,
   onDateRangeChange,
   onUpdateSearchParams,
   onPaginate,
@@ -88,6 +117,22 @@ export function UsersTable({
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const itemsPerPage = 20;
+
+  const currentSortField = reverseSortFieldMapping[sortBy] || 'nome';
+  const currentSortDirection = sortDirection as SortDirection;
+
+  function handleSort(field: SortField) {
+    const newSortBy = sortFieldMapping[field];
+    const newSortDirection =
+      currentSortField === field && currentSortDirection === 'asc'
+        ? 'desc'
+        : 'asc';
+
+    onUpdateSearchParams({
+      sortBy: newSortBy,
+      sortDirection: newSortDirection,
+    });
+  }
 
   const loading = externalLoading || false;
 
@@ -214,15 +259,95 @@ export function UsersTable({
         <Table>
           <TableHeader>
             <TableRow className="hover:bg-transparent">
-              <TableHead>Usuário</TableHead>
-              <TableHead className="hidden lg:table-cell">E-mail</TableHead>
-              <TableHead className="hidden md:table-cell">Cargo</TableHead>
-              <TableHead className="hidden md:table-cell">Status</TableHead>
-              <TableHead className="hidden lg:table-cell">
-                Data Criação
+              <TableHead>
+                <Button
+                  variant="ghost"
+                  className="h-auto p-0 font-semibold hover:bg-transparent"
+                  onClick={() => handleSort('nome')}
+                >
+                  Usuário
+                  {currentSortField === 'nome' ? (
+                    currentSortDirection === 'asc' ? (
+                      <ArrowUp className="ml-2 h-4 w-4" />
+                    ) : (
+                      <ArrowDown className="ml-2 h-4 w-4" />
+                    )
+                  ) : (
+                    <ArrowUpDown className="ml-2 h-4 w-4" />
+                  )}
+                </Button>
               </TableHead>
-              <TableHead className="hidden xl:table-cell">
-                Último Login
+              <TableHead className="hidden lg:table-cell">
+                <Button
+                  variant="ghost"
+                  className="h-auto p-0 font-semibold hover:bg-transparent"
+                  onClick={() => handleSort('email')}
+                >
+                  E-mail
+                  {currentSortField === 'email' ? (
+                    currentSortDirection === 'asc' ? (
+                      <ArrowUp className="ml-2 h-4 w-4" />
+                    ) : (
+                      <ArrowDown className="ml-2 h-4 w-4" />
+                    )
+                  ) : (
+                    <ArrowUpDown className="ml-2 h-4 w-4" />
+                  )}
+                </Button>
+              </TableHead>
+              <TableHead className="hidden md:table-cell">
+                <Button
+                  variant="ghost"
+                  className="h-auto p-0 font-semibold hover:bg-transparent"
+                  onClick={() => handleSort('cargo')}
+                >
+                  Cargo
+                  {currentSortField === 'cargo' ? (
+                    currentSortDirection === 'asc' ? (
+                      <ArrowUp className="ml-2 h-4 w-4" />
+                    ) : (
+                      <ArrowDown className="ml-2 h-4 w-4" />
+                    )
+                  ) : (
+                    <ArrowUpDown className="ml-2 h-4 w-4" />
+                  )}
+                </Button>
+              </TableHead>
+              <TableHead className="hidden md:table-cell">
+                <Button
+                  variant="ghost"
+                  className="h-auto p-0 font-semibold hover:bg-transparent"
+                  onClick={() => handleSort('status')}
+                >
+                  Status
+                  {currentSortField === 'status' ? (
+                    currentSortDirection === 'asc' ? (
+                      <ArrowUp className="ml-2 h-4 w-4" />
+                    ) : (
+                      <ArrowDown className="ml-2 h-4 w-4" />
+                    )
+                  ) : (
+                    <ArrowUpDown className="ml-2 h-4 w-4" />
+                  )}
+                </Button>
+              </TableHead>
+              <TableHead className="hidden lg:table-cell">
+                <Button
+                  variant="ghost"
+                  className="h-auto p-0 font-semibold hover:bg-transparent"
+                  onClick={() => handleSort('dataCriacao')}
+                >
+                  Data Criação
+                  {currentSortField === 'dataCriacao' ? (
+                    currentSortDirection === 'asc' ? (
+                      <ArrowUp className="ml-2 h-4 w-4" />
+                    ) : (
+                      <ArrowDown className="ml-2 h-4 w-4" />
+                    )
+                  ) : (
+                    <ArrowUpDown className="ml-2 h-4 w-4" />
+                  )}
+                </Button>
               </TableHead>
               <TableHead className="text-right w-20">Ações</TableHead>
             </TableRow>
@@ -296,11 +421,6 @@ export function UsersTable({
                       <div className="flex items-center gap-2 text-sm">
                         <UserIcon className="h-4 w-4 text-muted-foreground" />
                         {formatDate(user.createdAt)}
-                      </div>
-                    </TableCell>
-                    <TableCell className="hidden xl:table-cell">
-                      <div className="text-sm text-muted-foreground">
-                        {user.lastLogin ? formatDate(user.lastLogin) : 'Nunca'}
                       </div>
                     </TableCell>
                     <TableCell className="text-right">
