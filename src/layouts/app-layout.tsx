@@ -168,7 +168,7 @@ function AppLayoutContent() {
                     <>
                       <Avatar className="h-8 w-8 rounded-lg shrink-0">
                         <AvatarImage
-                          src={company?.photo ?? ''}
+                          src={company?.photoUrl ?? ''}
                           alt={company?.name}
                         />
                         <AvatarFallback className="rounded-lg bg-primary text-primary-foreground text-xs">
@@ -320,7 +320,10 @@ function AppLayoutContent() {
                     className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                   >
                     <Avatar className="h-8 w-8 rounded-lg shrink-0">
-                      <AvatarImage src={user?.photo ?? ''} alt={user?.name} />
+                      <AvatarImage
+                        src={user?.photoUrl ?? ''}
+                        alt={user?.name}
+                      />
                       <AvatarFallback className="rounded-lg bg-primary text-primary-foreground text-xs">
                         {getInitials(user?.name)}
                       </AvatarFallback>

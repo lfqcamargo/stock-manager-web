@@ -61,6 +61,7 @@ export function EditUserDialog({
       role: 'EMPLOYEE',
       active: true,
       password: '',
+      photoUrl: '',
     },
   });
 
@@ -80,6 +81,7 @@ export function EditUserDialog({
         role: user.role,
         active: user.active,
         password: '',
+        photoUrl: user.photoUrl || '',
       });
     } else {
       reset();
@@ -88,9 +90,14 @@ export function EditUserDialog({
 
   function onFormSubmit(data: EditUserFormData) {
     if (user) {
-      const { password, ...rest } = data;
+      const { password, photoUrl, ...rest } = data;
+      const payload: EditUserBody = {
+        ...rest,
+        ...(password ? { password } : {}),
+        photoUrl: photoUrl === '' ? undefined : photoUrl,
+      };
       editUserMutation.mutate(
-        { id: user.id, data: { ...rest, ...(password ? { password } : {}) } },
+        { id: user.id, data: payload },
         {
           onSuccess: () => {
             onOpenChange(false);
@@ -140,6 +147,22 @@ export function EditUserDialog({
             <p className="text-xs text-muted-foreground">
               E-mail não pode ser alterado
             </p>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="photoUrl">URL da Foto (opcional)</Label>
+            <Input
+              id="photoUrl"
+              type="url"
+              placeholder="https://example.com/photo.jpg"
+              disabled={isSubmitting}
+              aria-invalid={!!errors.photoUrl}
+              {...register('photoUrl')}
+            />
+            {errors.photoUrl && (
+              <p className="text-destructive text-sm">
+                {errors.photoUrl.message}
+              </p>
+            )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="role">Cargo</Label>

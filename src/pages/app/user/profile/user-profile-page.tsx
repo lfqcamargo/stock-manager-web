@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ArrowLeft, Camera, Mail, Save, User } from 'lucide-react';
+import { ArrowLeft, Mail, Save, User } from 'lucide-react';
 import { useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { Link } from 'react-router-dom';
@@ -22,7 +22,6 @@ import {
 export function UserProfilePage() {
   const { user, isLoading, updateProfileMutation } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
-  const [previewPhoto, setPreviewPhoto] = useState<string | null>(null);
 
   const {
     register,
@@ -35,39 +34,24 @@ export function UserProfilePage() {
     resolver: zodResolver(updateProfileSchema),
     defaultValues: {
       name: '',
-      photo: null,
+      photoUrl: null,
     },
   });
 
   const watchName = useWatch({ control, name: 'name' });
-  const watchPhoto = useWatch({ control, name: 'photo' });
+  const watchPhotoUrl = useWatch({ control, name: 'photoUrl' });
 
   const onSubmit = handleSubmit(async (data) => {
     await updateProfileMutation.mutateAsync(data);
     setIsEditing(false);
-    setPreviewPhoto(null);
   });
 
   const handleEditClick = () => {
     if (user) {
       setValue('name', user.name);
-      setValue('photo', user.photo ?? null);
-      setPreviewPhoto(user.photo ?? null);
+      setValue('photoUrl', user.photoUrl ?? null);
     }
     setIsEditing(true);
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const result = event.target?.result as string;
-        setPreviewPhoto(result);
-        setValue('photo', result);
-      };
-      reader.readAsDataURL(file);
-    }
   };
 
   if (isLoading || !user) {
@@ -116,7 +100,7 @@ export function UserProfilePage() {
     );
   }
 
-  const displayPhoto = previewPhoto ?? (isEditing ? watchPhoto : user.photo);
+  const displayPhoto = isEditing ? watchPhotoUrl : user.photoUrl;
 
   return (
     <div className="flex-1 space-y-8">
@@ -140,17 +124,6 @@ export function UserProfilePage() {
                   {getInitials(isEditing ? watchName : user.name)}
                 </AvatarFallback>
               </Avatar>
-              {isEditing && (
-                <label className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-100 transition-opacity rounded-full cursor-pointer">
-                  <Camera className="h-9 w-9 text-white" />
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="sr-only"
-                    onChange={handleFileChange}
-                  />
-                </label>
-              )}
             </div>
             <div className="mt-4 space-y-1">
               <h2 className="text-2xl font-bold">
@@ -179,7 +152,6 @@ export function UserProfilePage() {
                   onClick={() => {
                     reset();
                     setIsEditing(false);
-                    setPreviewPhoto(null);
                   }}
                   disabled={updateProfileMutation.isPending}
                 >
@@ -210,6 +182,22 @@ export function UserProfilePage() {
                   {errors.name && (
                     <p className="text-destructive text-sm">
                       {errors.name.message}
+                    </p>
+                  )}
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="photoUrl">URL da Foto (opcional)</Label>
+                  <Input
+                    id="photoUrl"
+                    type="url"
+                    placeholder="https://example.com/foto.jpg"
+                    disabled={isSubmitting || updateProfileMutation.isPending}
+                    aria-invalid={!!errors.photoUrl}
+                    {...register('photoUrl')}
+                  />
+                  {errors.photoUrl && (
+                    <p className="text-destructive text-sm">
+                      {errors.photoUrl.message}
                     </p>
                   )}
                 </div>

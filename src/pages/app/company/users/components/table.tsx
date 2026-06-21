@@ -14,7 +14,7 @@ import type { User } from '@/@types/user';
 import type { EditUserBody } from '@/api/user/edit-user';
 import type { FetchUsersResponse } from '@/api/user/fetch-users';
 import { Pagination } from '@/components/pagination';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -267,6 +267,9 @@ export function UsersTable({
                     <TableCell>
                       <div className="flex items-center gap-3">
                         <Avatar className="h-9 w-9 rounded-lg">
+                          {user.photoUrl ? (
+                            <AvatarImage src={user.photoUrl} alt={user.name} />
+                          ) : null}
                           <AvatarFallback className="rounded-lg bg-primary text-primary-foreground text-xs">
                             {getInitials(user.name)}
                           </AvatarFallback>

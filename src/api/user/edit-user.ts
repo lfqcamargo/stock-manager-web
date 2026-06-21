@@ -5,7 +5,7 @@ export interface EditUserBody {
   email?: string;
   role?: 'ADMIN' | 'MANAGER' | 'EMPLOYEE';
   active?: boolean;
-  photo?: string | null;
+  photoUrl?: string | null;
   password?: string;
 }
 

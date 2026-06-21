@@ -4,7 +4,7 @@ import { useState } from 'react';
 import type { User } from '@/@types/user';
 import type { FetchUsersResponse } from '@/api/user/fetch-users';
 import { Pagination } from '@/components/pagination';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
@@ -94,6 +94,9 @@ export function UsersCards({
             <CardContent className="p-6">
               <div className="flex items-start gap-4 mb-4">
                 <Avatar className="h-12 w-12 rounded-lg">
+                  {user.photoUrl ? (
+                    <AvatarImage src={user.photoUrl} alt={user.name} />
+                  ) : null}
                   <AvatarFallback className="rounded-lg bg-primary text-primary-foreground text-sm">
                     {getInitials(user.name)}
                   </AvatarFallback>

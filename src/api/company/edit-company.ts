@@ -2,7 +2,7 @@ import { api } from '@/lib/axios';
 
 export interface EditCompanyBody {
   name?: string;
-  photo?: string | null;
+  photoUrl?: string | null;
 }
 
 export async function editCompany(data: EditCompanyBody): Promise<void> {

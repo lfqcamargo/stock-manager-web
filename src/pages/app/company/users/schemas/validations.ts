@@ -13,6 +13,12 @@ export const editUserSchema = z.object({
     .min(6, 'Senha deve ter pelo menos 6 caracteres')
     .optional()
     .or(z.literal('')),
+  photoUrl: z
+    .string()
+    .url('URL da foto inválida')
+    .optional()
+    .or(z.literal(''))
+    .or(z.null()),
 });
 
 export type EditUserFormData = z.infer<typeof editUserSchema>;

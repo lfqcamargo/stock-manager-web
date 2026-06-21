@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ArrowLeft, Building, Camera, Save } from 'lucide-react';
+import { ArrowLeft, Building, Save } from 'lucide-react';
 import { useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { Link } from 'react-router-dom';
@@ -16,7 +16,12 @@ import { formatCNPJ } from '@/utils/validate-cnpj';
 
 const editCompanySchema = z.object({
   name: z.string().min(3, 'Nome deve ter pelo menos 3 caracteres'),
-  photo: z.string().nullable().optional(),
+  photoUrl: z
+    .string()
+    .url('URL inválida')
+    .optional()
+    .or(z.literal(''))
+    .or(z.null()),
 });
 
 type EditCompanyFormData = z.infer<typeof editCompanySchema>;
@@ -34,7 +39,6 @@ function getInitials(name?: string): string {
 export function CompanyProfilePage() {
   const { company, isLoading, editCompanyMutation } = useCompany();
   const [isEditing, setIsEditing] = useState(false);
-  const [previewPhoto, setPreviewPhoto] = useState<string | null>(null);
 
   const {
     register,
@@ -47,39 +51,28 @@ export function CompanyProfilePage() {
     resolver: zodResolver(editCompanySchema),
     defaultValues: {
       name: '',
-      photo: null,
+      photoUrl: null,
     },
   });
 
   const watchName = useWatch({ control, name: 'name' });
-  const watchPhoto = useWatch({ control, name: 'photo' });
+  const watchPhotoUrl = useWatch({ control, name: 'photoUrl' });
 
   const onSubmit = handleSubmit(async (data) => {
-    await editCompanyMutation.mutateAsync(data);
+    const { photoUrl, ...rest } = data;
+    await editCompanyMutation.mutateAsync({
+      ...rest,
+      photoUrl: photoUrl === '' ? undefined : photoUrl,
+    });
     setIsEditing(false);
-    setPreviewPhoto(null);
   });
 
   const handleEditClick = () => {
     if (company) {
       setValue('name', company.name);
-      setValue('photo', company.photo ?? null);
-      setPreviewPhoto(company.photo ?? null);
+      setValue('photoUrl', company.photoUrl ?? null);
     }
     setIsEditing(true);
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const result = event.target?.result as string;
-        setPreviewPhoto(result);
-        setValue('photo', result);
-      };
-      reader.readAsDataURL(file);
-    }
   };
 
   if (isLoading || !company) {
@@ -124,7 +117,7 @@ export function CompanyProfilePage() {
     );
   }
 
-  const displayPhoto = previewPhoto ?? (isEditing ? watchPhoto : company.photo);
+  const displayPhoto = isEditing ? watchPhotoUrl : company.photoUrl;
 
   return (
     <div className="flex-1 space-y-8">
@@ -148,17 +141,6 @@ export function CompanyProfilePage() {
                   {getInitials(isEditing ? watchName : company.name)}
                 </AvatarFallback>
               </Avatar>
-              {isEditing && (
-                <label className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-100 transition-opacity rounded-full cursor-pointer">
-                  <Camera className="h-9 w-9 text-white" />
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="sr-only"
-                    onChange={handleFileChange}
-                  />
-                </label>
-              )}
             </div>
             <div className="mt-4 space-y-1">
               <h2 className="text-2xl font-bold">
@@ -189,7 +171,6 @@ export function CompanyProfilePage() {
                   onClick={() => {
                     reset();
                     setIsEditing(false);
-                    setPreviewPhoto(null);
                   }}
                   disabled={editCompanyMutation.isPending}
                 >
@@ -220,6 +201,22 @@ export function CompanyProfilePage() {
                   {errors.name && (
                     <p className="text-destructive text-sm">
                       {errors.name.message}
+                    </p>
+                  )}
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="photoUrl">URL da Logo (opcional)</Label>
+                  <Input
+                    id="photoUrl"
+                    type="url"
+                    placeholder="https://example.com/logo.jpg"
+                    disabled={isSubmitting || editCompanyMutation.isPending}
+                    aria-invalid={!!errors.photoUrl}
+                    {...register('photoUrl')}
+                  />
+                  {errors.photoUrl && (
+                    <p className="text-destructive text-sm">
+                      {errors.photoUrl.message}
                     </p>
                   )}
                 </div>

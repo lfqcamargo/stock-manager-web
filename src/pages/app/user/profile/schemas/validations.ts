@@ -5,7 +5,7 @@ export const updateProfileSchema = z.object({
     .string()
     .min(3, 'Nome deve ter pelo menos 3 caracteres')
     .max(255, 'Nome deve ter no máximo 255 caracteres'),
-  photo: z.string().nullable().optional(),
+  photoUrl: z.string().nullable().optional(),
 });
 
 export type UpdateProfileFormData = z.infer<typeof updateProfileSchema>;

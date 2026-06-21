@@ -4,7 +4,7 @@ export interface User {
   email: string;
   role: 'ADMIN' | 'MANAGER' | 'EMPLOYEE';
   active: boolean;
-  photo?: string | null;
+  photoUrl?: string | null;
   createdAt: string;
   updatedAt: string;
   lastLogin: string | null;
