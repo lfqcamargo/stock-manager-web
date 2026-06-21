@@ -9,6 +9,7 @@ export interface EditMaterialRequest {
   description?: string;
   unit: UnitMeasure;
   active: boolean;
+  photoUrl?: string | null;
 }
 
 export async function editMaterial({
@@ -19,6 +20,7 @@ export async function editMaterial({
   description,
   unit,
   active,
+  photoUrl,
 }: EditMaterialRequest): Promise<void> {
   await api.put(`/materials/${id}`, {
     groupId,
@@ -27,5 +29,6 @@ export async function editMaterial({
     description,
     unit,
     active,
+    photoUrl,
   });
 }

@@ -44,9 +44,10 @@ export function useMaterial() {
         description?: string;
         unit: UnitMeasure;
         active: boolean;
+        photoUrl?: string | null;
       }) => await createMaterial(data),
       onSuccess: () => {
-        void queryClient.invalidateQueries({ queryKey: ['materials'] });
+        queryClient.removeQueries({ queryKey: ['materials'] });
       },
     });
   };
@@ -61,9 +62,10 @@ export function useMaterial() {
         description?: string;
         unit: UnitMeasure;
         active: boolean;
+        photoUrl?: string | null;
       }) => await editMaterial(data),
       onSuccess: () => {
-        void queryClient.invalidateQueries({ queryKey: ['materials'] });
+        queryClient.removeQueries({ queryKey: ['materials'] });
       },
     });
   };
@@ -72,7 +74,7 @@ export function useMaterial() {
     return useMutation({
       mutationFn: async (data: { id: string }) => await deleteMaterial(data.id),
       onSuccess: () => {
-        void queryClient.invalidateQueries({ queryKey: ['materials'] });
+        queryClient.removeQueries({ queryKey: ['materials'] });
       },
     });
   };

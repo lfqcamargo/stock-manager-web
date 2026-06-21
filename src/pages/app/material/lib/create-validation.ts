@@ -9,6 +9,7 @@ export const CreateMaterialSchema = z.object({
   description: z.string().optional(),
   unit: UnitMeasureEnum,
   active: z.boolean(),
+  photoUrl: z.string().url('URL inválida').nullable().optional(),
 });
 
 export type CreateMaterialFormData = z.infer<typeof CreateMaterialSchema>;

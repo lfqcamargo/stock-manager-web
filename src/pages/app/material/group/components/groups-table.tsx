@@ -13,6 +13,7 @@ import type { Group } from '@/api/stock/fetch-groups';
 import type { GetGroupsResponse } from '@/api/stock/fetch-groups';
 import { Pagination } from '@/components/pagination';
 import { StatusBadge } from '@/components/status-badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -31,6 +32,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { getInitials } from '@/utils/get-initials';
 
 import { EditGroupDialog } from './edit-group-dialog';
 
@@ -121,10 +123,10 @@ export function GroupsTable({
                 <Button
                   variant="ghost"
                   className="h-auto p-0 font-semibold hover:bg-transparent"
-                  onClick={() => handleSort('codigo')}
+                  onClick={() => handleSort('nome')}
                 >
-                  Código
-                  {currentSortField === 'codigo' ? (
+                  Grupo
+                  {currentSortField === 'nome' ? (
                     currentSortDirection === 'asc' ? (
                       <ArrowUp className="ml-2 h-4 w-4" />
                     ) : (
@@ -139,10 +141,10 @@ export function GroupsTable({
                 <Button
                   variant="ghost"
                   className="h-auto p-0 font-semibold hover:bg-transparent"
-                  onClick={() => handleSort('nome')}
+                  onClick={() => handleSort('codigo')}
                 >
-                  Nome
-                  {currentSortField === 'nome' ? (
+                  Código
+                  {currentSortField === 'codigo' ? (
                     currentSortDirection === 'asc' ? (
                       <ArrowUp className="ml-2 h-4 w-4" />
                     ) : (
@@ -197,10 +199,13 @@ export function GroupsTable({
               ? Array.from({ length: 5 }).map((_, index) => (
                   <TableRow key={index}>
                     <TableCell>
-                      <Skeleton className="h-4 w-16" />
+                      <div className="flex items-center gap-3">
+                        <Skeleton className="h-9 w-9 rounded-lg" />
+                        <Skeleton className="h-4 w-32" />
+                      </div>
                     </TableCell>
                     <TableCell>
-                      <Skeleton className="h-4 w-32" />
+                      <Skeleton className="h-4 w-16" />
                     </TableCell>
                     <TableCell className="hidden lg:table-cell">
                       <Skeleton className="h-4 w-40" />
@@ -215,15 +220,23 @@ export function GroupsTable({
                 ))
               : groups.map((group: Group) => (
                   <TableRow key={group.id} className="group">
-                    <TableCell className="font-medium">{group.code}</TableCell>
                     <TableCell>
-                      <div className="space-y-1">
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-9 w-9 rounded-lg">
+                          {group.photoUrl ? (
+                            <AvatarImage
+                              src={group.photoUrl}
+                              alt={group.name}
+                            />
+                          ) : null}
+                          <AvatarFallback className="rounded-lg bg-primary text-primary-foreground text-xs">
+                            {getInitials(group.name)}
+                          </AvatarFallback>
+                        </Avatar>
                         <div className="font-medium">{group.name}</div>
-                        <div className="text-sm text-muted-foreground lg:hidden">
-                          {group.description || '-'}
-                        </div>
                       </div>
                     </TableCell>
+                    <TableCell className="font-medium">{group.code}</TableCell>
                     <TableCell className="hidden lg:table-cell max-w-[300px] truncate">
                       {group.description || '-'}
                     </TableCell>

@@ -1,8 +1,9 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { FolderPlus } from 'lucide-react';
-import { useController, useForm } from 'react-hook-form';
+import { Controller, useController, useForm, useWatch } from 'react-hook-form';
 
 import type { Group } from '@/api/stock/fetch-groups';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -17,6 +18,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { useGroup } from '@/hooks/use-group';
+import { getInitials } from '@/utils/get-initials';
 
 import {
   type EditGroupFormData,
@@ -46,9 +48,12 @@ export function EditGroupDialog({
       name: group.name,
       description: group.description ?? '',
       active: group.active,
+      photoUrl: group.photoUrl ?? null,
     },
     mode: 'onChange',
   });
+
+  const watchName = useWatch({ control, name: 'name' });
 
   const {
     field: { value: active, onChange: setActive },
@@ -68,6 +73,7 @@ export function EditGroupDialog({
         name: data.name,
         description: data.description,
         active: data.active,
+        photoUrl: data.photoUrl,
       },
       {
         onSuccess: () => {
@@ -100,6 +106,22 @@ export function EditGroupDialog({
           }}
           className="space-y-5"
         >
+          {/* Avatar Preview */}
+          <Controller
+            name="photoUrl"
+            control={control}
+            render={({ field }) => (
+              <div className="flex justify-center mb-2">
+                <Avatar className="h-20 w-20">
+                  <AvatarImage src={field.value ?? ''} alt={group.name} />
+                  <AvatarFallback className="text-2xl bg-primary text-primary-foreground">
+                    {getInitials(watchName || group.name)}
+                  </AvatarFallback>
+                </Avatar>
+              </div>
+            )}
+          />
+
           {/* Código */}
           <div className="space-y-2">
             <Label htmlFor="code">Código</Label>
@@ -108,6 +130,7 @@ export function EditGroupDialog({
               maxLength={10}
               placeholder="Ex: FIX"
               className="h-11"
+              disabled={isPending}
               {...register('code')}
             />
             {errors.code && (
@@ -136,11 +159,40 @@ export function EditGroupDialog({
               id="description"
               placeholder="Descrição do grupo de materiais..."
               rows={3}
+              disabled={isPending}
               {...register('description')}
             />
             {errors.description && (
               <p className="text-sm text-destructive">
                 {errors.description.message}
+              </p>
+            )}
+          </div>
+
+          {/* URL da Foto */}
+          <div className="space-y-2">
+            <Label htmlFor="photoUrl">URL da Foto (opcional)</Label>
+            <Controller
+              name="photoUrl"
+              control={control}
+              render={({ field }) => (
+                <Input
+                  id="photoUrl"
+                  type="url"
+                  placeholder="https://example.com/photo.jpg"
+                  disabled={isPending}
+                  aria-invalid={!!errors.photoUrl}
+                  value={field.value ?? ''}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    field.onChange(value === '' ? null : value);
+                  }}
+                />
+              )}
+            />
+            {errors.photoUrl && (
+              <p className="text-destructive text-sm">
+                {errors.photoUrl.message}
               </p>
             )}
           </div>

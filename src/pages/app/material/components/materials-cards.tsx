@@ -1,7 +1,6 @@
 import { Edit, Package, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
-import type { Group } from '@/api/stock/fetch-groups';
 import type { MaterialDetails } from '@/api/stock/fetch-materials';
 import type { GetMaterialsResponse } from '@/api/stock/fetch-materials';
 import { Pagination } from '@/components/pagination';
@@ -84,8 +83,23 @@ export function MaterialsCards({
           <Card key={material.id} className="overflow-hidden group">
             <CardContent className="p-6">
               <div className="flex items-start gap-4 mb-4">
-                <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <Package className="h-6 w-6 text-primary" />
+                <div className="h-12 w-12 rounded-lg overflow-hidden relative">
+                  {material.photoUrl && (
+                    <img
+                      key={material.id}
+                      src={material.photoUrl}
+                      alt={material.name}
+                      className="h-full w-full object-cover absolute top-0 left-0"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = 'none';
+                      }}
+                    />
+                  )}
+                  {!material.photoUrl && (
+                    <div className="h-full w-full bg-primary/10 flex items-center justify-center">
+                      <Package className="h-6 w-6 text-primary" />
+                    </div>
+                  )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="font-semibold truncate">{material.name}</h3>

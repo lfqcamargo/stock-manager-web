@@ -8,6 +8,7 @@ export interface CreateMaterialRequest {
   description?: string;
   unit: UnitMeasure;
   active: boolean;
+  photoUrl?: string | null;
 }
 
 export async function createMaterial({
@@ -17,6 +18,7 @@ export async function createMaterial({
   description,
   unit,
   active,
+  photoUrl,
 }: CreateMaterialRequest): Promise<void> {
   await api.post('/materials', {
     groupId,
@@ -25,5 +27,6 @@ export async function createMaterial({
     description,
     unit,
     active,
+    photoUrl,
   });
 }

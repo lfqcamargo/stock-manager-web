@@ -5,6 +5,7 @@ export const CreateGroupSchema = z.object({
   name: z.string().min(2, 'Nome é obrigatório'),
   description: z.string().optional(),
   active: z.boolean(),
+  photoUrl: z.string().url('URL inválida').nullable().optional(),
 });
 
 export type CreateGroupFormData = z.infer<typeof CreateGroupSchema>;

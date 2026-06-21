@@ -78,8 +78,23 @@ export function GroupsCards({
           <Card key={group.id} className="overflow-hidden group">
             <CardContent className="p-6">
               <div className="flex items-start gap-4 mb-4">
-                <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <Folder className="h-6 w-6 text-primary" />
+                <div className="h-12 w-12 rounded-lg overflow-hidden relative">
+                  {group.photoUrl && (
+                    <img
+                      key={group.id}
+                      src={group.photoUrl}
+                      alt={group.name}
+                      className="h-full w-full object-cover absolute top-0 left-0"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = 'none';
+                      }}
+                    />
+                  )}
+                  {!group.photoUrl && (
+                    <div className="h-full w-full bg-primary/10 flex items-center justify-center">
+                      <Folder className="h-6 w-6 text-primary" />
+                    </div>
+                  )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="font-semibold truncate">{group.name}</h3>

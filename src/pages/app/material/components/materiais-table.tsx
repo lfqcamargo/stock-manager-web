@@ -13,6 +13,7 @@ import type { MaterialDetails } from '@/api/stock/fetch-materials';
 import type { GetMaterialsResponse } from '@/api/stock/fetch-materials';
 import { Pagination } from '@/components/pagination';
 import { StatusBadge } from '@/components/status-badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -31,6 +32,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { getInitials } from '@/utils/get-initials';
 
 import { EditMaterialDialog } from './edit-material-dialog';
 
@@ -124,10 +126,10 @@ export function MateriaisTable({
                 <Button
                   variant="ghost"
                   className="h-auto p-0 font-semibold hover:bg-transparent"
-                  onClick={() => handleSort('codigo')}
+                  onClick={() => handleSort('nome')}
                 >
-                  Código
-                  {currentSortField === 'codigo' ? (
+                  Material
+                  {currentSortField === 'nome' ? (
                     currentSortDirection === 'asc' ? (
                       <ArrowUp className="ml-2 h-4 w-4" />
                     ) : (
@@ -142,10 +144,10 @@ export function MateriaisTable({
                 <Button
                   variant="ghost"
                   className="h-auto p-0 font-semibold hover:bg-transparent"
-                  onClick={() => handleSort('nome')}
+                  onClick={() => handleSort('codigo')}
                 >
-                  Nome
-                  {currentSortField === 'nome' ? (
+                  Código
+                  {currentSortField === 'codigo' ? (
                     currentSortDirection === 'asc' ? (
                       <ArrowUp className="ml-2 h-4 w-4" />
                     ) : (
@@ -218,10 +220,13 @@ export function MateriaisTable({
               ? Array.from({ length: 5 }).map((_, index) => (
                   <TableRow key={index}>
                     <TableCell>
-                      <Skeleton className="h-4 w-16" />
+                      <div className="flex items-center gap-3">
+                        <Skeleton className="h-9 w-9 rounded-lg" />
+                        <Skeleton className="h-4 w-32" />
+                      </div>
                     </TableCell>
                     <TableCell>
-                      <Skeleton className="h-4 w-32" />
+                      <Skeleton className="h-4 w-16" />
                     </TableCell>
                     <TableCell>
                       <Skeleton className="h-4 w-24" />
@@ -239,13 +244,24 @@ export function MateriaisTable({
                 ))
               : materials.map((material: MaterialDetails) => (
                   <TableRow key={material.id} className="group">
-                    <TableCell className="font-medium">
-                      {material.code}
-                    </TableCell>
                     <TableCell>
-                      <div className="space-y-1">
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-9 w-9 rounded-lg">
+                          {material.photoUrl ? (
+                            <AvatarImage
+                              src={material.photoUrl}
+                              alt={material.name}
+                            />
+                          ) : null}
+                          <AvatarFallback className="rounded-lg bg-primary text-primary-foreground text-xs">
+                            {getInitials(material.name)}
+                          </AvatarFallback>
+                        </Avatar>
                         <div className="font-medium">{material.name}</div>
                       </div>
+                    </TableCell>
+                    <TableCell className="font-medium">
+                      {material.code}
                     </TableCell>
                     <TableCell>{material.group}</TableCell>
                     <TableCell>{material.unit}</TableCell>

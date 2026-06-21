@@ -9,6 +9,7 @@ export const EditMaterialSchema = z.object({
   description: z.string().optional(),
   unit: UnitMeasureEnum,
   active: z.boolean(),
+  photoUrl: z.string().url('URL inválida').nullable().optional(),
 });
 
 export type EditMaterialFormData = z.infer<typeof EditMaterialSchema>;

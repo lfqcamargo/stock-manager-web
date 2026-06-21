@@ -6,6 +6,7 @@ export interface EditGroupRequest {
   name: string;
   description?: string;
   active: boolean;
+  photoUrl?: string | null;
 }
 
 export async function editGroup({
@@ -14,11 +15,13 @@ export async function editGroup({
   name,
   description,
   active,
+  photoUrl,
 }: EditGroupRequest): Promise<void> {
   await api.put(`/groups/${id}`, {
     code,
     name,
     description,
     active,
+    photoUrl,
   });
 }

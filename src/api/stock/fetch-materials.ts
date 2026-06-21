@@ -10,6 +10,7 @@ export interface MaterialDetails {
   group: string;
   unit: UnitMeasure;
   active: boolean;
+  photoUrl?: string;
 }
 
 export interface GetMaterialsResponse {

@@ -5,6 +5,7 @@ export interface CreateGroupRequest {
   name: string;
   description?: string;
   active: boolean;
+  photoUrl?: string | null;
 }
 
 export async function createGroup({
@@ -12,11 +13,13 @@ export async function createGroup({
   name,
   description,
   active,
+  photoUrl,
 }: CreateGroupRequest): Promise<void> {
   await api.post('/groups', {
     code,
     name,
     description,
     active,
+    photoUrl,
   });
 }

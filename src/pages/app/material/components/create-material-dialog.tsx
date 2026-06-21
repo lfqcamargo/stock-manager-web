@@ -1,6 +1,8 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Controller, useController, useForm } from 'react-hook-form';
+import { Package } from 'lucide-react';
+import { Controller, useController, useForm, useWatch } from 'react-hook-form';
 
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -23,6 +25,7 @@ import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { useGroup } from '@/hooks/use-group';
 import { useMaterial } from '@/hooks/use-material';
+import { getInitials } from '@/utils/get-initials';
 import { unitMeasure } from '@/utils/unit-measure';
 
 import {
@@ -54,9 +57,12 @@ export function CreateMaterialDialog({
       groupId: '',
       unit: 'UN',
       active: true,
+      photoUrl: null,
     },
     mode: 'onChange',
   });
+
+  const watchName = useWatch({ control, name: 'name' });
 
   const {
     field: { value: active, onChange: setActive },
@@ -80,6 +86,7 @@ export function CreateMaterialDialog({
         description: data.description,
         unit: data.unit,
         active: data.active,
+        photoUrl: data.photoUrl,
       },
       {
         onSuccess: () => {
@@ -99,7 +106,10 @@ export function CreateMaterialDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>Novo Material</DialogTitle>
+          <DialogTitle className="text-xl font-semibold flex items-center gap-2">
+            <Package className="h-5 w-5 text-primary" />
+            Novo Material
+          </DialogTitle>
           <DialogDescription>
             Cadastre um novo material no sistema de estoque
           </DialogDescription>
@@ -111,6 +121,22 @@ export function CreateMaterialDialog({
           }}
           className="space-y-5"
         >
+          {/* Avatar Preview */}
+          <Controller
+            name="photoUrl"
+            control={control}
+            render={({ field }) => (
+              <div className="flex justify-center mb-2">
+                <Avatar className="h-20 w-20">
+                  <AvatarImage src={field.value ?? ''} alt="Preview" />
+                  <AvatarFallback className="text-2xl bg-primary text-primary-foreground">
+                    {getInitials(watchName || 'M')}
+                  </AvatarFallback>
+                </Avatar>
+              </div>
+            )}
+          />
+
           {/* Grupo */}
           <div className="space-y-2">
             <Label htmlFor="groupId">Grupo</Label>
@@ -206,6 +232,34 @@ export function CreateMaterialDialog({
             {errors.description && (
               <p className="text-sm text-destructive">
                 {errors.description.message}
+              </p>
+            )}
+          </div>
+
+          {/* URL da Foto */}
+          <div className="space-y-2">
+            <Label htmlFor="photoUrl">URL da Foto (opcional)</Label>
+            <Controller
+              name="photoUrl"
+              control={control}
+              render={({ field }) => (
+                <Input
+                  id="photoUrl"
+                  type="url"
+                  placeholder="https://example.com/photo.jpg"
+                  disabled={isPending}
+                  aria-invalid={!!errors.photoUrl}
+                  value={field.value ?? ''}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    field.onChange(value === '' ? null : value);
+                  }}
+                />
+              )}
+            />
+            {errors.photoUrl && (
+              <p className="text-destructive text-sm">
+                {errors.photoUrl.message}
               </p>
             )}
           </div>

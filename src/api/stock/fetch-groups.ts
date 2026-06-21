@@ -6,6 +6,7 @@ export interface Group {
   name: string;
   description?: string;
   active: boolean;
+  photoUrl?: string;
 }
 
 export interface GetGroupsResponse {

@@ -40,9 +40,10 @@ export function useGroup() {
         name: string;
         description?: string;
         active: boolean;
+        photoUrl?: string | null;
       }) => await createGroup(data),
       onSuccess: () => {
-        void queryClient.invalidateQueries({ queryKey: ['groups'] });
+        queryClient.removeQueries({ queryKey: ['groups'] });
       },
     });
   };
@@ -55,9 +56,10 @@ export function useGroup() {
         name: string;
         description?: string;
         active: boolean;
+        photoUrl?: string | null;
       }) => await editGroup(data),
       onSuccess: () => {
-        void queryClient.invalidateQueries({ queryKey: ['groups'] });
+        queryClient.removeQueries({ queryKey: ['groups'] });
       },
     });
   };
@@ -66,7 +68,7 @@ export function useGroup() {
     return useMutation({
       mutationFn: async (data: { id: string }) => await deleteGroup(data.id),
       onSuccess: () => {
-        void queryClient.invalidateQueries({ queryKey: ['groups'] });
+        queryClient.removeQueries({ queryKey: ['groups'] });
       },
     });
   };
