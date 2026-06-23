@@ -48,3 +48,8 @@ export async function fetchMaterials(
   });
   return response.data;
 }
+
+export async function fetchMaterialById(id: string): Promise<MaterialDetails> {
+  const response = await api.get<MaterialDetails>(`/materials/${id}`);
+  return response.data;
+}

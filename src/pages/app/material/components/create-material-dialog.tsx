@@ -2,7 +2,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Package } from 'lucide-react';
 import { Controller, useController, useForm, useWatch } from 'react-hook-form';
 
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -28,10 +27,8 @@ import { useMaterial } from '@/hooks/use-material';
 import { getInitials } from '@/utils/get-initials';
 import { unitMeasure } from '@/utils/unit-measure';
 
-import {
-  type CreateMaterialFormData,
-  CreateMaterialSchema,
-} from '../lib/create-validation';
+import type { CreateMaterialFormData } from '../lib/create-validation';
+import { CreateMaterialSchema } from '../lib/create-validation';
 
 interface CreateMaterialDialogProps {
   open: boolean;
@@ -121,18 +118,29 @@ export function CreateMaterialDialog({
           }}
           className="space-y-5"
         >
-          {/* Avatar Preview */}
+          {/* Preview */}
           <Controller
             name="photoUrl"
             control={control}
             render={({ field }) => (
               <div className="flex justify-center mb-2">
-                <Avatar className="h-20 w-20">
-                  <AvatarImage src={field.value ?? ''} alt="Preview" />
-                  <AvatarFallback className="text-2xl bg-primary text-primary-foreground">
-                    {getInitials(watchName || 'M')}
-                  </AvatarFallback>
-                </Avatar>
+                <div className="h-24 w-24 rounded-lg overflow-hidden relative">
+                  {field.value ? (
+                    <img
+                      src={field.value}
+                      alt="Preview"
+                      className="h-full w-full object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = 'none';
+                      }}
+                    />
+                  ) : null}
+                  {!field.value ? (
+                    <div className="h-full w-full bg-primary/10 flex items-center justify-center text-2xl bg-primary text-primary-foreground">
+                      {getInitials(watchName || 'M')}
+                    </div>
+                  ) : null}
+                </div>
               </div>
             )}
           />

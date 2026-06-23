@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createGroup } from '@/api/stock/create-group';
 import { deleteGroup } from '@/api/stock/delete-group';
 import { editGroup } from '@/api/stock/edit-group';
-import { fetchGroups } from '@/api/stock/fetch-groups';
+import { fetchGroupById, fetchGroups } from '@/api/stock/fetch-groups';
 
 export function useGroup() {
   const queryClient = useQueryClient();
@@ -23,6 +23,14 @@ export function useGroup() {
     return useQuery({
       queryKey: ['groups', page, limit, params],
       queryFn: async () => await fetchGroups(page, limit, params),
+    });
+  };
+
+  const useGetGroupById = (id: string) => {
+    return useQuery({
+      queryKey: ['group', id],
+      queryFn: async () => await fetchGroupById(id),
+      enabled: !!id,
     });
   };
 
@@ -75,6 +83,7 @@ export function useGroup() {
 
   return {
     useGetGroups,
+    useGetGroupById,
     useGetGroupsStats,
     useCreateGroup,
     useEditGroup,

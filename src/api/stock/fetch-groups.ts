@@ -43,3 +43,8 @@ export async function fetchGroups(
   });
   return response.data;
 }
+
+export async function fetchGroupById(id: string): Promise<Group> {
+  const response = await api.get<Group>(`/groups/${id}`);
+  return response.data;
+}

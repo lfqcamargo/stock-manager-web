@@ -3,7 +3,6 @@ import { FolderPlus } from 'lucide-react';
 import { Controller, useController, useForm, useWatch } from 'react-hook-form';
 
 import type { Group } from '@/api/stock/fetch-groups';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -106,18 +105,29 @@ export function EditGroupDialog({
           }}
           className="space-y-5"
         >
-          {/* Avatar Preview */}
+          {/* Preview */}
           <Controller
             name="photoUrl"
             control={control}
             render={({ field }) => (
               <div className="flex justify-center mb-2">
-                <Avatar className="h-20 w-20">
-                  <AvatarImage src={field.value ?? ''} alt={group.name} />
-                  <AvatarFallback className="text-2xl bg-primary text-primary-foreground">
-                    {getInitials(watchName || group.name)}
-                  </AvatarFallback>
-                </Avatar>
+                <div className="h-24 w-24 rounded-lg overflow-hidden relative">
+                  {field.value ? (
+                    <img
+                      src={field.value}
+                      alt={group.name}
+                      className="h-full w-full object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = 'none';
+                      }}
+                    />
+                  ) : null}
+                  {!field.value ? (
+                    <div className="h-full w-full bg-primary/10 flex items-center justify-center text-2xl bg-primary text-primary-foreground">
+                      {getInitials(watchName || group.name)}
+                    </div>
+                  ) : null}
+                </div>
               </div>
             )}
           />

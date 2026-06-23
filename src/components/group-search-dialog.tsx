@@ -32,8 +32,7 @@ const mockGroups: Group[] = [
     name: 'Eletrônicos',
     description: 'Produtos eletrônicos',
     active: true,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    photoUrl: undefined,
   },
   {
     id: '2',
@@ -41,8 +40,7 @@ const mockGroups: Group[] = [
     name: 'Móveis',
     description: 'Móveis para escritório',
     active: true,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    photoUrl: undefined,
   },
 ];
 

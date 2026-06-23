@@ -11,7 +11,9 @@ import { CompanyProfilePage } from '@/pages/app/company/profile/company-profile-
 import { UsersPage } from '@/pages/app/company/users/users-page';
 import { DashboardPage } from '@/pages/app/dashboard/dashboard-page';
 import { GroupPage } from '@/pages/app/material/group/group-page';
+import { GroupViewPage } from '@/pages/app/material/group/view/group-view-page';
 import { MaterialPage } from '@/pages/app/material/material-page';
+import { MaterialViewPage } from '@/pages/app/material/view/material-view-page';
 import { MovementPage } from '@/pages/app/movement/movement/movement-page';
 import { MovementTypesPage } from '@/pages/app/movement/movement-types/movement-types-page';
 import { UserProfilePage } from '@/pages/app/user/profile/user-profile-page';
@@ -22,7 +24,9 @@ export function AppRoutes() {
       <Route path="/" element={<AppLayout />}>
         <Route index element={<DashboardPage />} />
         <Route path="/material/group" element={<GroupPage />} />
+        <Route path="/material/group/:id" element={<GroupViewPage />} />
         <Route path="/material/material" element={<MaterialPage />} />
+        <Route path="/material/material/:id" element={<MaterialViewPage />} />
         <Route path="/addressing/location" element={<LocationPage />} />
         <Route path="/addressing/sub-location" element={<SubLocationPage />} />
         <Route path="/addressing/row" element={<RowPage />} />

@@ -32,11 +32,10 @@ const mockMaterials: MaterialDetails[] = [
     name: 'Teclado Mecânico',
     description: 'Teclado RGB para gaming',
     groupId: '1',
-    groupName: 'Eletrônicos',
+    group: 'Eletrônicos',
     unit: 'PC',
     active: true,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    photoUrl: undefined,
   },
   {
     id: '2',
@@ -44,11 +43,10 @@ const mockMaterials: MaterialDetails[] = [
     name: 'Mouse Wireless',
     description: 'Mouse ergonômico sem fio',
     groupId: '1',
-    groupName: 'Eletrônicos',
+    group: 'Eletrônicos',
     unit: 'PC',
     active: true,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    photoUrl: undefined,
   },
 ];
 

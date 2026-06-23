@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createMaterial } from '@/api/stock/create-material';
 import { deleteMaterial } from '@/api/stock/delete-material';
 import { editMaterial } from '@/api/stock/edit-material';
-import { fetchMaterials } from '@/api/stock/fetch-materials';
+import { fetchMaterialById, fetchMaterials } from '@/api/stock/fetch-materials';
 import type { UnitMeasure } from '@/lib/unit-measure-enum';
 
 export function useMaterial() {
@@ -25,6 +25,14 @@ export function useMaterial() {
     return useQuery({
       queryKey: ['materials', page, limit, params],
       queryFn: async () => await fetchMaterials(page, limit, params),
+    });
+  };
+
+  const useGetMaterialById = (id: string) => {
+    return useQuery({
+      queryKey: ['material', id],
+      queryFn: async () => await fetchMaterialById(id),
+      enabled: !!id,
     });
   };
 
@@ -81,6 +89,7 @@ export function useMaterial() {
 
   return {
     useGetMaterials,
+    useGetMaterialById,
     useGetMaterialsStats,
     useCreateMaterial,
     useEditMaterial,

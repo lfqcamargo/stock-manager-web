@@ -3,17 +3,18 @@ import {
   ArrowUp,
   ArrowUpDown,
   Edit,
+  Eye,
   MoreHorizontal,
   Package,
   Trash2,
 } from 'lucide-react';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import type { MaterialDetails } from '@/api/stock/fetch-materials';
 import type { GetMaterialsResponse } from '@/api/stock/fetch-materials';
 import { Pagination } from '@/components/pagination';
 import { StatusBadge } from '@/components/status-badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -32,7 +33,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { getInitials } from '@/utils/get-initials';
 
 import { EditMaterialDialog } from './edit-material-dialog';
 
@@ -79,6 +79,7 @@ export function MateriaisTable({
   onUpdateSearchParams,
   onPaginate,
 }: MateriaisTableProps) {
+  const navigate = useNavigate();
   const [selectedMaterial, setSelectedMaterial] =
     useState<MaterialDetails | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -102,6 +103,10 @@ export function MateriaisTable({
   function handleEdit(material: MaterialDetails) {
     setSelectedMaterial(material);
     setIsEditDialogOpen(true);
+  }
+
+  function handleView(material: MaterialDetails) {
+    void navigate(`/material/material/${material.id}`);
   }
 
   return (
@@ -245,18 +250,28 @@ export function MateriaisTable({
               : materials.map((material: MaterialDetails) => (
                   <TableRow key={material.id} className="group">
                     <TableCell>
-                      <div className="flex items-center gap-3">
-                        <Avatar className="h-9 w-9 rounded-lg">
+                      <div
+                        className="flex items-center gap-3 cursor-pointer"
+                        onClick={() => handleView(material)}
+                      >
+                        <div className="h-9 w-9 rounded-lg overflow-hidden relative">
                           {material.photoUrl ? (
-                            <AvatarImage
+                            <img
                               src={material.photoUrl}
                               alt={material.name}
+                              className="h-full w-full object-cover"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).style.display =
+                                  'none';
+                              }}
                             />
                           ) : null}
-                          <AvatarFallback className="rounded-lg bg-primary text-primary-foreground text-xs">
-                            {getInitials(material.name)}
-                          </AvatarFallback>
-                        </Avatar>
+                          {!material.photoUrl ? (
+                            <div className="h-full w-full bg-primary/10 flex items-center justify-center">
+                              <Package className="h-4 w-4 text-primary" />
+                            </div>
+                          ) : null}
+                        </div>
                         <div className="font-medium">{material.name}</div>
                       </div>
                     </TableCell>
@@ -282,6 +297,12 @@ export function MateriaisTable({
                         <DropdownMenuContent align="end" className="w-48">
                           <DropdownMenuLabel>Ações</DropdownMenuLabel>
                           <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={() => handleView(material)}
+                          >
+                            <Eye className="mr-2 h-4 w-4" />
+                            Ver
+                          </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() => handleEdit(material)}
                           >

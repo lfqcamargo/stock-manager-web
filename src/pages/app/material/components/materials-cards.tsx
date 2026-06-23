@@ -1,5 +1,6 @@
-import { Edit, Package, Trash2 } from 'lucide-react';
+import { Edit, Eye, Package, Trash2 } from 'lucide-react';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import type { MaterialDetails } from '@/api/stock/fetch-materials';
 import type { GetMaterialsResponse } from '@/api/stock/fetch-materials';
@@ -26,6 +27,7 @@ export function MaterialsCards({
   meta,
   onPaginate,
 }: MaterialsCardsProps) {
+  const navigate = useNavigate();
   const [selectedMaterial, setSelectedMaterial] =
     useState<MaterialDetails | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -33,6 +35,10 @@ export function MaterialsCards({
   function handleEdit(material: MaterialDetails) {
     setSelectedMaterial(material);
     setIsEditDialogOpen(true);
+  }
+
+  function handleView(material: MaterialDetails) {
+    void navigate(`/material/material/${material.id}`);
   }
 
   if (isLoading) {
@@ -82,7 +88,10 @@ export function MaterialsCards({
         {materials.map((material: MaterialDetails) => (
           <Card key={material.id} className="overflow-hidden group">
             <CardContent className="p-6">
-              <div className="flex items-start gap-4 mb-4">
+              <div
+                className="flex items-start gap-4 mb-4 cursor-pointer"
+                onClick={() => handleView(material)}
+              >
                 <div className="h-12 w-12 rounded-lg overflow-hidden relative">
                   {material.photoUrl && (
                     <img
@@ -123,6 +132,14 @@ export function MaterialsCards({
               </div>
             </CardContent>
             <CardFooter className="border-t bg-muted/20 px-6 py-3 flex justify-end items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleView(material)}
+              >
+                <Eye className="h-4 w-4 mr-2" />
+                Ver
+              </Button>
               <Button
                 variant="ghost"
                 size="sm"

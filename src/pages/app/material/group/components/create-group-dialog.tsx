@@ -1,8 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { FolderPlus } from 'lucide-react';
-import { Controller, useController, useForm, useWatch } from 'react-hook-form';
+import { Controller, useController, useForm } from 'react-hook-form';
 
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -19,10 +18,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { useGroup } from '@/hooks/use-group';
 import { getInitials } from '@/utils/get-initials';
 
-import {
-  type CreateGroupFormData,
-  CreateGroupSchema,
-} from '../lib/create-validation';
+import type { CreateGroupFormData } from '../lib/create-validation';
+import { CreateGroupSchema } from '../lib/create-validation';
 
 interface CreateGroupDialogProps {
   open: boolean;
@@ -39,6 +36,7 @@ export function CreateGroupDialog({
     control,
     reset,
     formState: { errors },
+    watch,
   } = useForm<CreateGroupFormData>({
     resolver: zodResolver(CreateGroupSchema),
     defaultValues: {
@@ -51,7 +49,7 @@ export function CreateGroupDialog({
     mode: 'onChange',
   });
 
-  const watchName = useWatch({ control, name: 'name' });
+  const watchName = watch('name');
 
   const {
     field: { value: active, onChange: setActive },
@@ -105,18 +103,29 @@ export function CreateGroupDialog({
           }}
           className="space-y-5"
         >
-          {/* Avatar Preview */}
+          {/* Preview */}
           <Controller
             name="photoUrl"
             control={control}
             render={({ field }) => (
               <div className="flex justify-center mb-2">
-                <Avatar className="h-20 w-20">
-                  <AvatarImage src={field.value ?? ''} alt="Preview" />
-                  <AvatarFallback className="text-2xl bg-primary text-primary-foreground">
-                    {getInitials(watchName || 'G')}
-                  </AvatarFallback>
-                </Avatar>
+                <div className="h-24 w-24 rounded-lg overflow-hidden relative">
+                  {field.value ? (
+                    <img
+                      src={field.value}
+                      alt="Preview"
+                      className="h-full w-full object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = 'none';
+                      }}
+                    />
+                  ) : null}
+                  {!field.value ? (
+                    <div className="h-full w-full bg-primary/10 flex items-center justify-center text-2xl bg-primary text-primary-foreground">
+                      {getInitials(watchName || 'G')}
+                    </div>
+                  ) : null}
+                </div>
               </div>
             )}
           />

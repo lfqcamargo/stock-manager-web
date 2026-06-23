@@ -1,5 +1,6 @@
-import { Edit, Folder, Trash2 } from 'lucide-react';
+import { Edit, Eye, Folder, Trash2 } from 'lucide-react';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import type { Group } from '@/api/stock/fetch-groups';
 import type { GetGroupsResponse } from '@/api/stock/fetch-groups';
@@ -26,12 +27,17 @@ export function GroupsCards({
   meta,
   onPaginate,
 }: GroupsCardsProps) {
+  const navigate = useNavigate();
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   function handleEdit(group: Group) {
     setSelectedGroup(group);
     setIsEditDialogOpen(true);
+  }
+
+  function handleView(group: Group) {
+    void navigate(`/material/group/${group.id}`);
   }
 
   if (isLoading) {
@@ -77,7 +83,10 @@ export function GroupsCards({
         {groups.map((group: Group) => (
           <Card key={group.id} className="overflow-hidden group">
             <CardContent className="p-6">
-              <div className="flex items-start gap-4 mb-4">
+              <div
+                className="flex items-start gap-4 mb-4 cursor-pointer"
+                onClick={() => handleView(group)}
+              >
                 <div className="h-12 w-12 rounded-lg overflow-hidden relative">
                   {group.photoUrl && (
                     <img
@@ -114,6 +123,14 @@ export function GroupsCards({
               </div>
             </CardContent>
             <CardFooter className="border-t bg-muted/20 px-6 py-3 flex justify-end items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleView(group)}
+              >
+                <Eye className="h-4 w-4 mr-2" />
+                Ver
+              </Button>
               <Button
                 variant="ghost"
                 size="sm"

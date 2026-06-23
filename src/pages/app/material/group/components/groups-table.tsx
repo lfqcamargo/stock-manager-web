@@ -4,16 +4,18 @@ import {
   ArrowUpDown,
   Boxes,
   Edit,
+  Eye,
+  Folder,
   MoreHorizontal,
   Trash2,
 } from 'lucide-react';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import type { Group } from '@/api/stock/fetch-groups';
 import type { GetGroupsResponse } from '@/api/stock/fetch-groups';
 import { Pagination } from '@/components/pagination';
 import { StatusBadge } from '@/components/status-badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -32,7 +34,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { getInitials } from '@/utils/get-initials';
 
 import { EditGroupDialog } from './edit-group-dialog';
 
@@ -77,6 +78,7 @@ export function GroupsTable({
   onUpdateSearchParams,
   onPaginate,
 }: GroupsTableProps) {
+  const navigate = useNavigate();
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
@@ -99,6 +101,10 @@ export function GroupsTable({
   function handleEdit(group: Group) {
     setSelectedGroup(group);
     setIsEditDialogOpen(true);
+  }
+
+  function handleView(group: Group) {
+    void navigate(`/material/group/${group.id}`);
   }
 
   return (
@@ -221,18 +227,28 @@ export function GroupsTable({
               : groups.map((group: Group) => (
                   <TableRow key={group.id} className="group">
                     <TableCell>
-                      <div className="flex items-center gap-3">
-                        <Avatar className="h-9 w-9 rounded-lg">
+                      <div
+                        className="flex items-center gap-3 cursor-pointer"
+                        onClick={() => handleView(group)}
+                      >
+                        <div className="h-9 w-9 rounded-lg overflow-hidden relative">
                           {group.photoUrl ? (
-                            <AvatarImage
+                            <img
                               src={group.photoUrl}
                               alt={group.name}
+                              className="h-full w-full object-cover"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).style.display =
+                                  'none';
+                              }}
                             />
                           ) : null}
-                          <AvatarFallback className="rounded-lg bg-primary text-primary-foreground text-xs">
-                            {getInitials(group.name)}
-                          </AvatarFallback>
-                        </Avatar>
+                          {!group.photoUrl ? (
+                            <div className="h-full w-full bg-primary/10 flex items-center justify-center">
+                              <Folder className="h-4 w-4 text-primary" />
+                            </div>
+                          ) : null}
+                        </div>
                         <div className="font-medium">{group.name}</div>
                       </div>
                     </TableCell>
@@ -257,6 +273,10 @@ export function GroupsTable({
                         <DropdownMenuContent align="end" className="w-48">
                           <DropdownMenuLabel>Ações</DropdownMenuLabel>
                           <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={() => handleView(group)}>
+                            <Eye className="mr-2 h-4 w-4" />
+                            Ver
+                          </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => handleEdit(group)}>
                             <Edit className="mr-2 h-4 w-4" />
                             Editar grupo
