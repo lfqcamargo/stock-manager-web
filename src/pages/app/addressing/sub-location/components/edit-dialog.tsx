@@ -1,5 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { FolderPlus } from 'lucide-react';
+import { MapPin } from 'lucide-react';
+import { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 
 import type { SubLocation } from '@/api/stock/fetch-sub-locations';
@@ -30,7 +31,7 @@ import {
   EditSubLocationSchema,
 } from '../lib/edit-validation';
 
-interface EditSubLocationDialogProps {
+interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   sublocation: SubLocation;
@@ -40,7 +41,7 @@ export function EditSubLocationDialog({
   open,
   onOpenChange,
   sublocation,
-}: EditSubLocationDialogProps) {
+}: Props) {
   const {
     register,
     handleSubmit,
@@ -50,70 +51,72 @@ export function EditSubLocationDialog({
   } = useForm<EditSubLocationFormData>({
     resolver: zodResolver(EditSubLocationSchema),
     defaultValues: {
+      code: sublocation.code,
       name: sublocation.name,
-      description: sublocation.description ?? undefined,
       locationId: sublocation.locationId,
+      description: sublocation.description ?? '',
     },
   });
 
-  const { useGetLocationsStats } = useLocation();
-  const { data: locationsData } = useGetLocationsStats();
+  useEffect(() => {
+    if (open) {
+      reset({
+        code: sublocation.code,
+        name: sublocation.name,
+        locationId: sublocation.locationId,
+        description: sublocation.description ?? '',
+      });
+    }
+  }, [open, sublocation, reset]);
+
+  const { useGetLocations } = useLocation();
+  const { data: locationsData } = useGetLocations(0, 100);
 
   const { useEditSubLocation } = useSubLocation();
-  const { mutateAsync: editSubLocationFn } = useEditSubLocation();
+  const { mutateAsync: editFn } = useEditSubLocation();
 
-  async function handleEditSubLocation(data: EditSubLocationFormData) {
-    await editSubLocationFn({
+  async function onSubmit(data: EditSubLocationFormData) {
+    await editFn({
       id: sublocation.id,
+      code: data.code,
       name: data.name,
-      description: data.description,
       locationId: data.locationId,
+      description: data.description || null,
     });
-    reset();
     onOpenChange(false);
   }
-
-  const handleCancel = () => {
-    reset();
-    onOpenChange(false);
-  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px] p-0">
-        <form
-          onSubmit={handleSubmit(handleEditSubLocation, (errors) => {
-            console.log('ERROS DE VALIDAÇÃO:', errors);
-          })}
-        >
+        <form onSubmit={handleSubmit(onSubmit)}>
           <DialogHeader className="px-6 pt-6 pb-4">
             <DialogTitle className="text-xl font-semibold flex items-center gap-2">
-              <FolderPlus className="h-5 w-5 text-primary" />
+              <MapPin className="h-5 w-5 text-primary" />
               Editar Sub-Localização
             </DialogTitle>
-            <DialogDescription className="text-muted-foreground">
-              Edite os dados da sub-localização
+            <DialogDescription>
+              Altere os dados da sub-localização
             </DialogDescription>
           </DialogHeader>
 
-          <div className="px-6 space-y-6">
-            {/* Localização */}
+          <div className="px-6 space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="locationId">Localização</Label>
+              <Label>Localização</Label>
               <Controller
                 name="locationId"
                 control={control}
                 render={({ field }) => (
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <SelectTrigger className="h-11 w-full">
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger className="h-11">
                       <SelectValue placeholder="Selecione uma localização" />
                     </SelectTrigger>
                     <SelectContent>
-                      {locationsData?.locations?.map((location) => (
-                        <SelectItem key={location.id} value={location.id}>
-                          {location.name}
+                      {locationsData?.locations?.map((l) => (
+                        <SelectItem key={l.id} value={l.id}>
+                          {l.code} — {l.name}
                         </SelectItem>
-                      )) || []}
+                      ))}
                     </SelectContent>
                   </Select>
                 )}
@@ -125,15 +128,19 @@ export function EditSubLocationDialog({
               )}
             </div>
 
-            {/* Nome */}
             <div className="space-y-2">
-              <Label htmlFor="name">Nome da Sub-Localização</Label>
-              <Input
-                id="name"
-                placeholder="Ex: Setor 1"
-                className="h-11"
-                {...register('name')}
-              />
+              <Label htmlFor="code">Código</Label>
+              <Input id="code" className="h-11" {...register('code')} />
+              {errors.code && (
+                <p className="text-sm text-destructive">
+                  {errors.code.message}
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="name">Nome</Label>
+              <Input id="name" className="h-11" {...register('name')} />
               {errors.name && (
                 <p className="text-sm text-destructive">
                   {errors.name.message}
@@ -141,20 +148,13 @@ export function EditSubLocationDialog({
               )}
             </div>
 
-            {/* Descrição */}
             <div className="space-y-2">
               <Label htmlFor="description">Descrição</Label>
               <Textarea
                 id="description"
-                placeholder="Descrição da sub-localização..."
-                rows={3}
+                className="min-h-[80px] resize-none"
                 {...register('description')}
               />
-              {errors.description && (
-                <p className="text-sm text-destructive">
-                  {errors.description.message}
-                </p>
-              )}
             </div>
           </div>
 
@@ -163,24 +163,24 @@ export function EditSubLocationDialog({
               <Button
                 type="button"
                 variant="outline"
-                onClick={handleCancel}
-                className="flex-1 sm:flex-none"
+                onClick={() => onOpenChange(false)}
                 disabled={isSubmitting}
+                className="flex-1 sm:flex-none"
               >
                 Cancelar
               </Button>
               <Button
                 type="submit"
-                className="flex-1 sm:flex-none"
                 disabled={isSubmitting}
+                className="flex-1 sm:flex-none"
               >
                 {isSubmitting ? (
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <span className="flex items-center gap-2">
+                    <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                     Salvando...
-                  </div>
+                  </span>
                 ) : (
-                  'Salvar Sub-Localização'
+                  'Salvar'
                 )}
               </Button>
             </div>

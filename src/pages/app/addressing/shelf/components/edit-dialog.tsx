@@ -1,6 +1,8 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { FolderPlus } from 'lucide-react';
+import { LayoutList } from 'lucide-react';
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
+import { z } from 'zod';
 
 import type { Shelf } from '@/api/stock/fetch-shelfs';
 import { Button } from '@/components/ui/button';
@@ -17,124 +19,117 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useShelf } from '@/hooks/use-shelf';
 
-import {
-  type EditShelfFormData,
-  EditShelfSchema,
-} from '../lib/edit-validation';
+const schema = z.object({
+  code: z.string().min(1).max(50),
+  name: z.string().min(3).max(255),
+  description: z.string().optional(),
+});
+type FormData = z.infer<typeof schema>;
 
-interface EditShelfDialogProps {
+interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   shelf: Shelf;
 }
 
-export function EditShelfDialog({
-  open,
-  onOpenChange,
-  shelf,
-}: EditShelfDialogProps) {
+export function EditShelfDialog({ open, onOpenChange, shelf }: Props) {
   const {
     register,
     handleSubmit,
     reset,
     formState: { errors, isSubmitting },
-  } = useForm<EditShelfFormData>({
-    resolver: zodResolver(EditShelfSchema),
+  } = useForm<FormData>({
+    resolver: zodResolver(schema),
     defaultValues: {
+      code: shelf.code,
       name: shelf.name,
-      description: shelf.description ?? undefined,
+      description: shelf.description ?? '',
     },
   });
 
-  const { useEditShelf } = useShelf();
-  const { mutateAsync: editShelfFn } = useEditShelf();
+  useEffect(() => {
+    if (open)
+      reset({
+        code: shelf.code,
+        name: shelf.name,
+        description: shelf.description ?? '',
+      });
+  }, [open, shelf, reset]);
 
-  async function handleEditShelf(data: EditShelfFormData) {
-    await editShelfFn({
+  const { useEditShelf } = useShelf();
+  const { mutateAsync: editFn } = useEditShelf();
+
+  async function onSubmit(data: FormData) {
+    await editFn({
       id: shelf.id,
+      code: data.code,
       name: data.name,
-      description: data.description,
+      description: data.description || null,
     });
-    reset();
     onOpenChange(false);
   }
-
-  const handleCancel = () => {
-    reset();
-    onOpenChange(false);
-  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px] p-0">
-        <form onSubmit={handleSubmit(handleEditShelf)}>
+        <form onSubmit={handleSubmit(onSubmit)}>
           <DialogHeader className="px-6 pt-6 pb-4">
             <DialogTitle className="text-xl font-semibold flex items-center gap-2">
-              <FolderPlus className="h-5 w-5 text-primary" />
+              <LayoutList className="h-5 w-5 text-primary" />
               Editar Prateleira
             </DialogTitle>
-            <DialogDescription className="text-muted-foreground">
-              Edite os dados da prateleira
-            </DialogDescription>
+            <DialogDescription>Altere os dados da prateleira</DialogDescription>
           </DialogHeader>
-
-          <div className="px-6 space-y-6">
-            {/* Nome */}
+          <div className="px-6 space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Nome da Prateleira</Label>
-              <Input
-                id="name"
-                placeholder="Ex: Prateleira 1"
-                className="h-11"
-                {...register('name')}
-              />
+              <Label>Código</Label>
+              <Input className="h-11" {...register('code')} />
+              {errors.code && (
+                <p className="text-sm text-destructive">
+                  {errors.code.message}
+                </p>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label>Nome</Label>
+              <Input className="h-11" {...register('name')} />
               {errors.name && (
                 <p className="text-sm text-destructive">
                   {errors.name.message}
                 </p>
               )}
             </div>
-
-            {/* Descrição */}
             <div className="space-y-2">
-              <Label htmlFor="description">Descrição</Label>
+              <Label>Descrição</Label>
               <Textarea
-                id="description"
-                placeholder="Descrição da prateleira..."
-                rows={3}
+                className="min-h-[80px] resize-none"
                 {...register('description')}
               />
-              {errors.description && (
-                <p className="text-sm text-destructive">
-                  {errors.description.message}
-                </p>
-              )}
             </div>
           </div>
-
           <DialogFooter className="px-6 py-4 bg-muted/30 mt-6">
             <div className="flex gap-3 w-full sm:w-auto">
               <Button
                 type="button"
                 variant="outline"
-                onClick={handleCancel}
-                className="flex-1 sm:flex-none"
+                onClick={() => onOpenChange(false)}
                 disabled={isSubmitting}
+                className="flex-1 sm:flex-none"
               >
                 Cancelar
               </Button>
               <Button
                 type="submit"
-                className="flex-1 sm:flex-none"
                 disabled={isSubmitting}
+                className="flex-1 sm:flex-none"
               >
                 {isSubmitting ? (
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <span className="flex items-center gap-2">
+                    <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                     Salvando...
-                  </div>
+                  </span>
                 ) : (
-                  'Salvar Prateleira'
+                  'Salvar'
                 )}
               </Button>
             </div>

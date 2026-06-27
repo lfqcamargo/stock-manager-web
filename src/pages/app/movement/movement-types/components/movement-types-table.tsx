@@ -52,10 +52,9 @@ import { EditMovementTypeDialog } from './edit-movement-type-dialog';
 
 interface MovementTypesTableProps {
   onDelete: (id: string) => void;
-  isLoading?: boolean;
 }
 
-type SortField = 'nome' | 'direcao' | 'dataCriacao';
+type SortField = 'nome' | 'direcao';
 type SortDirection = 'asc' | 'desc';
 
 export function MovementTypesTable(_props: MovementTypesTableProps) {
@@ -71,20 +70,18 @@ export function MovementTypesTable(_props: MovementTypesTableProps) {
 
   const page = z.coerce
     .number()
-    .transform((page) => page - 1)
+    .transform((p) => p - 1)
     .parse(searchParams.get('page') ?? '1');
 
-  const orderByMap: Record<SortField, 'name' | 'direction' | 'createdAt'> = {
+  const orderByMap: Record<SortField, 'name' | 'direction'> = {
     nome: 'name',
     direcao: 'direction',
-    dataCriacao: 'createdAt',
-  } as const;
+  };
 
   const directionFilterValue =
     directionFilter !== 'all' ? (directionFilter as 'IN' | 'OUT') : undefined;
 
-  // Aplicar debounce no filtro de nome
-  const debouncedNameFilter = useDebounce(nameFilter, 2000);
+  const debouncedNameFilter = useDebounce(nameFilter, 600);
 
   const { useGetMovementTypes, useDeleteMovementType } = useMovementType();
   const { data: typesData, isLoading } = useGetMovementTypes(page, 20, {
@@ -97,17 +94,15 @@ export function MovementTypesTable(_props: MovementTypesTableProps) {
 
   const processedData = useMemo(() => {
     if (!typesData?.movementTypes) return { filteredTypes: [], totalPages: 0 };
-
-    // Todos os filtros são feitos no servidor
     return {
       filteredTypes: typesData.movementTypes,
       totalPages: typesData.meta.totalPages,
     };
   }, [typesData?.movementTypes, typesData?.meta?.totalPages]);
 
-  function handlePaginate(page: number) {
+  function handlePaginate(p: number) {
     setSearchParams((state) => {
-      state.set('page', (page + 1).toString());
+      state.set('page', (p + 1).toString());
       return state;
     });
   }
@@ -119,16 +114,10 @@ export function MovementTypesTable(_props: MovementTypesTableProps) {
       setSortField(field);
       setSortDirection('asc');
     }
-    // Resetar para primeira página ao alterar ordenação
     setSearchParams((state) => {
       state.set('page', '1');
       return state;
     });
-  }
-
-  function handleClearFilters() {
-    setNameFilter('');
-    setDirectionFilter('all');
   }
 
   function handleEdit(type: MovementType) {
@@ -151,49 +140,51 @@ export function MovementTypesTable(_props: MovementTypesTableProps) {
   const hasActiveFilters = nameFilter !== '' || directionFilter !== 'all';
 
   return (
-    <div className="space-y-6">
-      {/* Search and Filters */}
-      <div className="flex flex-col gap-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Nome..."
-              className="pl-10 h-11"
-              value={nameFilter}
-              onChange={(e) => setNameFilter(e.target.value)}
-            />
-          </div>
-          <Select value={directionFilter} onValueChange={setDirectionFilter}>
-            <SelectTrigger className="h-11">
-              <SelectValue placeholder="Direção" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todas direções</SelectItem>
-              <SelectItem value="IN">Entrada</SelectItem>
-              <SelectItem value="OUT">Saída</SelectItem>
-            </SelectContent>
-          </Select>
+    <div className="space-y-6 p-6">
+      {/* Filters */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Buscar por nome..."
+            className="pl-10 h-11"
+            value={nameFilter}
+            onChange={(e) => setNameFilter(e.target.value)}
+          />
         </div>
+        <Select value={directionFilter} onValueChange={setDirectionFilter}>
+          <SelectTrigger className="h-11">
+            <SelectValue placeholder="Direção" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todas as direções</SelectItem>
+            <SelectItem value="IN">Entrada (IN)</SelectItem>
+            <SelectItem value="OUT">Saída (OUT)</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
-      {/* Results Summary */}
+      {/* Summary */}
       <div className="flex items-center justify-between text-sm text-muted-foreground">
-        <div className="flex items-center gap-2">
-          <span>
-            Mostrando {processedData.filteredTypes.length} de{' '}
-            {typesData?.meta.totalItems} tipos de movimento
-            {processedData.totalPages > 1 &&
-              ` • Página ${page + 1} de ${processedData.totalPages}`}
-          </span>
-        </div>
-        <div className="h-3.5">
-          {hasActiveFilters && (
-            <Button variant="ghost" size="sm" onClick={handleClearFilters}>
-              Limpar filtros
-            </Button>
-          )}
-        </div>
+        <span>
+          {typesData
+            ? `${processedData.filteredTypes.length} de ${typesData.meta.totalItems} tipos`
+            : 'Carregando...'}
+          {processedData.totalPages > 1 &&
+            ` • Página ${page + 1} de ${processedData.totalPages}`}
+        </span>
+        {hasActiveFilters && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              setNameFilter('');
+              setDirectionFilter('all');
+            }}
+          >
+            Limpar filtros
+          </Button>
+        )}
       </div>
 
       {/* Table */}
@@ -207,8 +198,7 @@ export function MovementTypesTable(_props: MovementTypesTableProps) {
                   className="h-auto p-0 font-semibold hover:bg-transparent"
                   onClick={() => handleSort('nome')}
                 >
-                  Nome
-                  <ArrowUpDown className="ml-2 h-4 w-4" />
+                  Nome <ArrowUpDown className="ml-2 h-4 w-4" />
                 </Button>
               </TableHead>
               <TableHead>
@@ -217,18 +207,7 @@ export function MovementTypesTable(_props: MovementTypesTableProps) {
                   className="h-auto p-0 font-semibold hover:bg-transparent"
                   onClick={() => handleSort('direcao')}
                 >
-                  Direção
-                  <ArrowUpDown className="ml-2 h-4 w-4" />
-                </Button>
-              </TableHead>
-              <TableHead>
-                <Button
-                  variant="ghost"
-                  className="h-auto p-0 font-semibold hover:bg-transparent"
-                  onClick={() => handleSort('dataCriacao')}
-                >
-                  Data Criação
-                  <ArrowUpDown className="ml-2 h-4 w-4" />
+                  Direção <ArrowUpDown className="ml-2 h-4 w-4" />
                 </Button>
               </TableHead>
               <TableHead className="text-right w-20">Ações</TableHead>
@@ -236,8 +215,8 @@ export function MovementTypesTable(_props: MovementTypesTableProps) {
           </TableHeader>
           <TableBody>
             {isLoading ? (
-              Array.from({ length: 5 }).map((_, index) => (
-                <TableRow key={index}>
+              Array.from({ length: 5 }).map((_, i) => (
+                <TableRow key={i}>
                   <TableCell>
                     <Skeleton className="h-4 w-32" />
                   </TableCell>
@@ -245,9 +224,6 @@ export function MovementTypesTable(_props: MovementTypesTableProps) {
                     <Skeleton className="h-4 w-16" />
                   </TableCell>
                   <TableCell>
-                    <Skeleton className="h-4 w-20" />
-                  </TableCell>
-                  <TableCell className="text-right">
                     <Skeleton className="h-8 w-8 rounded" />
                   </TableCell>
                 </TableRow>
@@ -255,7 +231,7 @@ export function MovementTypesTable(_props: MovementTypesTableProps) {
             ) : processedData.filteredTypes.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={4}
+                  colSpan={3}
                   className="text-center py-8 text-muted-foreground"
                 >
                   {hasActiveFilters
@@ -276,9 +252,6 @@ export function MovementTypesTable(_props: MovementTypesTableProps) {
                       {type.direction === 'IN' ? 'Entrada' : 'Saída'}
                     </Badge>
                   </TableCell>
-                  <TableCell>
-                    {new Date(type.createdAt).toLocaleDateString('pt-BR')}
-                  </TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -294,15 +267,13 @@ export function MovementTypesTable(_props: MovementTypesTableProps) {
                         <DropdownMenuLabel>Ações</DropdownMenuLabel>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={() => handleEdit(type)}>
-                          <Edit className="mr-2 h-4 w-4" />
-                          Editar tipo
+                          <Edit className="mr-2 h-4 w-4" /> Editar
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => handleDeleteRequest(type)}
                           className="text-destructive focus:text-destructive"
                         >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Excluir tipo
+                          <Trash2 className="mr-2 h-4 w-4" /> Excluir
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -315,11 +286,11 @@ export function MovementTypesTable(_props: MovementTypesTableProps) {
       </div>
 
       {/* Paginação */}
-      {processedData.totalPages > 0 && (
+      {processedData.totalPages > 1 && (
         <Pagination
           currentPage={page}
-          itemCount={typesData?.meta.totalItems || 0}
-          itemsPerPage={typesData?.meta.itemsPerPage || 0}
+          itemCount={typesData?.meta.totalItems ?? 0}
+          itemsPerPage={typesData?.meta.itemsPerPage ?? 20}
           onPageChange={handlePaginate}
         />
       )}
@@ -336,15 +307,16 @@ export function MovementTypesTable(_props: MovementTypesTableProps) {
         />
       )}
 
-      {/* Dialog de confirmação de exclusão */}
+      {/* Confirmação de exclusão */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Confirmar exclusão</DialogTitle>
           </DialogHeader>
           <p>
-            Tem certeza que deseja excluir o tipo <b>{typeToDelete?.name}</b>?
-            Esta ação não pode ser desfeita.
+            Tem certeza que deseja excluir o tipo{' '}
+            <strong>{typeToDelete?.name}</strong>? Esta ação não pode ser
+            desfeita.
           </p>
           <DialogFooter>
             <Button

@@ -1,5 +1,6 @@
-import { Calendar, ClipboardEdit, Hash, MapPin, Package } from 'lucide-react';
+import { Calendar, ClipboardEdit, Hash, MapPin } from 'lucide-react';
 
+import type { Movement } from '@/api/stock/fetch-movements';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -8,121 +9,108 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 
 interface MovementDetailsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  movement: {
-    material: { code: string; name: string };
-    addressing: {
-      location: { name: string };
-      subLocation: { name: string };
-      row: { name: string };
-      shelf: { name: string };
-      position: { name: string };
-    };
-    movementType: { name: string; direction: string };
-    quantity: number;
-    date: string;
-    observation?: string | null;
-  };
+  movement: Movement;
+  addressingLabel?: string;
+  movementType?: { name: string; direction: 'IN' | 'OUT' };
 }
 
 export function MovementDetailsDialog({
   open,
   onOpenChange,
   movement,
+  addressingLabel,
+  movementType,
 }: MovementDetailsDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-4xl">
+      <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>Detalhes da Movimentação</DialogTitle>
         </DialogHeader>
-        <form className="space-y-10">
-          {/* Material - linha separada */}
-          <div>
-            <label className="block text-lg font-medium mb-3 flex items-center gap-2">
-              <Package className="w-6 h-6 text-muted-foreground" /> Material
+        <div className="space-y-4 py-2">
+          {/* Endereçamento */}
+          <div className="space-y-1">
+            <label className="text-sm font-medium flex items-center gap-2">
+              <MapPin className="w-4 h-4 text-muted-foreground" />
+              Endereçamento
             </label>
             <Input
-              value={`${movement.material.code} - ${movement.material.name}`}
+              value={addressingLabel ?? movement.addressingId}
               readOnly
-              className="bg-muted h-14 text-lg w-[900px] max-w-full px-6"
+              className="bg-muted"
             />
           </div>
-          {/* Endereçamento - linha separada */}
-          <div>
-            <label className="block text-lg font-medium mb-3 flex items-center gap-2">
-              <MapPin className="w-6 h-6 text-muted-foreground" /> Endereçamento
-            </label>
-            <Input
-              value={`${movement.addressing.location.name} / ${movement.addressing.subLocation.name} / ${movement.addressing.row.name} / ${movement.addressing.shelf.name} / ${movement.addressing.position.name}`}
-              readOnly
-              className="bg-muted h-14 text-lg w-[900px] max-w-full px-6"
-            />
-          </div>
-          {/* Restante dos campos em grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div>
-              <label className="block text-lg font-medium mb-3 flex items-center gap-2">
-                <ClipboardEdit className="w-6 h-6 text-muted-foreground" /> Tipo
-                de Movimentação
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Tipo */}
+            <div className="space-y-1">
+              <label className="text-sm font-medium flex items-center gap-2">
+                <ClipboardEdit className="w-4 h-4 text-muted-foreground" />
+                Tipo de Movimentação
               </label>
               <Input
-                value={`${movement.movementType.name} (${
-                  movement.movementType.direction === 'IN'
-                    ? 'Entrada'
-                    : movement.movementType.direction === 'OUT'
-                      ? 'Saída'
-                      : 'Ajuste'
-                })`}
+                value={
+                  movementType
+                    ? `${movementType.name} (${movementType.direction === 'IN' ? 'Entrada' : 'Saída'})`
+                    : movement.movementTypeId
+                }
                 readOnly
-                className="bg-muted h-14 text-lg w-[900px] max-w-full px-6"
+                className="bg-muted"
               />
             </div>
-            <div>
-              <label className="block text-lg font-medium mb-3 flex items-center gap-2">
-                <Hash className="w-6 h-6 text-muted-foreground" /> Quantidade
+
+            {/* Quantidade */}
+            <div className="space-y-1">
+              <label className="text-sm font-medium flex items-center gap-2">
+                <Hash className="w-4 h-4 text-muted-foreground" />
+                Quantidade
               </label>
               <Input
                 value={movement.quantity}
                 readOnly
-                className="bg-muted h-14 text-lg w-[900px] max-w-full px-6"
-              />
-            </div>
-            <div>
-              <label className="block text-lg font-medium mb-3 flex items-center gap-2">
-                <Calendar className="w-6 h-6 text-muted-foreground" /> Data
-              </label>
-              <Input
-                value={new Date(movement.date).toLocaleDateString('pt-BR')}
-                readOnly
-                className="bg-muted h-14 text-lg w-[900px] max-w-full px-6"
+                className="bg-muted"
               />
             </div>
           </div>
-          <div>
-            <label className="block text-lg font-medium mb-3 flex items-center gap-2">
-              Observação
+
+          {/* Data */}
+          <div className="space-y-1">
+            <label className="text-sm font-medium flex items-center gap-2">
+              <Calendar className="w-4 h-4 text-muted-foreground" />
+              Data
             </label>
             <Input
-              value={movement.observation ?? ''}
+              value={new Date(movement.date).toLocaleDateString('pt-BR')}
               readOnly
-              className="bg-muted h-14 text-lg w-[900px] max-w-full px-6"
+              className="bg-muted"
             />
           </div>
-          <div className="flex justify-end gap-6 mt-8">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              className="h-14 px-12 text-lg"
-            >
-              Fechar
-            </Button>
+
+          {/* Observação */}
+          <div className="space-y-1">
+            <label className="text-sm font-medium">Observação</label>
+            <Textarea
+              value={movement.observation ?? ''}
+              readOnly
+              className="bg-muted resize-none min-h-[80px]"
+            />
           </div>
-        </form>
+        </div>
+
+        <div className="flex justify-end pt-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+          >
+            Fechar
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );

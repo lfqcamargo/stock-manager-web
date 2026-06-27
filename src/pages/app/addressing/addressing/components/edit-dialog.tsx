@@ -1,13 +1,10 @@
-import { useQuery } from '@tanstack/react-query';
-import { CheckCircle, MapPin, Package, Settings, XCircle } from 'lucide-react';
-import type React from 'react';
-import { useEffect, useState } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Warehouse } from 'lucide-react';
+import { useEffect } from 'react';
+import { Controller, useForm } from 'react-hook-form';
+import { z } from 'zod';
 
-import { type Addressing } from '@/api/stock/fetch-addressings';
-import { fetchGroups } from '@/api/stock/fetch-groups';
-import { fetchMaterials } from '@/api/stock/fetch-materials';
-import { type MaterialDetails } from '@/api/stock/fetch-materials';
-import { MaterialSearchDialog } from '@/components/material-search-dialog';
+import type { Addressing } from '@/api/stock/fetch-addressings';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -29,406 +26,168 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { useAddressing } from '@/hooks/use-addressing';
 
-interface EditAddressingDialogProps {
+const schema = z.object({
+  active: z.boolean(),
+  materialId: z.string().nullable(),
+});
+type FormData = z.infer<typeof schema>;
+
+interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   addressing: Addressing;
+  materials: { id: string; code: string; name: string }[];
 }
 
 export function EditAddressingDialog({
   open,
   onOpenChange,
   addressing,
-}: EditAddressingDialogProps) {
-  // Query para buscar materiais (deve vir antes de qualquer useEffect)
-  const { data: materialsData } = useQuery({
-    queryKey: ['materials'],
-    queryFn: () => fetchMaterials({ page: 1, itemsPerPage: 100 }),
-    enabled: open,
-    staleTime: 0,
-    refetchOnMount: true,
+  materials,
+}: Props) {
+  const {
+    control,
+    handleSubmit,
+    reset,
+    formState: { isSubmitting },
+  } = useForm<FormData>({
+    resolver: zodResolver(schema),
+    defaultValues: {
+      active: addressing.active,
+      materialId: addressing.material?.id ?? null,
+    },
   });
 
-  // Buscar todos os grupos para preencher o nome do grupo no selectedMaterial
-  const { data: groupsData } = useQuery({
-    queryKey: ['groups-all'],
-    queryFn: () => fetchGroups({ page: 1, itemsPerPage: 9999 }),
-    staleTime: 5 * 60 * 1000,
-  });
-
-  const [formData, setFormData] = useState({
-    materialId: '',
-    locationId: '',
-    subLocationId: '',
-    rowId: '',
-    shelfId: '',
-    positionId: '',
-    amount: '',
-    active: true,
-  });
-
-  // Estado para controlar o dialog de busca de material
-  const [materialDialogOpen, setMaterialDialogOpen] = useState(false);
-  const [selectedMaterial, setSelectedMaterial] =
-    useState<MaterialDetails | null>(null);
-
-  // Preenche o material selecionado ao abrir o edit
   useEffect(() => {
-    if (!open) {
-      setSelectedMaterial(null);
-      setFormData((prev: typeof formData) => ({ ...prev, materialId: '' }));
-      return;
-    }
-    if (!addressing?.material) {
-      setSelectedMaterial(null);
-      return;
-    }
-    // Buscar material completo na lista de materiais
-    let materialFull: MaterialDetails | null = null;
-    if (materialsData?.materials) {
-      materialFull =
-        materialsData.materials.find(
-          (m: MaterialDetails) => m.id === addressing.material?.id,
-        ) || null;
-    }
-    let groupName = '';
-    let groupId = '';
-    let createdAt = '';
-    if (materialFull) {
-      groupName = materialFull.group || '';
-      groupId = materialFull.groupId || '';
-      createdAt = materialFull.createdAt || '';
-      // Se não veio o nome do grupo, tenta buscar pelo groupId
-      if (!groupName && groupId && groupsData?.groups) {
-        const groupObj = groupsData.groups.find(
-          (g: { id: string }) => g.id === groupId,
-        );
-        groupName = groupObj ? groupObj.name : '';
-      }
-    } else if (groupsData?.groups) {
-      // Tenta buscar pelo nome do grupo se possível
-      const groupByName = groupsData.groups.find(
-        (g: { name: string }) => g.name === addressing.material?.name,
-      );
-      groupName = groupByName ? groupByName.name : '';
-      groupId = groupByName ? groupByName.id : '';
-      createdAt = '';
-    }
-    setSelectedMaterial({
-      id: addressing.material?.id || '',
-      code: addressing.material?.code || '',
-      name: addressing.material?.name || '',
-      description: addressing.material?.description || '',
-      unit: addressing.material?.unit || '',
-      active: addressing.material?.active ?? true,
-      groupId,
-      group: groupName,
-      createdAt,
-    });
-    setFormData((prev: typeof formData) => ({
-      ...prev,
-      materialId: addressing.material?.id || '',
-    }));
-  }, [open, addressing?.material, groupsData, materialsData]);
-
-  // Preenche o formulário quando o dialog abrir
-  useEffect(() => {
-    if (open && addressing && addressing.id) {
-      setFormData({
-        materialId: addressing.material?.id || '',
-        locationId: addressing.location?.id || '',
-        subLocationId: addressing.subLocation?.id || '',
-        rowId: addressing.row?.id || '',
-        shelfId: addressing.shelf?.id || '',
-        positionId: addressing.position?.id || '',
-        amount: addressing.amount?.toString() || '',
-        active: addressing.active ?? true,
+    if (open)
+      reset({
+        active: addressing.active,
+        materialId: addressing.material?.id ?? null,
       });
-    }
-  }, [open, addressing]);
-
-  // Reset form quando dialog fechar
-  useEffect(() => {
-    if (!open) {
-      setFormData({
-        materialId: '',
-        locationId: '',
-        subLocationId: '',
-        rowId: '',
-        shelfId: '',
-        positionId: '',
-        amount: '',
-        active: true,
-      });
-    }
-  }, [open]);
+  }, [open, addressing, reset]);
 
   const { useEditAddressing } = useAddressing();
-  const { mutateAsync: editAddressingFn, isPending } = useEditAddressing();
+  const { mutateAsync: editFn } = useEditAddressing();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    await editAddressingFn({
+  async function onSubmit(data: FormData) {
+    await editFn({
       id: addressing.id,
-      materialId: formData.materialId || undefined,
-      locationId: formData.locationId,
-      subLocationId: formData.subLocationId,
-      rowId: formData.rowId,
-      shelfId: formData.shelfId,
-      positionId: formData.positionId,
-      active: formData.active,
+      active: data.active,
+      materialId: data.materialId,
     });
     onOpenChange(false);
-  };
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[750px] max-h-[85vh] overflow-y-auto">
-        <DialogHeader className="space-y-3">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-primary/10 rounded-lg">
-              <MapPin className="h-5 w-5 text-primary" />
-            </div>
-            <div>
-              <DialogTitle className="text-xl font-semibold">
-                Editar Endereçamento
-              </DialogTitle>
-              <DialogDescription className="text-muted-foreground">
-                Atualize as informações do endereçamento no estoque.
-              </DialogDescription>
-            </div>
-          </div>
-        </DialogHeader>
+      <DialogContent className="sm:max-w-[500px] p-0">
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <DialogHeader className="px-6 pt-6 pb-4">
+            <DialogTitle className="text-xl font-semibold flex items-center gap-2">
+              <Warehouse className="h-5 w-5 text-primary" />
+              Editar Endereçamento
+            </DialogTitle>
+            <DialogDescription>
+              Altere o material vinculado e o status
+            </DialogDescription>
+          </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Seção: Localização */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-3 pb-2 border-b">
-              <div className="p-1.5 bg-primary/10 rounded-md">
-                <MapPin className="h-4 w-4 text-primary" />
-              </div>
-              <div className="flex items-center gap-2">
-                <h3 className="text-lg font-semibold text-foreground">
-                  Localização
-                </h3>
-                <Badge variant="outline" className="text-xs">
-                  Somente Leitura
-                </Badge>
-              </div>
-            </div>
-            {/* Primeira linha - Local e Sub-local */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="location" className="text-sm font-medium">
-                  Local
-                </Label>
-                <Select value={formData.locationId} disabled>
-                  <SelectTrigger className="h-9 w-full">
-                    <SelectValue placeholder="Selecione o local" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {addressing?.location?.id ? (
-                      <SelectItem value={addressing.location.id}>
-                        {addressing.location.name}
-                      </SelectItem>
-                    ) : null}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="subLocation" className="text-sm font-medium">
-                  Sub-Local
-                </Label>
-                <Select value={formData.subLocationId} disabled>
-                  <SelectTrigger className="h-9 w-full">
-                    <SelectValue placeholder="Selecione o sub-local" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {addressing?.subLocation?.id ? (
-                      <SelectItem value={addressing.subLocation.id}>
-                        {addressing.subLocation.name}
-                      </SelectItem>
-                    ) : null}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            {/* Segunda linha - Fileira e Prateleira */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="row" className="text-sm font-medium">
-                  Fileira
-                </Label>
-                <Select value={formData.rowId} disabled>
-                  <SelectTrigger className="h-9 w-full">
-                    <SelectValue placeholder="Selecione a fileira" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {addressing?.row?.id ? (
-                      <SelectItem value={addressing.row.id}>
-                        {addressing.row.name}
-                      </SelectItem>
-                    ) : null}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="shelf" className="text-sm font-medium">
-                  Prateleira
-                </Label>
-                <Select value={formData.shelfId} disabled>
-                  <SelectTrigger className="h-9 w-full">
-                    <SelectValue placeholder="Selecione a prateleira" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {addressing?.shelf?.id ? (
-                      <SelectItem value={addressing.shelf.id}>
-                        {addressing.shelf.name}
-                      </SelectItem>
-                    ) : null}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            {/* Terceira linha - Posição */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="position" className="text-sm font-medium">
-                  Posição
-                </Label>
-                <Select value={formData.positionId} disabled>
-                  <SelectTrigger className="h-9 w-full">
-                    <SelectValue placeholder="Selecione a posição" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {addressing?.position?.id ? (
-                      <SelectItem value={addressing.position.id}>
-                        {addressing.position.name}
-                      </SelectItem>
-                    ) : null}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </div>
-          {/* Seção: Configurações */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-3 pb-2 border-b">
-              <div className="p-1.5 bg-secondary/10 rounded-md">
-                <Settings className="h-4 w-4 text-secondary-foreground" />
-              </div>
-              <h3 className="text-lg font-semibold text-foreground">
-                Configurações
-              </h3>
-            </div>
-            <div className="flex items-center justify-between p-4 border rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
-              <div className="space-y-1">
-                <Label htmlFor="active" className="text-sm font-medium">
-                  Status do Endereçamento
-                </Label>
-                <p className="text-xs text-muted-foreground">
-                  Define se este endereçamento está disponível para uso
-                </p>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2 text-sm">
-                  {formData.active ? (
-                    <>
-                      <CheckCircle className="h-4 w-4 text-green-500" />
-                      <span className="text-green-600 font-medium">Ativo</span>
-                    </>
-                  ) : (
-                    <>
-                      <XCircle className="h-4 w-4 text-red-500" />
-                      <span className="text-red-600 font-medium">Inativo</span>
-                    </>
-                  )}
-                </div>
-                <Switch
-                  id="active"
-                  checked={formData.active}
-                  onCheckedChange={(checked: boolean) =>
-                    setFormData({ ...formData, active: checked })
-                  }
-                />
-              </div>
-            </div>
-          </div>
-          {/* Seção: Material (busca via dialog) */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-3 pb-2 border-b">
-              <div className="p-1.5 bg-accent/10 rounded-md">
-                <Package className="h-4 w-4 text-accent-foreground" />
-              </div>
-              <div className="flex items-center gap-2">
-                <h3 className="text-lg font-semibold text-foreground">
-                  Material
-                </h3>
-                <Badge variant="outline" className="text-xs">
-                  Buscar e selecionar
-                </Badge>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="material" className="text-sm font-medium">
-                Material
-              </Label>
-              <p className="text-xs text-muted-foreground">
-                Clique em "Buscar material" para selecionar ou alterar o
-                material deste endereçamento.
+          <div className="px-6 space-y-4">
+            {/* Localização resumida (somente leitura) */}
+            <div className="rounded-md border p-3 space-y-1 bg-muted/30 text-sm">
+              <p>
+                <span className="text-muted-foreground">Localização:</span>{' '}
+                {addressing.location.code} — {addressing.location.name}
               </p>
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => setMaterialDialogOpen(true)}
-              >
-                Buscar material
-              </Button>
-              {selectedMaterial ? (
-                <div className="p-3 border rounded bg-muted/30 mt-2">
-                  <div className="font-medium">
-                    {selectedMaterial.code} - {selectedMaterial.name}
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    {selectedMaterial.description}
-                  </div>
-                </div>
-              ) : (
-                <div className="p-3 border rounded bg-muted/30 mt-2 text-xs text-muted-foreground">
-                  Nenhum material selecionado.
-                </div>
-              )}
-              <MaterialSearchDialog
-                open={materialDialogOpen}
-                onOpenChange={setMaterialDialogOpen}
-                onSelect={(material: MaterialDetails) => {
-                  setSelectedMaterial(material);
-                  setFormData((prev: typeof formData) => ({
-                    ...prev,
-                    materialId: material.id,
-                  }));
-                }}
-                selectedMaterial={selectedMaterial}
+              <p>
+                <span className="text-muted-foreground">Sub-local:</span>{' '}
+                {addressing.subLocation.code} — {addressing.subLocation.name}
+              </p>
+              <p>
+                <span className="text-muted-foreground">
+                  Fileira / Prateleira / Posição:
+                </span>{' '}
+                {addressing.row.code} / {addressing.shelf.code} /{' '}
+                {addressing.position.code}
+              </p>
+              <p>
+                <span className="text-muted-foreground">Saldo:</span>{' '}
+                <Badge variant="outline">{addressing.amount}</Badge>
+              </p>
+            </div>
+
+            {/* Material */}
+            <div className="space-y-2">
+              <Label>Material vinculado</Label>
+              <Controller
+                name="materialId"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    value={field.value ?? '__none__'}
+                    onValueChange={(v) =>
+                      field.onChange(v === '__none__' ? null : v)
+                    }
+                  >
+                    <SelectTrigger className="h-11">
+                      <SelectValue placeholder="Sem material" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__none__">— Sem material —</SelectItem>
+                      {materials.map((m) => (
+                        <SelectItem key={m.id} value={m.id}>
+                          {m.code} — {m.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
               />
             </div>
+
+            {/* Ativo */}
+            <div className="flex items-center gap-3">
+              <Controller
+                name="active"
+                control={control}
+                render={({ field }) => (
+                  <Switch
+                    id="active"
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                )}
+              />
+              <Label htmlFor="active">Endereçamento ativo</Label>
+            </div>
           </div>
-          <DialogFooter className="flex flex-col sm:flex-row gap-3 pt-6 border-t">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={isPending}
-              className="order-2 sm:order-1 w-full sm:w-auto"
-            >
-              Cancelar
-            </Button>
-            <Button
-              type="submit"
-              disabled={isPending}
-              className="order-1 sm:order-2 w-full sm:w-auto"
-            >
-              {isPending ? 'Salvando...' : 'Salvar Alterações'}
-            </Button>
+
+          <DialogFooter className="px-6 py-4 bg-muted/30 mt-6">
+            <div className="flex gap-3 w-full sm:w-auto">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                disabled={isSubmitting}
+                className="flex-1 sm:flex-none"
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                className="flex-1 sm:flex-none"
+              >
+                {isSubmitting ? (
+                  <span className="flex items-center gap-2">
+                    <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Salvando...
+                  </span>
+                ) : (
+                  'Salvar'
+                )}
+              </Button>
+            </div>
           </DialogFooter>
         </form>
       </DialogContent>

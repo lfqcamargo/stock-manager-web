@@ -1,6 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 
+import { createShelf } from '@/api/stock/create-shelf';
+import { deleteShelf } from '@/api/stock/delete-shelf';
+import { editShelf } from '@/api/stock/edit-shelf';
 import { fetchShelfs } from '@/api/stock/fetch-shelfs';
+import { findShelfById } from '@/api/stock/find-shelf-by-id';
 
 export function useShelf() {
   const queryClient = useQueryClient();
@@ -9,8 +14,8 @@ export function useShelf() {
     page = 0,
     limit = 20,
     params?: {
-      rowId?: string;
       name?: string;
+      code?: string;
       description?: string;
       orderBy?: string;
       orderDirection?: string;
@@ -22,93 +27,43 @@ export function useShelf() {
     });
   };
 
-  const useGetShelfsStats = () => {
-    return useQuery({
-      queryKey: ['shelfsStats'],
-      queryFn: () => fetchShelfs({ page: 0, limit: 1 }),
-    });
-  };
-
   const useCreateShelf = () => {
     return useMutation({
-      mutationFn: async ({
-        code,
-        name,
-        rowId,
-        description,
-        active,
-      }: {
-        code?: string;
-        name: string;
-        rowId: string;
-        description?: string;
-        active?: boolean;
-      }) => {
-        await new Promise((resolve) => setTimeout(resolve, 500));
-        console.log('Creating shelf', {
-          code: code || `SHELF-${Date.now()}`,
-          name,
-          rowId,
-          description,
-          active: active ?? true,
-        });
-      },
+      mutationFn: createShelf,
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['shelfs'] });
+        queryClient.removeQueries({ queryKey: ['shelfs'] });
+        toast.success('Prateleira criada com sucesso');
       },
     });
   };
 
   const useEditShelf = () => {
     return useMutation({
-      mutationFn: async ({
-        id,
-        code,
-        name,
-        rowId,
-        description,
-        active,
-      }: {
-        id: string;
-        code?: string;
-        name: string;
-        rowId: string;
-        description?: string;
-        active?: boolean;
-      }) => {
-        await new Promise((resolve) => setTimeout(resolve, 500));
-        console.log('Editing shelf', {
-          id,
-          code,
-          name,
-          rowId,
-          description,
-          active,
-        });
-      },
+      mutationFn: editShelf,
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['shelfs'] });
+        queryClient.removeQueries({ queryKey: ['shelfs'] });
+        toast.success('Prateleira atualizada com sucesso');
       },
     });
   };
 
   const useDeleteShelf = () => {
     return useMutation({
-      mutationFn: async ({ id }: { id: string }) => {
-        await new Promise((resolve) => setTimeout(resolve, 500));
-        console.log('Deleting shelf', id);
-      },
+      mutationFn: ({ id }: { id: string }) => deleteShelf(id),
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['shelfs'] });
+        queryClient.removeQueries({ queryKey: ['shelfs'] });
+        toast.success('Prateleira excluída com sucesso');
       },
     });
   };
 
-  return {
-    useGetShelfs,
-    useGetShelfsStats,
-    useCreateShelf,
-    useEditShelf,
-    useDeleteShelf,
+  const useGetShelfById = (id: string) => {
+    return useQuery({
+      queryKey: ['shelf', id],
+      queryFn: () => findShelfById(id),
+      enabled: !!id,
+    });
   };
+
+  return { useGetShelfs, useGetShelfById, useCreateShelf, useEditShelf, useDeleteShelf };
 }

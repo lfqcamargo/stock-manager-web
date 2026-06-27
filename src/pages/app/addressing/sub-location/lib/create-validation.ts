@@ -1,15 +1,10 @@
 import { z } from 'zod';
 
 export const createSubLocationSchema = z.object({
-  name: z
-    .string()
-    .min(1, 'Nome é obrigatório')
-    .max(100, 'Nome deve ter no máximo 100 caracteres'),
-  description: z
-    .string()
-    .max(500, 'Descrição deve ter no máximo 500 caracteres')
-    .optional(),
+  code: z.string().min(1, 'Código é obrigatório').max(50),
+  name: z.string().min(3, 'Nome deve ter no mínimo 3 caracteres').max(255),
   locationId: z.string().min(1, 'Localização é obrigatória'),
+  description: z.string().optional(),
 });
 
 export type CreateSubLocationFormData = z.infer<typeof createSubLocationSchema>;

@@ -17,46 +17,39 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useLocation } from '@/hooks/use-location';
 
-const createLocationSchema = z.object({
+const schema = z.object({
+  code: z
+    .string()
+    .min(1, 'Código é obrigatório')
+    .max(50, 'Máximo 50 caracteres'),
   name: z
     .string()
-    .min(1, 'Nome é obrigatório')
-    .max(100, 'Nome deve ter no máximo 100 caracteres'),
-  description: z
-    .string()
-    .max(500, 'Descrição deve ter no máximo 500 caracteres')
-    .optional(),
+    .min(3, 'Nome deve ter no mínimo 3 caracteres')
+    .max(255, 'Máximo 255 caracteres'),
+  description: z.string().optional(),
 });
 
-type CreateLocationFormData = z.infer<typeof createLocationSchema>;
+type FormData = z.infer<typeof schema>;
 
-interface CreateLocationDialogProps {
+interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-export function CreateLocationDialog({
-  open,
-  onOpenChange,
-}: CreateLocationDialogProps) {
+export function CreateLocationDialog({ open, onOpenChange }: Props) {
   const {
     register,
     handleSubmit,
     reset,
     formState: { errors, isSubmitting },
-  } = useForm<CreateLocationFormData>({
-    resolver: zodResolver(createLocationSchema),
-    defaultValues: {
-      name: '',
-      description: '',
-    },
-  });
+  } = useForm<FormData>({ resolver: zodResolver(schema) });
 
   const { useCreateLocation } = useLocation();
-  const { mutateAsync: createLocationFn } = useCreateLocation();
+  const { mutateAsync: createFn } = useCreateLocation();
 
-  async function handleCreateLocation(data: CreateLocationFormData) {
-    await createLocationFn({
+  async function onSubmit(data: FormData) {
+    await createFn({
+      code: data.code,
       name: data.name,
       description: data.description || undefined,
     });
@@ -64,29 +57,37 @@ export function CreateLocationDialog({
     onOpenChange(false);
   }
 
-  const handleCancel = () => {
-    reset();
-    onOpenChange(false);
-  };
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px] p-0">
-        <form onSubmit={handleSubmit(handleCreateLocation)}>
+        <form onSubmit={handleSubmit(onSubmit)}>
           <DialogHeader className="px-6 pt-6 pb-4">
             <DialogTitle className="text-xl font-semibold flex items-center gap-2">
               <MapPin className="h-5 w-5 text-primary" />
               Nova Localização
             </DialogTitle>
-            <DialogDescription className="text-muted-foreground">
+            <DialogDescription>
               Preencha os dados da nova localização
             </DialogDescription>
           </DialogHeader>
 
-          <div className="px-6 space-y-6">
-            {/* Nome */}
+          <div className="px-6 space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Nome da Localização</Label>
+              <Label htmlFor="code">Código</Label>
+              <Input
+                id="code"
+                placeholder="Ex: LOC-A"
+                className="h-11"
+                {...register('code')}
+              />
+              {errors.code && (
+                <p className="text-sm text-destructive">
+                  {errors.code.message}
+                </p>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="name">Nome</Label>
               <Input
                 id="name"
                 placeholder="Ex: Galpão A"
@@ -99,21 +100,14 @@ export function CreateLocationDialog({
                 </p>
               )}
             </div>
-
-            {/* Descrição */}
             <div className="space-y-2">
               <Label htmlFor="description">Descrição</Label>
               <Textarea
                 id="description"
-                placeholder="Ex: Galpão principal para armazenamento de materiais"
+                placeholder="Descrição opcional..."
                 className="min-h-[80px] resize-none"
                 {...register('description')}
               />
-              {errors.description && (
-                <p className="text-sm text-destructive">
-                  {errors.description.message}
-                </p>
-              )}
             </div>
           </div>
 
@@ -122,24 +116,27 @@ export function CreateLocationDialog({
               <Button
                 type="button"
                 variant="outline"
-                onClick={handleCancel}
-                className="flex-1 sm:flex-none"
+                onClick={() => {
+                  reset();
+                  onOpenChange(false);
+                }}
                 disabled={isSubmitting}
+                className="flex-1 sm:flex-none"
               >
                 Cancelar
               </Button>
               <Button
                 type="submit"
-                className="flex-1 sm:flex-none"
                 disabled={isSubmitting}
+                className="flex-1 sm:flex-none"
               >
                 {isSubmitting ? (
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <span className="flex items-center gap-2">
+                    <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                     Salvando...
-                  </div>
+                  </span>
                 ) : (
-                  'Salvar Localização'
+                  'Salvar'
                 )}
               </Button>
             </div>

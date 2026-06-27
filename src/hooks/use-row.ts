@@ -1,6 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 
+import { createRow } from '@/api/stock/create-row';
+import { deleteRow } from '@/api/stock/delete-row';
+import { editRow } from '@/api/stock/edit-row';
 import { fetchRows } from '@/api/stock/fetch-rows';
+import { findRowById } from '@/api/stock/find-row-by-id';
 
 export function useRow() {
   const queryClient = useQueryClient();
@@ -9,8 +14,8 @@ export function useRow() {
     page = 0,
     limit = 20,
     params?: {
-      subLocationId?: string;
       name?: string;
+      code?: string;
       description?: string;
       orderBy?: string;
       orderDirection?: string;
@@ -22,93 +27,43 @@ export function useRow() {
     });
   };
 
-  const useGetRowsStats = () => {
-    return useQuery({
-      queryKey: ['rowsStats'],
-      queryFn: () => fetchRows({ page: 0, limit: 1 }),
-    });
-  };
-
   const useCreateRow = () => {
     return useMutation({
-      mutationFn: async ({
-        code,
-        name,
-        subLocationId,
-        description,
-        active,
-      }: {
-        code?: string;
-        name: string;
-        subLocationId: string;
-        description?: string;
-        active?: boolean;
-      }) => {
-        await new Promise((resolve) => setTimeout(resolve, 500));
-        console.log('Creating row', {
-          code: code || `ROW-${Date.now()}`,
-          name,
-          subLocationId,
-          description,
-          active: active ?? true,
-        });
-      },
+      mutationFn: createRow,
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['rows'] });
+        queryClient.removeQueries({ queryKey: ['rows'] });
+        toast.success('Fileira criada com sucesso');
       },
     });
   };
 
   const useEditRow = () => {
     return useMutation({
-      mutationFn: async ({
-        id,
-        code,
-        name,
-        subLocationId,
-        description,
-        active,
-      }: {
-        id: string;
-        code?: string;
-        name: string;
-        subLocationId: string;
-        description?: string;
-        active?: boolean;
-      }) => {
-        await new Promise((resolve) => setTimeout(resolve, 500));
-        console.log('Editing row', {
-          id,
-          code,
-          name,
-          subLocationId,
-          description,
-          active,
-        });
-      },
+      mutationFn: editRow,
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['rows'] });
+        queryClient.removeQueries({ queryKey: ['rows'] });
+        toast.success('Fileira atualizada com sucesso');
       },
     });
   };
 
   const useDeleteRow = () => {
     return useMutation({
-      mutationFn: async ({ id }: { id: string }) => {
-        await new Promise((resolve) => setTimeout(resolve, 500));
-        console.log('Deleting row', id);
-      },
+      mutationFn: ({ id }: { id: string }) => deleteRow(id),
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['rows'] });
+        queryClient.removeQueries({ queryKey: ['rows'] });
+        toast.success('Fileira excluída com sucesso');
       },
     });
   };
 
-  return {
-    useGetRows,
-    useGetRowsStats,
-    useCreateRow,
-    useEditRow,
-    useDeleteRow,
+  const useGetRowById = (id: string) => {
+    return useQuery({
+      queryKey: ['row', id],
+      queryFn: () => findRowById(id),
+      enabled: !!id,
+    });
   };
+
+  return { useGetRows, useGetRowById, useCreateRow, useEditRow, useDeleteRow };
 }

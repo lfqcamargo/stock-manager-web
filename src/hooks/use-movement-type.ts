@@ -1,127 +1,72 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 
-import type {
-  GetMovementTypesResponse,
-  MovementType,
-} from '@/api/stock/fetch-movement-types';
-
-// Mock data
-const mockMovementTypesData: GetMovementTypesResponse = {
-  movementTypes: [
-    {
-      id: '1',
-      name: 'Compra',
-      direction: 'IN',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-    {
-      id: '2',
-      name: 'Venda',
-      direction: 'OUT',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-    {
-      id: '3',
-      name: 'Devolução',
-      direction: 'IN',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-    {
-      id: '4',
-      name: 'Transferência',
-      direction: 'OUT',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-  ],
-  meta: {
-    totalItems: 4,
-    totalPages: 1,
-    itemsPerPage: 20,
-    totalInboundTypes: 2,
-    totalOutboundTypes: 2,
-  },
-};
+import { createMovementType } from '@/api/stock/create-movement-type';
+import { deleteMovementType } from '@/api/stock/delete-movement-type';
+import { editMovementType } from '@/api/stock/edit-movement-type';
+import { fetchMovementTypes } from '@/api/stock/fetch-movement-types';
+import { findMovementTypeById } from '@/api/stock/find-movement-type-by-id';
 
 export function useMovementType() {
   const queryClient = useQueryClient();
 
   const useGetMovementTypes = (
-    _page: number = 0,
-    _limit: number = 20,
-    _params?: {
-      orderBy?: string;
-      orderDirection?: 'asc' | 'desc';
+    page = 0,
+    limit = 20,
+    params?: {
       name?: string;
       direction?: 'IN' | 'OUT';
+      orderBy?: string;
+      orderDirection?: string;
     },
   ) => {
     return useQuery({
-      queryKey: ['movementTypes', _page, _limit, _params],
-      queryFn: async () => {
-        // Simulate API call
-        await new Promise((resolve) => setTimeout(resolve, 500));
-        return mockMovementTypesData;
-      },
+      queryKey: ['movementTypes', page, limit, params],
+      queryFn: () => fetchMovementTypes({ page, limit, ...params }),
     });
   };
 
-  const useGetMovementTypesStats = () => {
+  const useGetMovementTypeById = (id: string) => {
     return useQuery({
-      queryKey: ['movementTypes-stats'],
-      queryFn: async () => {
-        await new Promise((resolve) => setTimeout(resolve, 300));
-        return mockMovementTypesData;
-      },
+      queryKey: ['movementType', id],
+      queryFn: () => findMovementTypeById(id),
+      enabled: !!id,
     });
   };
 
   const useCreateMovementType = () => {
     return useMutation({
-      mutationFn: async (data: { name: string; direction: 'IN' | 'OUT' }) => {
-        await new Promise((resolve) => setTimeout(resolve, 500));
-        console.log('Creating movement type:', data);
-      },
+      mutationFn: createMovementType,
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['movementTypes'] });
+        queryClient.removeQueries({ queryKey: ['movementTypes'] });
+        toast.success('Tipo de movimentação criado com sucesso');
       },
     });
   };
 
   const useEditMovementType = () => {
     return useMutation({
-      mutationFn: async (data: {
-        id: string;
-        name: string;
-        direction: 'IN' | 'OUT';
-      }) => {
-        await new Promise((resolve) => setTimeout(resolve, 500));
-        console.log('Editing movement type:', data);
-      },
+      mutationFn: editMovementType,
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['movementTypes'] });
+        queryClient.removeQueries({ queryKey: ['movementTypes'] });
+        toast.success('Tipo de movimentação atualizado com sucesso');
       },
     });
   };
 
   const useDeleteMovementType = () => {
     return useMutation({
-      mutationFn: async (data: { id: string }) => {
-        await new Promise((resolve) => setTimeout(resolve, 500));
-        console.log('Deleting movement type:', data);
-      },
+      mutationFn: ({ id }: { id: string }) => deleteMovementType(id),
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['movementTypes'] });
+        queryClient.removeQueries({ queryKey: ['movementTypes'] });
+        toast.success('Tipo de movimentação excluído com sucesso');
       },
     });
   };
 
   return {
     useGetMovementTypes,
-    useGetMovementTypesStats,
+    useGetMovementTypeById,
     useCreateMovementType,
     useEditMovementType,
     useDeleteMovementType,

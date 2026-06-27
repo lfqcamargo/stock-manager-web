@@ -1,6 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 
+import { createPosition } from '@/api/stock/create-position';
+import { deletePosition } from '@/api/stock/delete-position';
+import { editPosition } from '@/api/stock/edit-position';
 import { fetchPositions } from '@/api/stock/fetch-positions';
+import { findPositionById } from '@/api/stock/find-position-by-id';
 
 export function usePosition() {
   const queryClient = useQueryClient();
@@ -9,8 +14,8 @@ export function usePosition() {
     page = 0,
     limit = 20,
     params?: {
-      shelfId?: string;
       name?: string;
+      code?: string;
       description?: string;
       orderBy?: string;
       orderDirection?: string;
@@ -22,91 +27,47 @@ export function usePosition() {
     });
   };
 
-  const useGetPositionsStats = () => {
-    return useQuery({
-      queryKey: ['positionsStats'],
-      queryFn: () => fetchPositions({ page: 0, limit: 1 }),
-    });
-  };
-
   const useCreatePosition = () => {
     return useMutation({
-      mutationFn: async ({
-        code,
-        name,
-        shelfId,
-        description,
-        active,
-      }: {
-        code?: string;
-        name: string;
-        shelfId: string;
-        description?: string;
-        active?: boolean;
-      }) => {
-        await new Promise((resolve) => setTimeout(resolve, 500));
-        console.log('Creating position', {
-          code: code || `POS-${Date.now()}`,
-          name,
-          shelfId,
-          description,
-          active: active ?? true,
-        });
-      },
+      mutationFn: createPosition,
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['positions'] });
+        queryClient.removeQueries({ queryKey: ['positions'] });
+        toast.success('Posição criada com sucesso');
       },
     });
   };
 
   const useEditPosition = () => {
     return useMutation({
-      mutationFn: async ({
-        id,
-        code,
-        name,
-        shelfId,
-        description,
-        active,
-      }: {
-        id: string;
-        code?: string;
-        name: string;
-        shelfId: string;
-        description?: string;
-        active?: boolean;
-      }) => {
-        await new Promise((resolve) => setTimeout(resolve, 500));
-        console.log('Editing position', {
-          id,
-          code,
-          name,
-          shelfId,
-          description,
-          active,
-        });
-      },
+      mutationFn: editPosition,
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['positions'] });
+        queryClient.removeQueries({ queryKey: ['positions'] });
+        toast.success('Posição atualizada com sucesso');
       },
     });
   };
 
   const useDeletePosition = () => {
     return useMutation({
-      mutationFn: async ({ id }: { id: string }) => {
-        await new Promise((resolve) => setTimeout(resolve, 500));
-        console.log('Deleting position', id);
-      },
+      mutationFn: ({ id }: { id: string }) => deletePosition(id),
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['positions'] });
+        queryClient.removeQueries({ queryKey: ['positions'] });
+        toast.success('Posição excluída com sucesso');
       },
+    });
+  };
+
+  const useGetPositionById = (id: string) => {
+    return useQuery({
+      queryKey: ['position', id],
+      queryFn: () => findPositionById(id),
+      enabled: !!id,
     });
   };
 
   return {
     useGetPositions,
-    useGetPositionsStats,
+    useGetPositionById,
     useCreatePosition,
     useEditPosition,
     useDeletePosition,

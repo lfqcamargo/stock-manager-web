@@ -2,20 +2,22 @@ import { useQuery } from '@tanstack/react-query';
 import {
   ArrowUpDown,
   Edit,
-  MapPin,
+  Eye,
   MoreHorizontal,
-  Package,
   Trash2,
-  X,
+  Warehouse,
 } from 'lucide-react';
-import { useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { z } from 'zod';
 
-import { type Addressing } from '@/api/stock/fetch-addressings';
-import { type MaterialDetails } from '@/api/stock/fetch-materials';
+import type { Addressing } from '@/api/stock/fetch-addressings';
+import { fetchLocations } from '@/api/stock/fetch-locations';
+import { fetchMaterials } from '@/api/stock/fetch-materials';
+import { fetchPositions } from '@/api/stock/fetch-positions';
+import { fetchRows } from '@/api/stock/fetch-rows';
+import { fetchShelfs } from '@/api/stock/fetch-shelfs';
 import { fetchSubLocations } from '@/api/stock/fetch-sub-locations';
-import { MaterialSearchDialog } from '@/components/material-search-dialog';
 import { Pagination } from '@/components/pagination';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -44,552 +46,472 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { useAddressing } from '@/hooks/use-addressing';
-import { useLocation } from '@/hooks/use-location';
-import { usePosition } from '@/hooks/use-position';
-import { useRow } from '@/hooks/use-row';
-import { useShelf } from '@/hooks/use-shelf';
-import { formatDate } from '@/utils/format-date';
 
 import { EditAddressingDialog } from './edit-dialog';
 
-interface AddressingTableProps {
+interface Props {
   onDelete: (id: string) => void;
-  isLoading?: boolean;
 }
 
-type SortField = 'amount' | 'status' | 'dataAtualizacao';
-type SortDirection = 'asc' | 'desc';
+export function AddressingTable({ onDelete }: Props) {
+  const [selected, setSelected] = useState<Addressing | null>(null);
+  const [editOpen, setEditOpen] = useState(false);
 
-export function AddressingTable({ onDelete }: AddressingTableProps) {
-  const [selectedAddressing, setSelectedAddressing] =
-    useState<Addressing | null>(null);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [materialDialogOpen, setMaterialDialogOpen] = useState(false);
-  const [selectedMaterial, setSelectedMaterial] =
-    useState<MaterialDetails | null>(null);
-  const [locationIdFilter, setLocationIdFilter] = useState<string>('all');
-  const [subLocationIdFilter, setSubLocationIdFilter] = useState<string>('all');
-  const [rowIdFilter, setRowIdFilter] = useState<string>('all');
-  const [shelfIdFilter, setShelfIdFilter] = useState<string>('all');
-  const [positionIdFilter, setPositionIdFilter] = useState<string>('all');
-  const [activeFilter, setActiveFilter] = useState<string>('all');
-  const [sortField, setSortField] = useState<SortField>('dataAtualizacao');
-  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  const [locationFilter, setLocationFilter] = useState('all');
+  const [subLocationFilter, setSubLocationFilter] = useState('all');
+  const [rowFilter, setRowFilter] = useState('all');
+  const [shelfFilter, setShelfFilter] = useState('all');
+  const [positionFilter, setPositionFilter] = useState('all');
+  const [materialFilter, setMaterialFilter] = useState('all');
+  const [activeFilter, setActiveFilter] = useState('all');
+
+  const [sortField, setSortField] = useState<'createdAt' | 'amount'>(
+    'createdAt',
+  );
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
 
   const page = z.coerce
     .number()
-    .transform((page) => page - 1)
+    .transform((p) => p - 1)
     .parse(searchParams.get('page') ?? '1');
 
-  // Buscar dados para os selects de filtro
-  const { useGetLocationsStats } = useLocation();
-  const { data: locationsData } = useGetLocationsStats();
+  // ── Reference data ──────────────────────────────────────────────────────────
+  const { data: locData } = useQuery({
+    queryKey: ['locations', 0, 100, undefined],
+    queryFn: () => fetchLocations({ page: 0, limit: 100 }),
+  });
 
-  const { useGetRowsStats } = useRow();
-  const { data: rowsData } = useGetRowsStats();
-
-  const { useGetShelfsStats } = useShelf();
-  const { data: shelfsData } = useGetShelfsStats();
-
-  const { useGetPositionsStats } = usePosition();
-  const { data: positionsData } = useGetPositionsStats();
-
-  const { data: subLocationsData } = useQuery({
-    queryKey: ['sub-locations-all', locationIdFilter],
+  const { data: subLocData } = useQuery({
+    queryKey: [
+      'subLocations',
+      0,
+      100,
+      { locationId: locationFilter !== 'all' ? locationFilter : undefined },
+    ],
     queryFn: () =>
       fetchSubLocations({
-        locationId: locationIdFilter !== 'all' ? locationIdFilter : undefined,
-        page: 1,
-        itemsPerPage: 9999,
+        page: 0,
+        limit: 100,
+        locationId: locationFilter !== 'all' ? locationFilter : undefined,
       }),
-    staleTime: 5 * 60 * 1000,
   });
 
-  const orderByMap: Record<SortField, 'createdAt' | 'amount' | 'active'> = {
-    amount: 'amount',
-    status: 'active',
-    dataAtualizacao: 'createdAt',
-  } as const;
+  const { data: rowData } = useQuery({
+    queryKey: ['rows', 0, 100, undefined],
+    queryFn: () => fetchRows({ page: 0, limit: 100 }),
+  });
 
+  const { data: shelfData } = useQuery({
+    queryKey: ['shelfs', 0, 100, undefined],
+    queryFn: () => fetchShelfs({ page: 0, limit: 100 }),
+  });
+
+  const { data: positionData } = useQuery({
+    queryKey: ['positions', 0, 100, undefined],
+    queryFn: () => fetchPositions({ page: 0, limit: 100 }),
+  });
+
+  const { data: matData } = useQuery({
+    queryKey: [
+      'materials',
+      0,
+      100,
+      { orderBy: 'name', orderDirection: 'asc', active: true },
+    ],
+    queryFn: () =>
+      fetchMaterials(0, 100, {
+        orderBy: 'name',
+        orderDirection: 'asc',
+        active: true,
+      }),
+  });
+
+  // ── Main query ───────────────────────────────────────────────────────────────
   const { useGetAddressings } = useAddressing();
-  const { data: addressingData, isLoading } = useGetAddressings(page, 20, {
-    materialId: selectedMaterial?.id,
-    locationId: locationIdFilter !== 'all' ? locationIdFilter : undefined,
-    subLocationId:
-      subLocationIdFilter !== 'all' ? subLocationIdFilter : undefined,
-    rowId: rowIdFilter !== 'all' ? rowIdFilter : undefined,
-    shelfId: shelfIdFilter !== 'all' ? shelfIdFilter : undefined,
-    positionId: positionIdFilter !== 'all' ? positionIdFilter : undefined,
-    active: activeFilter !== 'all' ? activeFilter === 'ativo' : undefined,
-    orderBy: orderByMap[sortField],
-    orderDirection: sortDirection,
+  const { data, isLoading } = useGetAddressings(page, 20, {
+    locationId: locationFilter !== 'all' ? locationFilter : undefined,
+    subLocationId: subLocationFilter !== 'all' ? subLocationFilter : undefined,
+    rowId: rowFilter !== 'all' ? rowFilter : undefined,
+    shelfId: shelfFilter !== 'all' ? shelfFilter : undefined,
+    positionId: positionFilter !== 'all' ? positionFilter : undefined,
+    materialId: materialFilter !== 'all' ? materialFilter : undefined,
+    active: activeFilter === 'all' ? undefined : activeFilter === 'true',
+    orderBy: sortField,
+    orderDirection: sortDir,
   });
 
-  const processedData = useMemo(() => {
-    if (!addressingData?.addressings)
-      return { filteredAddressings: [], totalPages: 0 };
-
-    // Todos os filtros são feitos no servidor
-    return {
-      filteredAddressings: addressingData.addressings,
-      totalPages: addressingData.meta.totalPages,
-    };
-  }, [addressingData?.addressings, addressingData?.meta?.totalPages]);
-
-  function handlePaginate(page: number) {
-    setSearchParams((state) => {
-      state.set('page', (page + 1).toString());
-      return state;
-    });
-  }
-
-  function handleSort(field: SortField) {
-    if (sortField === field) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortField(field);
-      setSortDirection('desc');
+  function handleSort(f: 'createdAt' | 'amount') {
+    if (sortField === f) setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
+    else {
+      setSortField(f);
+      setSortDir(f === 'createdAt' ? 'desc' : 'asc');
     }
-    // Resetar para primeira página ao alterar ordenação
-    setSearchParams((state) => {
-      state.set('page', '1');
-      return state;
+    setSearchParams((s) => {
+      s.set('page', '1');
+      return s;
     });
   }
 
-  function handleClearFilters() {
-    setSelectedMaterial(null);
-    setLocationIdFilter('all');
-    setSubLocationIdFilter('all');
-    setRowIdFilter('all');
-    setShelfIdFilter('all');
-    setPositionIdFilter('all');
+  function handleFilterChange(
+    setter: (v: string) => void,
+    dependents?: Array<() => void>,
+  ) {
+    return (v: string) => {
+      setter(v);
+      dependents?.forEach((reset) => reset());
+      setSearchParams((s) => {
+        s.set('page', '1');
+        return s;
+      });
+    };
+  }
+
+  function clearFilters() {
+    setLocationFilter('all');
+    setSubLocationFilter('all');
+    setRowFilter('all');
+    setShelfFilter('all');
+    setPositionFilter('all');
+    setMaterialFilter('all');
     setActiveFilter('all');
+    setSearchParams((s) => {
+      s.set('page', '1');
+      return s;
+    });
   }
 
-  function handleMaterialSelect(material: MaterialDetails) {
-    setSelectedMaterial(material);
-    setMaterialDialogOpen(false);
-  }
-
-  function handleEdit(addressing: Addressing) {
-    setSelectedAddressing(addressing);
-    setIsEditDialogOpen(true);
-  }
-
-  const hasActiveFilters =
-    selectedMaterial !== null ||
-    locationIdFilter !== 'all' ||
-    subLocationIdFilter !== 'all' ||
-    rowIdFilter !== 'all' ||
-    shelfIdFilter !== 'all' ||
-    positionIdFilter !== 'all' ||
+  const hasActiveFilter =
+    locationFilter !== 'all' ||
+    subLocationFilter !== 'all' ||
+    rowFilter !== 'all' ||
+    shelfFilter !== 'all' ||
+    positionFilter !== 'all' ||
+    materialFilter !== 'all' ||
     activeFilter !== 'all';
 
+  const addressings = data?.addressings ?? [];
+  const meta = data?.meta;
+
+  const materialsFromAddressings = Array.from(
+    new Map(
+      addressings
+        .filter((a) => a.material)
+        .map((a) => [a.material!.id, a.material!]),
+    ).values(),
+  );
+
   return (
-    <div className="space-y-6">
-      {/* Search and Filters */}
-      <div className="flex flex-col gap-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="relative">
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full h-11 justify-start"
-              onClick={() => setMaterialDialogOpen(true)}
-            >
-              <Package className="mr-2 h-4 w-4" />
-              {selectedMaterial
-                ? `${selectedMaterial.code} - ${selectedMaterial.name}`
-                : 'Selecionar Material'}
-            </Button>
-            {selectedMaterial && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="absolute right-1 top-1 h-8 w-8"
-                onClick={() => setSelectedMaterial(null)}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            )}
-          </div>
-          <Select
-            value={locationIdFilter}
-            onValueChange={(value) => {
-              setLocationIdFilter(value);
-              setSubLocationIdFilter('all');
-            }}
-          >
-            <SelectTrigger className="h-11">
-              <SelectValue placeholder="Localização" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todas as localizações</SelectItem>
-              {locationsData?.locations?.map((location) => (
-                <SelectItem key={location.id} value={location.id}>
-                  {location.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select
-            value={subLocationIdFilter}
-            onValueChange={setSubLocationIdFilter}
-          >
-            <SelectTrigger className="h-11">
-              <SelectValue placeholder="Sub-Localização" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todas as sub-localizações</SelectItem>
-              {subLocationsData?.subLocations?.map((subLocation) => (
-                <SelectItem key={subLocation.id} value={subLocation.id}>
-                  {subLocation.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={rowIdFilter} onValueChange={setRowIdFilter}>
-            <SelectTrigger className="h-11">
-              <SelectValue placeholder="Fileira" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todas as fileiras</SelectItem>
-              {rowsData?.rows?.map((row) => (
-                <SelectItem key={row.id} value={row.id}>
-                  {row.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={shelfIdFilter} onValueChange={setShelfIdFilter}>
-            <SelectTrigger className="h-11">
-              <SelectValue placeholder="Prateleira" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todas as prateleiras</SelectItem>
-              {shelfsData?.shelfs?.map((shelf) => (
-                <SelectItem key={shelf.id} value={shelf.id}>
-                  {shelf.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={positionIdFilter} onValueChange={setPositionIdFilter}>
-            <SelectTrigger className="h-11">
-              <SelectValue placeholder="Posição" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todas as posições</SelectItem>
-              {positionsData?.positions?.map((position) => (
-                <SelectItem key={position.id} value={position.id}>
-                  {position.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={activeFilter} onValueChange={setActiveFilter}>
-            <SelectTrigger className="h-11">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos</SelectItem>
-              <SelectItem value="ativo">Ativo</SelectItem>
-              <SelectItem value="inativo">Inativo</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+    <div className="space-y-6 p-6">
+      {/* Filters */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        {/* Localização */}
+        <Select
+          value={locationFilter}
+          onValueChange={handleFilterChange(setLocationFilter, [
+            () => setSubLocationFilter('all'),
+          ])}
+        >
+          <SelectTrigger className="h-11">
+            <SelectValue placeholder="Localização" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todas as localizações</SelectItem>
+            {locData?.locations?.map((l) => (
+              <SelectItem key={l.id} value={l.id}>
+                {l.code} — {l.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        {/* Sub-localização (cascata: filtra por locationId) */}
+        <Select
+          value={subLocationFilter}
+          onValueChange={handleFilterChange(setSubLocationFilter)}
+        >
+          <SelectTrigger className="h-11">
+            <SelectValue placeholder="Sub-localização" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todas as sub-localizações</SelectItem>
+            {subLocData?.subLocations?.map((s) => (
+              <SelectItem key={s.id} value={s.id}>
+                {s.code} — {s.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        {/* Fileira */}
+        <Select
+          value={rowFilter}
+          onValueChange={handleFilterChange(setRowFilter)}
+        >
+          <SelectTrigger className="h-11">
+            <SelectValue placeholder="Fileira" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todas as fileiras</SelectItem>
+            {rowData?.rows?.map((r) => (
+              <SelectItem key={r.id} value={r.id}>
+                {r.code} — {r.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        {/* Prateleira */}
+        <Select
+          value={shelfFilter}
+          onValueChange={handleFilterChange(setShelfFilter)}
+        >
+          <SelectTrigger className="h-11">
+            <SelectValue placeholder="Prateleira" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todas as prateleiras</SelectItem>
+            {shelfData?.shelfs?.map((s) => (
+              <SelectItem key={s.id} value={s.id}>
+                {s.code} — {s.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        {/* Posição */}
+        <Select
+          value={positionFilter}
+          onValueChange={handleFilterChange(setPositionFilter)}
+        >
+          <SelectTrigger className="h-11">
+            <SelectValue placeholder="Posição" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todas as posições</SelectItem>
+            {positionData?.positions?.map((p) => (
+              <SelectItem key={p.id} value={p.id}>
+                {p.code} — {p.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        {/* Material */}
+        <Select
+          value={materialFilter}
+          onValueChange={handleFilterChange(setMaterialFilter)}
+        >
+          <SelectTrigger className="h-11">
+            <SelectValue placeholder="Material" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos os materiais</SelectItem>
+            {matData?.materials?.map((m) => (
+              <SelectItem key={m.id} value={m.id}>
+                {m.code} — {m.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        {/* Status */}
+        <Select
+          value={activeFilter}
+          onValueChange={handleFilterChange(setActiveFilter)}
+        >
+          <SelectTrigger className="h-11">
+            <SelectValue placeholder="Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos os status</SelectItem>
+            <SelectItem value="true">Ativo</SelectItem>
+            <SelectItem value="false">Inativo</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
-      {/* Material Search Dialog */}
-      <MaterialSearchDialog
-        open={materialDialogOpen}
-        onOpenChange={setMaterialDialogOpen}
-        onSelect={handleMaterialSelect}
-        selectedMaterial={selectedMaterial}
-      />
-
-      {/* Results Summary */}
+      {/* Summary */}
       <div className="flex items-center justify-between text-sm text-muted-foreground">
         <div className="flex items-center gap-2">
-          <MapPin className="h-4 w-4" />
+          <Warehouse className="h-4 w-4" />
           <span>
-            Mostrando {processedData.filteredAddressings.length} de{' '}
-            {addressingData?.meta.totalItems} endereçamentos
-            {processedData.totalPages > 1 &&
-              ` • Página ${page + 1} de ${processedData.totalPages}`}
+            {meta
+              ? `${addressings.length} de ${meta.totalItems} endereçamentos`
+              : 'Carregando...'}
+            {meta &&
+              meta.totalPages > 1 &&
+              ` • Página ${page + 1} de ${meta.totalPages}`}
           </span>
         </div>
-        <div className="h-3.5">
-          {hasActiveFilters && (
-            <Button variant="ghost" size="sm" onClick={handleClearFilters}>
-              Limpar filtros
-            </Button>
-          )}
-        </div>
+        {hasActiveFilter && (
+          <Button variant="ghost" size="sm" onClick={clearFilters}>
+            Limpar filtros
+          </Button>
+        )}
       </div>
 
       {/* Table */}
-      <div className="rounded-md border">
+      <div className="rounded-md border overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow className="hover:bg-transparent">
-              <TableHead>
-                <Button
-                  variant="ghost"
-                  className="h-auto p-0 font-semibold hover:bg-transparent"
-                  onClick={() => handleSort('dataAtualizacao')}
-                >
-                  Material
-                  <ArrowUpDown className="ml-2 h-4 w-4" />
-                </Button>
-              </TableHead>
-              <TableHead className="hidden lg:table-cell">
-                <Button
-                  variant="ghost"
-                  className="h-auto p-0 font-semibold hover:bg-transparent"
-                  onClick={() => handleSort('dataAtualizacao')}
-                >
-                  Local
-                  <ArrowUpDown className="ml-2 h-4 w-4" />
-                </Button>
-              </TableHead>
-              <TableHead className="hidden lg:table-cell">
-                <Button
-                  variant="ghost"
-                  className="h-auto p-0 font-semibold hover:bg-transparent"
-                  onClick={() => handleSort('dataAtualizacao')}
-                >
-                  Sub-Local
-                  <ArrowUpDown className="ml-2 h-4 w-4" />
-                </Button>
-              </TableHead>
-              <TableHead className="hidden xl:table-cell">
-                <Button
-                  variant="ghost"
-                  className="h-auto p-0 font-semibold hover:bg-transparent"
-                  onClick={() => handleSort('dataAtualizacao')}
-                >
-                  Fileira
-                  <ArrowUpDown className="ml-2 h-4 w-4" />
-                </Button>
-              </TableHead>
-              <TableHead className="hidden xl:table-cell">
-                <Button
-                  variant="ghost"
-                  className="h-auto p-0 font-semibold hover:bg-transparent"
-                  onClick={() => handleSort('dataAtualizacao')}
-                >
-                  Prateleira
-                  <ArrowUpDown className="ml-2 h-4 w-4" />
-                </Button>
-              </TableHead>
-              <TableHead className="hidden xl:table-cell">
-                <Button
-                  variant="ghost"
-                  className="h-auto p-0 font-semibold hover:bg-transparent"
-                  onClick={() => handleSort('dataAtualizacao')}
-                >
-                  Posição
-                  <ArrowUpDown className="ml-2 h-4 w-4" />
-                </Button>
-              </TableHead>
+              <TableHead>Localização</TableHead>
               <TableHead className="hidden md:table-cell">
+                Sub-local / Fileira
+              </TableHead>
+              <TableHead className="hidden lg:table-cell">
+                Prateleira / Posição
+              </TableHead>
+              <TableHead>Material</TableHead>
+              <TableHead>
                 <Button
                   variant="ghost"
                   className="h-auto p-0 font-semibold hover:bg-transparent"
                   onClick={() => handleSort('amount')}
                 >
-                  Quantidade
-                  <ArrowUpDown className="ml-2 h-4 w-4" />
+                  Saldo <ArrowUpDown className="ml-2 h-4 w-4" />
                 </Button>
               </TableHead>
-              <TableHead className="hidden lg:table-cell">
-                <Button
-                  variant="ghost"
-                  className="h-auto p-0 font-semibold hover:bg-transparent"
-                  onClick={() => handleSort('status')}
-                >
-                  Status
-                  <ArrowUpDown className="ml-2 h-4 w-4" />
-                </Button>
-              </TableHead>
-              <TableHead className="hidden xl:table-cell">
-                <Button
-                  variant="ghost"
-                  className="h-auto p-0 font-semibold hover:bg-transparent"
-                  onClick={() => handleSort('dataAtualizacao')}
-                >
-                  Data Criação
-                  <ArrowUpDown className="ml-2 h-4 w-4" />
-                </Button>
-              </TableHead>
+              <TableHead>Status</TableHead>
               <TableHead className="text-right w-20">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
-              Array.from({ length: 5 }).map((_, index) => (
-                <TableRow key={index}>
-                  <TableCell>
-                    <Skeleton className="h-4 w-32" />
-                  </TableCell>
-                  <TableCell className="hidden lg:table-cell">
-                    <Skeleton className="h-4 w-24" />
-                  </TableCell>
-                  <TableCell className="hidden lg:table-cell">
-                    <Skeleton className="h-4 w-24" />
-                  </TableCell>
-                  <TableCell className="hidden xl:table-cell">
-                    <Skeleton className="h-4 w-20" />
-                  </TableCell>
-                  <TableCell className="hidden xl:table-cell">
-                    <Skeleton className="h-4 w-20" />
-                  </TableCell>
-                  <TableCell className="hidden xl:table-cell">
-                    <Skeleton className="h-4 w-20" />
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell">
-                    <Skeleton className="h-4 w-16" />
-                  </TableCell>
-                  <TableCell className="hidden lg:table-cell">
-                    <Skeleton className="h-6 w-16 rounded" />
-                  </TableCell>
-                  <TableCell className="hidden xl:table-cell">
-                    <Skeleton className="h-4 w-20" />
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Skeleton className="h-8 w-8 rounded" />
-                  </TableCell>
+              Array.from({ length: 5 }).map((_, i) => (
+                <TableRow key={i}>
+                  {Array.from({ length: 7 }).map((_, j) => (
+                    <TableCell key={j}>
+                      <Skeleton className="h-4 w-24" />
+                    </TableCell>
+                  ))}
                 </TableRow>
               ))
-            ) : processedData.filteredAddressings.length === 0 ? (
+            ) : addressings.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={10}
+                  colSpan={7}
                   className="text-center py-8 text-muted-foreground"
                 >
-                  {hasActiveFilters
-                    ? 'Nenhum endereçamento encontrado'
-                    : 'Nenhum endereçamento cadastrado'}
+                  Nenhum endereçamento encontrado
                 </TableCell>
               </TableRow>
             ) : (
-              processedData.filteredAddressings.map(
-                (addressing: Addressing) => (
-                  <TableRow key={addressing.id} className="group">
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Package className="h-4 w-4 text-muted-foreground" />
-                        <div>
-                          <div className="font-medium">
-                            {addressing.material
-                              ? `${addressing.material.code} - ${addressing.material.name}`
-                              : 'Sem material'}
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            ID: {addressing.id.slice(0, 8)}...
-                          </div>
+              addressings.map((addr) => (
+                <TableRow key={addr.id} className="group">
+                  <TableCell>
+                    <div className="font-medium text-sm">
+                      {addr.location.code}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {addr.location.name}
+                    </div>
+                  </TableCell>
+                  <TableCell className="hidden md:table-cell text-sm">
+                    <div>{addr.subLocation.code}</div>
+                    <div className="text-muted-foreground">{addr.row.code}</div>
+                  </TableCell>
+                  <TableCell className="hidden lg:table-cell text-sm">
+                    <div>{addr.shelf.code}</div>
+                    <div className="text-muted-foreground">
+                      {addr.position.code}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    {addr.material ? (
+                      <div>
+                        <div className="font-medium text-sm">
+                          {addr.material.code}
+                        </div>
+                        <div className="text-xs text-muted-foreground truncate max-w-[140px]">
+                          {addr.material.name}
                         </div>
                       </div>
-                    </TableCell>
-                    <TableCell className="hidden lg:table-cell">
-                      <div className="text-sm font-medium">
-                        {addressing.location.name}
-                      </div>
-                    </TableCell>
-                    <TableCell className="hidden lg:table-cell">
-                      <div className="text-sm font-medium">
-                        {addressing.subLocation.name}
-                      </div>
-                    </TableCell>
-                    <TableCell className="hidden xl:table-cell">
-                      <div className="text-sm font-medium">
-                        {addressing.row.name}
-                      </div>
-                    </TableCell>
-                    <TableCell className="hidden xl:table-cell">
-                      <div className="text-sm font-medium">
-                        {addressing.shelf.name}
-                      </div>
-                    </TableCell>
-                    <TableCell className="hidden xl:table-cell">
-                      <div className="text-sm font-medium">
-                        {addressing.position.name}
-                      </div>
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell">
-                      <Badge variant="outline">{addressing.amount || 0}</Badge>
-                    </TableCell>
-                    <TableCell className="hidden lg:table-cell">
-                      <Badge
-                        variant={addressing.active ? 'default' : 'secondary'}
-                      >
-                        {addressing.active ? 'Ativo' : 'Inativo'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="hidden xl:table-cell">
-                      <div className="text-sm text-muted-foreground">
-                        {formatDate(addressing.createdAt)}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-48">
-                          <DropdownMenuLabel>Ações</DropdownMenuLabel>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            onClick={() => handleEdit(addressing)}
-                          >
-                            <Edit className="mr-2 h-4 w-4" />
-                            Editar endereçamento
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => onDelete(addressing.id)}
-                            className="text-destructive focus:text-destructive"
-                          >
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Excluir endereçamento
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ),
-              )
+                    ) : (
+                      <span className="text-muted-foreground text-sm">—</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={addr.amount > 0 ? 'default' : 'outline'}>
+                      {addr.amount}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={addr.active ? 'default' : 'secondary'}>
+                      {addr.active ? 'Ativo' : 'Inativo'}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-48">
+                        <DropdownMenuLabel>Ações</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          onClick={() => navigate(`/addressing/addressing/${addr.id}`)}
+                        >
+                          <Eye className="mr-2 h-4 w-4" />
+                          Visualizar
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => {
+                            setSelected(addr);
+                            setEditOpen(true);
+                          }}
+                        >
+                          <Edit className="mr-2 h-4 w-4" />
+                          Editar
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => onDelete(addr.id)}
+                          className="text-destructive focus:text-destructive"
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Excluir
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))
             )}
           </TableBody>
         </Table>
       </div>
 
-      {/* Dialogs */}
-      {selectedAddressing && (
+      {selected && (
         <EditAddressingDialog
-          open={isEditDialogOpen}
-          onOpenChange={(open) => {
-            setIsEditDialogOpen(open);
-            if (!open) setSelectedAddressing(null);
+          open={editOpen}
+          onOpenChange={(o) => {
+            setEditOpen(o);
+            if (!o) setSelected(null);
           }}
-          addressing={selectedAddressing}
+          addressing={selected}
+          materials={materialsFromAddressings}
         />
       )}
-      {processedData.totalPages > 0 && (
+
+      {meta && meta.totalPages > 1 && (
         <Pagination
           currentPage={page}
-          itemCount={addressingData?.meta.totalItems || 0}
-          itemsPerPage={addressingData?.meta.itemsPerPage || 0}
-          onPageChange={handlePaginate}
+          itemCount={meta.totalItems}
+          itemsPerPage={meta.itemsPerPage}
+          onPageChange={(p) =>
+            setSearchParams((s) => {
+              s.set('page', (p + 1).toString());
+              return s;
+            })
+          }
         />
       )}
     </div>

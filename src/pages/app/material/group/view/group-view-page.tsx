@@ -2,11 +2,17 @@ import { ArrowLeft, FolderPlus } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { useGroup } from '@/hooks/use-group';
 import { getInitials } from '@/utils/get-initials';
@@ -78,23 +84,13 @@ export function GroupViewPage() {
               {/* Código */}
               <div className="space-y-2">
                 <Label htmlFor="code">Código</Label>
-                <Input
-                  id="code"
-                  value={group.code}
-                  disabled
-                  className="h-11"
-                />
+                <Input id="code" value={group.code} disabled className="h-11" />
               </div>
 
               {/* Nome */}
               <div className="space-y-2">
                 <Label htmlFor="name">Nome do Grupo</Label>
-                <Input
-                  id="name"
-                  value={group.name}
-                  disabled
-                  className="h-11"
-                />
+                <Input id="name" value={group.name} disabled className="h-11" />
               </div>
 
               {/* Descrição */}
@@ -135,10 +131,7 @@ export function GroupViewPage() {
                   >
                     {group.active ? 'Ativo' : 'Inativo'}
                   </span>
-                  <Switch
-                    checked={group.active}
-                    disabled
-                  />
+                  <Switch checked={group.active} disabled />
                 </div>
               </div>
             </CardContent>

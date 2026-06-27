@@ -1,6 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 
+import { createSubLocation } from '@/api/stock/create-sub-location';
+import { deleteSubLocation } from '@/api/stock/delete-sub-location';
+import { editSubLocation } from '@/api/stock/edit-sub-location';
 import { fetchSubLocations } from '@/api/stock/fetch-sub-locations';
+import { findSubLocationById } from '@/api/stock/find-sub-location-by-id';
 
 export function useSubLocation() {
   const queryClient = useQueryClient();
@@ -11,6 +16,7 @@ export function useSubLocation() {
     params?: {
       locationId?: string;
       name?: string;
+      code?: string;
       description?: string;
       orderBy?: string;
       orderDirection?: string;
@@ -22,91 +28,47 @@ export function useSubLocation() {
     });
   };
 
-  const useGetSubLocationsStats = () => {
-    return useQuery({
-      queryKey: ['subLocationsStats'],
-      queryFn: () => fetchSubLocations({ page: 0, limit: 1 }),
-    });
-  };
-
   const useCreateSubLocation = () => {
     return useMutation({
-      mutationFn: async ({
-        code,
-        name,
-        locationId,
-        description,
-        active,
-      }: {
-        code?: string;
-        name: string;
-        locationId: string;
-        description?: string;
-        active?: boolean;
-      }) => {
-        await new Promise((resolve) => setTimeout(resolve, 500));
-        console.log('Creating subLocation', {
-          code: code || `SUB-${Date.now()}`,
-          name,
-          locationId,
-          description,
-          active: active ?? true,
-        });
-      },
+      mutationFn: createSubLocation,
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['subLocations'] });
+        queryClient.removeQueries({ queryKey: ['subLocations'] });
+        toast.success('Sub-localização criada com sucesso');
       },
     });
   };
 
   const useEditSubLocation = () => {
     return useMutation({
-      mutationFn: async ({
-        id,
-        code,
-        name,
-        locationId,
-        description,
-        active,
-      }: {
-        id: string;
-        code?: string;
-        name: string;
-        locationId: string;
-        description?: string;
-        active?: boolean;
-      }) => {
-        await new Promise((resolve) => setTimeout(resolve, 500));
-        console.log('Editing subLocation', {
-          id,
-          code,
-          name,
-          locationId,
-          description,
-          active,
-        });
-      },
+      mutationFn: editSubLocation,
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['subLocations'] });
+        queryClient.removeQueries({ queryKey: ['subLocations'] });
+        toast.success('Sub-localização atualizada com sucesso');
       },
     });
   };
 
   const useDeleteSubLocation = () => {
     return useMutation({
-      mutationFn: async ({ id }: { id: string }) => {
-        await new Promise((resolve) => setTimeout(resolve, 500));
-        console.log('Deleting subLocation', id);
-      },
+      mutationFn: ({ id }: { id: string }) => deleteSubLocation(id),
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['subLocations'] });
+        queryClient.removeQueries({ queryKey: ['subLocations'] });
+        toast.success('Sub-localização excluída com sucesso');
       },
+    });
+  };
+
+  const useGetSubLocationById = (id: string) => {
+    return useQuery({
+      queryKey: ['subLocation', id],
+      queryFn: () => findSubLocationById(id),
+      enabled: !!id,
     });
   };
 
   return {
     useGetSubLocations,
-    useGetSubLocationsStats,
+    useGetSubLocationById,
     useCreateSubLocation,
     useEditSubLocation,
     useDeleteSubLocation,

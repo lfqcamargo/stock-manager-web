@@ -1,6 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 
+import { createAddressing } from '@/api/stock/create-addressing';
+import { deleteAddressing } from '@/api/stock/delete-addressing';
+import { editAddressing } from '@/api/stock/edit-addressing';
 import { fetchAddressings } from '@/api/stock/fetch-addressings';
+import { findAddressingById } from '@/api/stock/find-addressing-by-id';
 
 export function useAddressing() {
   const queryClient = useQueryClient();
@@ -14,8 +19,10 @@ export function useAddressing() {
       rowId?: string;
       shelfId?: string;
       positionId?: string;
-      name?: string;
-      description?: string;
+      materialId?: string;
+      active?: boolean;
+      minAmount?: number;
+      maxAmount?: number;
       orderBy?: string;
       orderDirection?: string;
     },
@@ -26,115 +33,47 @@ export function useAddressing() {
     });
   };
 
-  const useGetAddressingsStats = () => {
-    return useQuery({
-      queryKey: ['addressingsStats'],
-      queryFn: () => fetchAddressings({ page: 0, limit: 1 }),
-    });
-  };
-
   const useCreateAddressing = () => {
     return useMutation({
-      mutationFn: async ({
-        code,
-        name,
-        locationId,
-        subLocationId,
-        rowId,
-        shelfId,
-        positionId,
-        description,
-        active,
-      }: {
-        code?: string;
-        name: string;
-        locationId: string;
-        subLocationId: string;
-        rowId: string;
-        shelfId: string;
-        positionId: string;
-        description?: string;
-        active?: boolean;
-      }) => {
-        await new Promise((resolve) => setTimeout(resolve, 500));
-        console.log('Creating addressing', {
-          code: code || `ADDR-${Date.now()}`,
-          name,
-          locationId,
-          subLocationId,
-          rowId,
-          shelfId,
-          positionId,
-          description,
-          active: active ?? true,
-        });
-      },
+      mutationFn: createAddressing,
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['addressings'] });
+        queryClient.removeQueries({ queryKey: ['addressings'] });
+        toast.success('Endereçamento criado com sucesso');
       },
     });
   };
 
   const useEditAddressing = () => {
     return useMutation({
-      mutationFn: async ({
-        id,
-        code,
-        name,
-        locationId,
-        subLocationId,
-        rowId,
-        shelfId,
-        positionId,
-        description,
-        active,
-      }: {
-        id: string;
-        code?: string;
-        name: string;
-        locationId: string;
-        subLocationId: string;
-        rowId: string;
-        shelfId: string;
-        positionId: string;
-        description?: string;
-        active?: boolean;
-      }) => {
-        await new Promise((resolve) => setTimeout(resolve, 500));
-        console.log('Editing addressing', {
-          id,
-          code,
-          name,
-          locationId,
-          subLocationId,
-          rowId,
-          shelfId,
-          positionId,
-          description,
-          active,
-        });
-      },
+      mutationFn: editAddressing,
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['addressings'] });
+        queryClient.removeQueries({ queryKey: ['addressings'] });
+        toast.success('Endereçamento atualizado com sucesso');
       },
     });
   };
 
   const useDeleteAddressing = () => {
     return useMutation({
-      mutationFn: async ({ id }: { id: string }) => {
-        await new Promise((resolve) => setTimeout(resolve, 500));
-        console.log('Deleting addressing', id);
-      },
+      mutationFn: ({ id }: { id: string }) => deleteAddressing(id),
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['addressings'] });
+        queryClient.removeQueries({ queryKey: ['addressings'] });
+        toast.success('Endereçamento excluído com sucesso');
       },
+    });
+  };
+
+  const useGetAddressingById = (id: string) => {
+    return useQuery({
+      queryKey: ['addressing', id],
+      queryFn: () => findAddressingById(id),
+      enabled: !!id,
     });
   };
 
   return {
     useGetAddressings,
-    useGetAddressingsStats,
+    useGetAddressingById,
     useCreateAddressing,
     useEditAddressing,
     useDeleteAddressing,

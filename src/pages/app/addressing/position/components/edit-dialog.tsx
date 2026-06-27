@@ -1,6 +1,8 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { FolderPlus } from 'lucide-react';
+import { Pin } from 'lucide-react';
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
+import { z } from 'zod';
 
 import type { Position } from '@/api/stock/fetch-positions';
 import { Button } from '@/components/ui/button';
@@ -17,124 +19,117 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { usePosition } from '@/hooks/use-position';
 
-import {
-  type EditPositionFormData,
-  EditPositionSchema,
-} from '../lib/edit-validation';
+const schema = z.object({
+  code: z.string().min(1).max(50),
+  name: z.string().min(3).max(255),
+  description: z.string().optional(),
+});
+type FormData = z.infer<typeof schema>;
 
-interface EditPositionDialogProps {
+interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   position: Position;
 }
 
-export function EditPositionDialog({
-  open,
-  onOpenChange,
-  position,
-}: EditPositionDialogProps) {
+export function EditPositionDialog({ open, onOpenChange, position }: Props) {
   const {
     register,
     handleSubmit,
     reset,
     formState: { errors, isSubmitting },
-  } = useForm<EditPositionFormData>({
-    resolver: zodResolver(EditPositionSchema),
+  } = useForm<FormData>({
+    resolver: zodResolver(schema),
     defaultValues: {
+      code: position.code,
       name: position.name,
-      description: position.description ?? undefined,
+      description: position.description ?? '',
     },
   });
 
-  const { useEditPosition } = usePosition();
-  const { mutateAsync: editPositionFn } = useEditPosition();
+  useEffect(() => {
+    if (open)
+      reset({
+        code: position.code,
+        name: position.name,
+        description: position.description ?? '',
+      });
+  }, [open, position, reset]);
 
-  async function handleEditPosition(data: EditPositionFormData) {
-    await editPositionFn({
+  const { useEditPosition } = usePosition();
+  const { mutateAsync: editFn } = useEditPosition();
+
+  async function onSubmit(data: FormData) {
+    await editFn({
       id: position.id,
+      code: data.code,
       name: data.name,
-      description: data.description,
+      description: data.description || null,
     });
-    reset();
     onOpenChange(false);
   }
-
-  const handleCancel = () => {
-    reset();
-    onOpenChange(false);
-  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px] p-0">
-        <form onSubmit={handleSubmit(handleEditPosition)}>
+        <form onSubmit={handleSubmit(onSubmit)}>
           <DialogHeader className="px-6 pt-6 pb-4">
             <DialogTitle className="text-xl font-semibold flex items-center gap-2">
-              <FolderPlus className="h-5 w-5 text-primary" />
+              <Pin className="h-5 w-5 text-primary" />
               Editar Posição
             </DialogTitle>
-            <DialogDescription className="text-muted-foreground">
-              Edite os dados da posição
-            </DialogDescription>
+            <DialogDescription>Altere os dados da posição</DialogDescription>
           </DialogHeader>
-
-          <div className="px-6 space-y-6">
-            {/* Nome */}
+          <div className="px-6 space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Nome da Posição</Label>
-              <Input
-                id="name"
-                placeholder="Ex: Posição 1"
-                className="h-11"
-                {...register('name')}
-              />
+              <Label>Código</Label>
+              <Input className="h-11" {...register('code')} />
+              {errors.code && (
+                <p className="text-sm text-destructive">
+                  {errors.code.message}
+                </p>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label>Nome</Label>
+              <Input className="h-11" {...register('name')} />
               {errors.name && (
                 <p className="text-sm text-destructive">
                   {errors.name.message}
                 </p>
               )}
             </div>
-
-            {/* Descrição */}
             <div className="space-y-2">
-              <Label htmlFor="description">Descrição</Label>
+              <Label>Descrição</Label>
               <Textarea
-                id="description"
-                placeholder="Descrição da posição..."
-                rows={3}
+                className="min-h-[80px] resize-none"
                 {...register('description')}
               />
-              {errors.description && (
-                <p className="text-sm text-destructive">
-                  {errors.description.message}
-                </p>
-              )}
             </div>
           </div>
-
           <DialogFooter className="px-6 py-4 bg-muted/30 mt-6">
             <div className="flex gap-3 w-full sm:w-auto">
               <Button
                 type="button"
                 variant="outline"
-                onClick={handleCancel}
-                className="flex-1 sm:flex-none"
+                onClick={() => onOpenChange(false)}
                 disabled={isSubmitting}
+                className="flex-1 sm:flex-none"
               >
                 Cancelar
               </Button>
               <Button
                 type="submit"
-                className="flex-1 sm:flex-none"
                 disabled={isSubmitting}
+                className="flex-1 sm:flex-none"
               >
                 {isSubmitting ? (
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <span className="flex items-center gap-2">
+                    <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                     Salvando...
-                  </div>
+                  </span>
                 ) : (
-                  'Salvar Posição'
+                  'Salvar'
                 )}
               </Button>
             </div>

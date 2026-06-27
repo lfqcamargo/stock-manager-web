@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { MapPin } from 'lucide-react';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -29,87 +29,75 @@ import {
   createSubLocationSchema,
 } from '../lib/create-validation';
 
-interface CreateSubLocationDialogProps {
+interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-export function CreateSubLocationDialog({
-  open,
-  onOpenChange,
-}: CreateSubLocationDialogProps) {
+export function CreateSubLocationDialog({ open, onOpenChange }: Props) {
   const {
     register,
     handleSubmit,
+    control,
     reset,
-    setValue,
-    watch,
     formState: { errors, isSubmitting },
   } = useForm<CreateSubLocationFormData>({
     resolver: zodResolver(createSubLocationSchema),
-    defaultValues: {
-      name: '',
-      description: '',
-      locationId: '',
-    },
+    defaultValues: { code: '', name: '', locationId: '', description: '' },
   });
 
-  const locationId = watch('locationId');
-
-  const { useGetLocationsStats } = useLocation();
-  const { data: locationsData } = useGetLocationsStats();
+  const { useGetLocations } = useLocation();
+  const { data: locationsData } = useGetLocations(0, 100);
 
   const { useCreateSubLocation } = useSubLocation();
-  const { mutateAsync: createSubLocationFn } = useCreateSubLocation();
+  const { mutateAsync: createFn } = useCreateSubLocation();
 
-  async function handleCreateSubLocation(data: CreateSubLocationFormData) {
-    await createSubLocationFn({
+  async function onSubmit(data: CreateSubLocationFormData) {
+    await createFn({
+      code: data.code,
       name: data.name,
-      description: data.description || undefined,
       locationId: data.locationId,
+      description: data.description || undefined,
     });
     reset();
     onOpenChange(false);
   }
 
-  const handleCancel = () => {
-    reset();
-    onOpenChange(false);
-  };
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px] p-0">
-        <form onSubmit={handleSubmit(handleCreateSubLocation)}>
+        <form onSubmit={handleSubmit(onSubmit)}>
           <DialogHeader className="px-6 pt-6 pb-4">
             <DialogTitle className="text-xl font-semibold flex items-center gap-2">
               <MapPin className="h-5 w-5 text-primary" />
               Nova Sub-Localização
             </DialogTitle>
-            <DialogDescription className="text-muted-foreground">
+            <DialogDescription>
               Preencha os dados da nova sub-localização
             </DialogDescription>
           </DialogHeader>
 
-          <div className="px-6 space-y-6">
-            {/* Localização */}
+          <div className="px-6 space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="locationId">Localização</Label>
-              <Select
-                value={locationId}
-                onValueChange={(value) => setValue('locationId', value)}
-              >
-                <SelectTrigger className="h-11">
-                  <SelectValue placeholder="Selecione uma localização" />
-                </SelectTrigger>
-                <SelectContent>
-                  {locationsData?.locations?.map((location) => (
-                    <SelectItem key={location.id} value={location.id}>
-                      {location.name}
-                    </SelectItem>
-                  )) || []}
-                </SelectContent>
-              </Select>
+              <Label>Localização</Label>
+              <Controller
+                name="locationId"
+                control={control}
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger className="h-11">
+                      <SelectValue placeholder="Selecione uma localização" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {locationsData?.locations?.map((l) => (
+                        <SelectItem key={l.id} value={l.id}>
+                          {l.code} — {l.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
               {errors.locationId && (
                 <p className="text-sm text-destructive">
                   {errors.locationId.message}
@@ -117,12 +105,26 @@ export function CreateSubLocationDialog({
               )}
             </div>
 
-            {/* Nome */}
             <div className="space-y-2">
-              <Label htmlFor="name">Nome da Sub-Localização</Label>
+              <Label htmlFor="code">Código</Label>
+              <Input
+                id="code"
+                placeholder="Ex: SUB-A1"
+                className="h-11"
+                {...register('code')}
+              />
+              {errors.code && (
+                <p className="text-sm text-destructive">
+                  {errors.code.message}
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="name">Nome</Label>
               <Input
                 id="name"
-                placeholder="Ex: Setor 1"
+                placeholder="Ex: Setor A1"
                 className="h-11"
                 {...register('name')}
               />
@@ -133,20 +135,14 @@ export function CreateSubLocationDialog({
               )}
             </div>
 
-            {/* Descrição */}
             <div className="space-y-2">
               <Label htmlFor="description">Descrição</Label>
               <Textarea
                 id="description"
-                placeholder="Ex: Setor destinado para materiais de fixação"
+                placeholder="Opcional..."
                 className="min-h-[80px] resize-none"
                 {...register('description')}
               />
-              {errors.description && (
-                <p className="text-sm text-destructive">
-                  {errors.description.message}
-                </p>
-              )}
             </div>
           </div>
 
@@ -155,24 +151,27 @@ export function CreateSubLocationDialog({
               <Button
                 type="button"
                 variant="outline"
-                onClick={handleCancel}
-                className="flex-1 sm:flex-none"
+                onClick={() => {
+                  reset();
+                  onOpenChange(false);
+                }}
                 disabled={isSubmitting}
+                className="flex-1 sm:flex-none"
               >
                 Cancelar
               </Button>
               <Button
                 type="submit"
-                className="flex-1 sm:flex-none"
                 disabled={isSubmitting}
+                className="flex-1 sm:flex-none"
               >
                 {isSubmitting ? (
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <span className="flex items-center gap-2">
+                    <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                     Salvando...
-                  </div>
+                  </span>
                 ) : (
-                  'Salvar Sub-Localização'
+                  'Salvar'
                 )}
               </Button>
             </div>

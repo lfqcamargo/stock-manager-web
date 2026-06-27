@@ -10,10 +10,6 @@ import { MovementsTable } from './components/movimentacoes-table';
 export function MovementPage() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 
-  async function handleDeleteMovement(id: string) {
-    console.log('Delete movement', id);
-  }
-
   return (
     <div className="flex-1 space-y-4 md:space-y-6">
       {/* Header */}
@@ -51,7 +47,7 @@ export function MovementPage() {
 
       {/* Table */}
       <div className="rounded-lg md:rounded-2xl border border-border/40 bg-card/50 backdrop-blur supports-backdrop-filter:bg-card/50 shadow-sm overflow-hidden">
-        <MovementsTable onDelete={handleDeleteMovement} />
+        <MovementsTable />
       </div>
 
       <CreateMovementDialog

@@ -6,28 +6,20 @@ import { Button } from '@/components/ui/button';
 import { useMovementType } from '@/hooks/use-movement-type';
 
 import { CreateMovementTypeDialog } from './components/create-movement-type-dialog';
-import { MovementTypeStatsCards } from './components/movement-type-stats-cards';
 import { MovementTypesTable } from './components/movement-types-table';
 
 export function MovementTypesPage() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 
-  const { useGetMovementTypesStats } = useMovementType();
-  const { data } = useGetMovementTypesStats();
+  const { useDeleteMovementType } = useMovementType();
+  const { mutateAsync: deleteMovementTypeFn } = useDeleteMovementType();
 
   async function handleDeleteMovementType(id: string) {
-    console.log('Delete movement type:', id);
+    await deleteMovementTypeFn({ id });
   }
 
   return (
     <div className="flex-1 space-y-4 md:space-y-6">
-      {/* Stats Cards */}
-      <MovementTypeStatsCards
-        totalItems={data?.meta?.totalItems || 0}
-        totalInboundTypes={data?.meta?.totalInboundTypes || 0}
-        totalOutboundTypes={data?.meta?.totalOutboundTypes || 0}
-      />
-
       {/* Header */}
       <div className="rounded-lg md:rounded-2xl border border-border/40 bg-card/50 backdrop-blur supports-[backdrop-filter]:bg-card/50 p-4 md:p-6 lg:p-8 shadow-sm">
         <div className="flex flex-col gap-4 md:gap-6 md:flex-row md:items-start md:justify-between">
@@ -44,7 +36,7 @@ export function MovementTypesPage() {
             </Button>
             <div className="space-y-0.5 md:space-y-1">
               <h1 className="text-xl md:text-2xl lg:text-3xl font-bold tracking-tight">
-                Tipos de Movimento
+                Tipos de Movimentação
               </h1>
               <p className="text-xs md:text-sm text-muted-foreground">
                 Configure os tipos de movimentação disponíveis no sistema

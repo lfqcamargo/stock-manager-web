@@ -1,6 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 
+import { createLocation } from '@/api/stock/create-location';
+import { deleteLocation } from '@/api/stock/delete-location';
+import { editLocation } from '@/api/stock/edit-location';
 import { fetchLocations } from '@/api/stock/fetch-locations';
+import { findLocationById } from '@/api/stock/find-location-by-id';
 
 export function useLocation() {
   const queryClient = useQueryClient();
@@ -9,10 +14,11 @@ export function useLocation() {
     page = 0,
     limit = 20,
     params?: {
+      name?: string;
+      code?: string;
+      description?: string;
       orderBy?: string;
       orderDirection?: string;
-      search?: string;
-      active?: boolean;
     },
   ) => {
     return useQuery({
@@ -21,85 +27,47 @@ export function useLocation() {
     });
   };
 
-  const useGetLocationsStats = () => {
-    return useQuery({
-      queryKey: ['locationsStats'],
-      queryFn: () => fetchLocations({ page: 0, limit: 1 }),
-    });
-  };
-
   const useCreateLocation = () => {
     return useMutation({
-      mutationFn: async ({
-        code,
-        name,
-        description,
-        active,
-      }: {
-        code?: string;
-        name: string;
-        description?: string;
-        active?: boolean;
-      }) => {
-        await new Promise((resolve) => setTimeout(resolve, 500));
-        console.log('Creating location', {
-          code: code || `LOC-${Date.now()}`,
-          name,
-          description,
-          active: active ?? true,
-        });
-      },
+      mutationFn: createLocation,
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['locations'] });
+        queryClient.removeQueries({ queryKey: ['locations'] });
+        toast.success('Localização criada com sucesso');
       },
     });
   };
 
   const useEditLocation = () => {
     return useMutation({
-      mutationFn: async ({
-        id,
-        code,
-        name,
-        description,
-        active,
-      }: {
-        id: string;
-        code?: string;
-        name: string;
-        description?: string;
-        active?: boolean;
-      }) => {
-        await new Promise((resolve) => setTimeout(resolve, 500));
-        console.log('Editing location', {
-          id,
-          code,
-          name,
-          description,
-          active,
-        });
-      },
+      mutationFn: editLocation,
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['locations'] });
+        queryClient.removeQueries({ queryKey: ['locations'] });
+        toast.success('Localização atualizada com sucesso');
       },
     });
   };
 
   const useDeleteLocation = () => {
     return useMutation({
-      mutationFn: async ({ id }: { id: string }) => {
-        await new Promise((resolve) => setTimeout(resolve, 500));
-        console.log('Deleting location', id);
-      },
+      mutationFn: ({ id }: { id: string }) => deleteLocation(id),
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['locations'] });
+        queryClient.removeQueries({ queryKey: ['locations'] });
+        toast.success('Localização excluída com sucesso');
       },
+    });
+  };
+
+  const useGetLocationById = (id: string) => {
+    return useQuery({
+      queryKey: ['location', id],
+      queryFn: () => findLocationById(id),
+      enabled: !!id,
     });
   };
 
   return {
     useGetLocations,
-    useGetLocationsStats,
+    useGetLocationById,
     useCreateLocation,
     useEditLocation,
     useDeleteLocation,

@@ -2,7 +2,13 @@ import { ArrowLeft, Package } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -12,8 +18,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { useGroup } from '@/hooks/use-group';
 import { useMaterial } from '@/hooks/use-material';
@@ -188,10 +194,7 @@ export function MaterialViewPage() {
                   >
                     {material.active ? 'Ativo' : 'Inativo'}
                   </span>
-                  <Switch
-                    checked={material.active}
-                    disabled
-                  />
+                  <Switch checked={material.active} disabled />
                 </div>
               </div>
             </CardContent>
