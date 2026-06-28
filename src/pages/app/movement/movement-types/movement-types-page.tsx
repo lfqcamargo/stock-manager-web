@@ -1,21 +1,56 @@
-import { ArrowLeft, Plus } from 'lucide-react';
+import { ArrowLeft, LayoutGrid, Plus, Table } from 'lucide-react';
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
+import { z } from 'zod';
 
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useDebounce } from '@/hooks/use-debounce';
 import { useMovementType } from '@/hooks/use-movement-type';
 
 import { CreateMovementTypeDialog } from './components/create-movement-type-dialog';
+import { MovementTypeStatsCards } from './components/movement-type-stats-cards';
+import { MovementTypesCards } from './components/movement-types-cards';
 import { MovementTypesTable } from './components/movement-types-table';
 
 export function MovementTypesPage() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  const { useDeleteMovementType } = useMovementType();
+  const page = z.coerce
+    .number()
+    .transform((p) => p - 1)
+    .parse(searchParams.get('page') ?? '1');
+
+  const nameFilter = searchParams.get('name') ?? '';
+  const directionFilter = searchParams.get('direction') ?? 'all';
+  const debouncedNameFilter = useDebounce(nameFilter, 600);
+
+  const directionFilterValue =
+    directionFilter !== 'all' ? (directionFilter as 'IN' | 'OUT') : undefined;
+
+  const { useGetMovementTypes, useDeleteMovementType } = useMovementType();
+  const { data: typesData, isLoading } = useGetMovementTypes(page, 20, {
+    name: debouncedNameFilter || undefined,
+    direction: directionFilterValue,
+  });
   const { mutateAsync: deleteMovementTypeFn } = useDeleteMovementType();
+
+  const totalInboundTypes =
+    typesData?.movementTypes.filter((t) => t.direction === 'IN').length ?? 0;
+  const totalOutboundTypes =
+    typesData?.movementTypes.filter((t) => t.direction === 'OUT').length ?? 0;
 
   async function handleDeleteMovementType(id: string) {
     await deleteMovementTypeFn({ id });
+  }
+
+  function handlePaginate(newPage: number) {
+    setSearchParams((state) => {
+      state.set('page', newPage.toString());
+      return state;
+    });
   }
 
   return (
@@ -53,9 +88,48 @@ export function MovementTypesPage() {
         </div>
       </div>
 
-      {/* Table */}
+      {/* Stats */}
+      <MovementTypeStatsCards
+        totalItems={typesData?.meta.totalItems}
+        totalInboundTypes={totalInboundTypes}
+        totalOutboundTypes={totalOutboundTypes}
+      />
+
+      {/* View Toggle & Content */}
       <div className="rounded-lg md:rounded-2xl border border-border/40 bg-card/50 backdrop-blur supports-backdrop-filter:bg-card/50 shadow-sm overflow-hidden">
-        <MovementTypesTable onDelete={handleDeleteMovementType} />
+        <div className="px-6 py-4 border-b border-border/50 flex items-center justify-between">
+          <h2 className="font-semibold text-lg">Lista de Tipos</h2>
+          <Tabs
+            value={viewMode}
+            onValueChange={(v) => setViewMode(v as 'table' | 'cards')}
+            className="w-auto"
+          >
+            <TabsList>
+              <TabsTrigger value="table" className="flex items-center gap-2">
+                <Table className="h-4 w-4" />
+                <span className="hidden sm:inline">Tabela</span>
+              </TabsTrigger>
+              <TabsTrigger value="cards" className="flex items-center gap-2">
+                <LayoutGrid className="h-4 w-4" />
+                <span className="hidden sm:inline">Cards</span>
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
+
+        <div className="p-6">
+          {viewMode === 'table' ? (
+            <MovementTypesTable onDelete={handleDeleteMovementType} />
+          ) : (
+            <MovementTypesCards
+              onDelete={handleDeleteMovementType}
+              isLoading={isLoading}
+              movementTypes={typesData?.movementTypes ?? []}
+              meta={typesData?.meta}
+              onPaginate={handlePaginate}
+            />
+          )}
+        </div>
       </div>
 
       <CreateMovementTypeDialog
