@@ -1,9 +1,11 @@
-import { ArrowLeft, LayoutGrid, Plus, Table } from 'lucide-react';
+import { ArrowLeft, FileUp, LayoutGrid, Plus, Table } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 
+import { ImportCsvDialog } from '@/components/import-csv-dialog';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { csvColumns } from '@/config/csv-columns';
 import { useDebounce } from '@/hooks/use-debounce';
 import { useGroup } from '@/hooks/use-group';
 
@@ -15,6 +17,7 @@ import { GroupsTable } from './components/groups-table';
 
 export function GroupPage() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -116,13 +119,23 @@ export function GroupPage() {
               </p>
             </div>
           </div>
-          <Button
-            onClick={() => setIsAddDialogOpen(true)}
-            className="rounded-lg md:rounded-xl shadow-md hover:shadow-lg transition-all duration-300 h-9 md:h-10 lg:h-11 w-full md:w-auto"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            <span className="md:inline">Novo Grupo</span>
-          </Button>
+          <div className="flex flex-col gap-2 md:flex-row md:items-center">
+            <Button
+              variant="outline"
+              onClick={() => setIsImportDialogOpen(true)}
+              className="rounded-lg md:rounded-xl h-9 md:h-10 lg:h-11 w-full md:w-auto"
+            >
+              <FileUp className="mr-2 h-4 w-4" />
+              Importar CSV
+            </Button>
+            <Button
+              onClick={() => setIsAddDialogOpen(true)}
+              className="rounded-lg md:rounded-xl shadow-md hover:shadow-lg transition-all duration-300 h-9 md:h-10 lg:h-11 w-full md:w-auto"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              <span className="md:inline">Novo Grupo</span>
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -191,6 +204,15 @@ export function GroupPage() {
       <CreateGroupDialog
         open={isAddDialogOpen}
         onOpenChange={setIsAddDialogOpen}
+      />
+
+      <ImportCsvDialog
+        open={isImportDialogOpen}
+        onOpenChange={setIsImportDialogOpen}
+        entity="groups"
+        entityLabel="Grupos"
+        queryKeys={['groups']}
+        columns={csvColumns.groups}
       />
     </div>
   );

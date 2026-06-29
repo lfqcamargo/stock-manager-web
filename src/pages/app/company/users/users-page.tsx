@@ -1,11 +1,14 @@
 import { parse } from 'date-fns';
 import { ptBR } from 'date-fns/locale/pt-BR';
-import { LayoutGrid, Table } from 'lucide-react';
+import { FileUp, LayoutGrid, Table } from 'lucide-react';
 import { useState } from 'react';
 import type { DateRange } from 'react-day-picker';
 import { useSearchParams } from 'react-router-dom';
 
+import { ImportCsvDialog } from '@/components/import-csv-dialog';
+import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { csvColumns } from '@/config/csv-columns';
 import { useDebounce } from '@/hooks/use-debounce';
 import { useUsers } from '@/hooks/use-users';
 
@@ -17,6 +20,7 @@ import { UsersStatsCards } from './components/users-stats-cards';
 export function UsersPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
 
   // Initialize filters from searchParams
   const rawPage = searchParams.get('page');
@@ -150,22 +154,33 @@ export function UsersPage() {
       <div className="rounded-lg md:rounded-2xl border border-border/40 bg-card/50 backdrop-blur supports-[backdrop-filter]:bg-card/50 shadow-sm overflow-hidden">
         <div className="px-6 py-4 border-b border-border/50 flex items-center justify-between">
           <h2 className="font-semibold text-lg">Usuários</h2>
-          <Tabs
-            value={viewMode}
-            onValueChange={(v) => setViewMode(v as 'table' | 'cards')}
-            className="w-auto"
-          >
-            <TabsList>
-              <TabsTrigger value="table" className="flex items-center gap-2">
-                <Table className="h-4 w-4" />
-                <span className="hidden sm:inline">Tabela</span>
-              </TabsTrigger>
-              <TabsTrigger value="cards" className="flex items-center gap-2">
-                <LayoutGrid className="h-4 w-4" />
-                <span className="hidden sm:inline">Cards</span>
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
+          <div className="flex items-center gap-3">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsImportDialogOpen(true)}
+              className="hidden sm:flex items-center gap-2"
+            >
+              <FileUp className="h-4 w-4" />
+              Importar CSV
+            </Button>
+            <Tabs
+              value={viewMode}
+              onValueChange={(v) => setViewMode(v as 'table' | 'cards')}
+              className="w-auto"
+            >
+              <TabsList>
+                <TabsTrigger value="table" className="flex items-center gap-2">
+                  <Table className="h-4 w-4" />
+                  <span className="hidden sm:inline">Tabela</span>
+                </TabsTrigger>
+                <TabsTrigger value="cards" className="flex items-center gap-2">
+                  <LayoutGrid className="h-4 w-4" />
+                  <span className="hidden sm:inline">Cards</span>
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
         </div>
 
         <div className="p-6 space-y-6">
@@ -205,6 +220,15 @@ export function UsersPage() {
           )}
         </div>
       </div>
+
+      <ImportCsvDialog
+        open={isImportDialogOpen}
+        onOpenChange={setIsImportDialogOpen}
+        entity="users"
+        entityLabel="Usuários"
+        queryKeys={['users']}
+        columns={csvColumns.users}
+      />
     </div>
   );
 }

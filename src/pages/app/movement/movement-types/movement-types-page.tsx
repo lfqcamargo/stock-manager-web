@@ -1,10 +1,12 @@
-import { ArrowLeft, LayoutGrid, Plus, Table } from 'lucide-react';
+import { ArrowLeft, FileUp, LayoutGrid, Plus, Table } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { z } from 'zod';
 
+import { ImportCsvDialog } from '@/components/import-csv-dialog';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { csvColumns } from '@/config/csv-columns';
 import { useDebounce } from '@/hooks/use-debounce';
 import { useMovementType } from '@/hooks/use-movement-type';
 
@@ -15,6 +17,7 @@ import { MovementTypesTable } from './components/movement-types-table';
 
 export function MovementTypesPage() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -35,15 +38,15 @@ export function MovementTypesPage() {
     name: debouncedNameFilter || undefined,
     direction: directionFilterValue,
   });
-  const { mutateAsync: deleteMovementTypeFn } = useDeleteMovementType();
+  const { mutate: deleteMovementTypeFn } = useDeleteMovementType();
 
   const totalInboundTypes =
     typesData?.movementTypes.filter((t) => t.direction === 'IN').length ?? 0;
   const totalOutboundTypes =
     typesData?.movementTypes.filter((t) => t.direction === 'OUT').length ?? 0;
 
-  async function handleDeleteMovementType(id: string) {
-    await deleteMovementTypeFn({ id });
+  function handleDeleteMovementType(id: string) {
+    deleteMovementTypeFn({ id });
   }
 
   function handlePaginate(newPage: number) {
@@ -78,13 +81,23 @@ export function MovementTypesPage() {
               </p>
             </div>
           </div>
-          <Button
-            onClick={() => setIsAddDialogOpen(true)}
-            className="rounded-lg md:rounded-xl shadow-md hover:shadow-lg transition-all duration-300 h-9 md:h-10 lg:h-11 w-full md:w-auto"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            <span className="md:inline">Novo Tipo</span>
-          </Button>
+          <div className="flex flex-col gap-2 md:flex-row md:items-center">
+            <Button
+              variant="outline"
+              onClick={() => setIsImportDialogOpen(true)}
+              className="rounded-lg md:rounded-xl h-9 md:h-10 lg:h-11 w-full md:w-auto"
+            >
+              <FileUp className="mr-2 h-4 w-4" />
+              Importar CSV
+            </Button>
+            <Button
+              onClick={() => setIsAddDialogOpen(true)}
+              className="rounded-lg md:rounded-xl shadow-md hover:shadow-lg transition-all duration-300 h-9 md:h-10 lg:h-11 w-full md:w-auto"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              <span className="md:inline">Novo Tipo</span>
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -135,6 +148,15 @@ export function MovementTypesPage() {
       <CreateMovementTypeDialog
         open={isAddDialogOpen}
         onOpenChange={setIsAddDialogOpen}
+      />
+
+      <ImportCsvDialog
+        open={isImportDialogOpen}
+        onOpenChange={setIsImportDialogOpen}
+        entity="movement-types"
+        entityLabel="Tipos de Movimentação"
+        queryKeys={['movementTypes']}
+        columns={csvColumns.movementTypes}
       />
     </div>
   );

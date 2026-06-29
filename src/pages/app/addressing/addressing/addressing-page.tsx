@@ -1,8 +1,10 @@
-import { ArrowLeft, Plus } from 'lucide-react';
+import { ArrowLeft, FileUp, Plus } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
+import { ImportCsvDialog } from '@/components/import-csv-dialog';
 import { Button } from '@/components/ui/button';
+import { csvColumns } from '@/config/csv-columns';
 import { useAddressing } from '@/hooks/use-addressing';
 
 import { AddressingStatsCards } from './components/addressing-stats-cards';
@@ -11,12 +13,13 @@ import { AddressingTable } from './components/table';
 
 export function AddressingPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
 
   const { useDeleteAddressing } = useAddressing();
-  const { mutateAsync: deleteAddressingFn } = useDeleteAddressing();
+  const { mutate: deleteAddressingFn } = useDeleteAddressing();
 
-  async function handleDelete(id: string) {
-    await deleteAddressingFn({ id });
+  function handleDelete(id: string) {
+    deleteAddressingFn({ id });
   }
 
   return (
@@ -44,13 +47,23 @@ export function AddressingPage() {
               </p>
             </div>
           </div>
-          <Button
-            onClick={() => setIsCreateDialogOpen(true)}
-            className="rounded-lg md:rounded-xl shadow-md hover:shadow-lg transition-all duration-300 h-9 md:h-10 lg:h-11 w-full md:w-auto"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            <span className="md:inline">Novo Endereçamento</span>
-          </Button>
+          <div className="flex flex-col gap-2 md:flex-row md:items-center">
+            <Button
+              variant="outline"
+              onClick={() => setIsImportDialogOpen(true)}
+              className="rounded-lg md:rounded-xl h-9 md:h-10 lg:h-11 w-full md:w-auto"
+            >
+              <FileUp className="mr-2 h-4 w-4" />
+              Importar CSV
+            </Button>
+            <Button
+              onClick={() => setIsCreateDialogOpen(true)}
+              className="rounded-lg md:rounded-xl shadow-md hover:shadow-lg transition-all duration-300 h-9 md:h-10 lg:h-11 w-full md:w-auto"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              <span className="md:inline">Novo Endereçamento</span>
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -66,6 +79,15 @@ export function AddressingPage() {
       <CreateAddressingDialog
         open={isCreateDialogOpen}
         onOpenChange={setIsCreateDialogOpen}
+      />
+
+      <ImportCsvDialog
+        open={isImportDialogOpen}
+        onOpenChange={setIsImportDialogOpen}
+        entity="addressings"
+        entityLabel="Endereçamentos"
+        queryKeys={['addressings']}
+        columns={csvColumns.addressings}
       />
     </div>
   );

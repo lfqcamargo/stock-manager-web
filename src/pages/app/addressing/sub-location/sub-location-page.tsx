@@ -1,8 +1,10 @@
-import { ArrowLeft, Plus } from 'lucide-react';
+import { ArrowLeft, FileUp, Plus } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
+import { ImportCsvDialog } from '@/components/import-csv-dialog';
 import { Button } from '@/components/ui/button';
+import { csvColumns } from '@/config/csv-columns';
 import { useSubLocation } from '@/hooks/use-sub-location';
 
 import { CreateSubLocationDialog } from './components/create-dialog';
@@ -10,12 +12,13 @@ import { SubLocationsTable } from './components/table';
 
 export function SubLocationPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
 
   const { useDeleteSubLocation } = useSubLocation();
-  const { mutateAsync: deleteSubLocationFn } = useDeleteSubLocation();
+  const { mutate: deleteSubLocationFn } = useDeleteSubLocation();
 
-  async function handleDelete(id: string) {
-    await deleteSubLocationFn({ id });
+  function handleDelete(id: string) {
+    deleteSubLocationFn({ id });
   }
 
   return (
@@ -43,13 +46,23 @@ export function SubLocationPage() {
               </p>
             </div>
           </div>
-          <Button
-            onClick={() => setIsCreateDialogOpen(true)}
-            className="rounded-lg md:rounded-xl shadow-md hover:shadow-lg transition-all duration-300 h-9 md:h-10 lg:h-11 w-full md:w-auto"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            <span className="md:inline">Nova Sub-Localização</span>
-          </Button>
+          <div className="flex flex-col gap-2 md:flex-row md:items-center">
+            <Button
+              variant="outline"
+              onClick={() => setIsImportDialogOpen(true)}
+              className="rounded-lg md:rounded-xl h-9 md:h-10 lg:h-11 w-full md:w-auto"
+            >
+              <FileUp className="mr-2 h-4 w-4" />
+              Importar CSV
+            </Button>
+            <Button
+              onClick={() => setIsCreateDialogOpen(true)}
+              className="rounded-lg md:rounded-xl shadow-md hover:shadow-lg transition-all duration-300 h-9 md:h-10 lg:h-11 w-full md:w-auto"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              <span className="md:inline">Nova Sub-Localização</span>
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -62,6 +75,15 @@ export function SubLocationPage() {
       <CreateSubLocationDialog
         open={isCreateDialogOpen}
         onOpenChange={setIsCreateDialogOpen}
+      />
+
+      <ImportCsvDialog
+        open={isImportDialogOpen}
+        onOpenChange={setIsImportDialogOpen}
+        entity="sub-locations"
+        entityLabel="Sub-Localizações"
+        queryKeys={['subLocations']}
+        columns={csvColumns.subLocations}
       />
     </div>
   );

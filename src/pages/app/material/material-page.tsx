@@ -1,9 +1,11 @@
-import { ArrowLeft, LayoutGrid, Plus, Table } from 'lucide-react';
+import { ArrowLeft, FileUp, LayoutGrid, Plus, Table } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 
+import { ImportCsvDialog } from '@/components/import-csv-dialog';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { csvColumns } from '@/config/csv-columns';
 import { useDebounce } from '@/hooks/use-debounce';
 import { useGroup } from '@/hooks/use-group';
 import { useMaterial } from '@/hooks/use-material';
@@ -16,6 +18,7 @@ import { MaterialsFilters } from './components/materials-filters';
 
 export function MaterialPage() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -125,13 +128,23 @@ export function MaterialPage() {
               </p>
             </div>
           </div>
-          <Button
-            onClick={() => setIsAddDialogOpen(true)}
-            className="rounded-lg md:rounded-xl shadow-md hover:shadow-lg transition-all duration-300 h-9 md:h-10 lg:h-11 w-full md:w-auto"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            <span className="md:inline">Novo Material</span>
-          </Button>
+          <div className="flex flex-col gap-2 md:flex-row md:items-center">
+            <Button
+              variant="outline"
+              onClick={() => setIsImportDialogOpen(true)}
+              className="rounded-lg md:rounded-xl h-9 md:h-10 lg:h-11 w-full md:w-auto"
+            >
+              <FileUp className="mr-2 h-4 w-4" />
+              Importar CSV
+            </Button>
+            <Button
+              onClick={() => setIsAddDialogOpen(true)}
+              className="rounded-lg md:rounded-xl shadow-md hover:shadow-lg transition-all duration-300 h-9 md:h-10 lg:h-11 w-full md:w-auto"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              <span className="md:inline">Novo Material</span>
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -202,6 +215,15 @@ export function MaterialPage() {
       <CreateMaterialDialog
         open={isAddDialogOpen}
         onOpenChange={setIsAddDialogOpen}
+      />
+
+      <ImportCsvDialog
+        open={isImportDialogOpen}
+        onOpenChange={setIsImportDialogOpen}
+        entity="materials"
+        entityLabel="Materiais"
+        queryKeys={['materials']}
+        columns={csvColumns.materials}
       />
     </div>
   );

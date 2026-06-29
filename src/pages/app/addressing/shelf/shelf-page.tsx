@@ -1,8 +1,10 @@
-import { ArrowLeft, Plus } from 'lucide-react';
+import { ArrowLeft, FileUp, Plus } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
+import { ImportCsvDialog } from '@/components/import-csv-dialog';
 import { Button } from '@/components/ui/button';
+import { csvColumns } from '@/config/csv-columns';
 import { useShelf } from '@/hooks/use-shelf';
 
 import { CreateShelfDialog } from './components/create-dialog';
@@ -10,12 +12,13 @@ import { ShelfsTable } from './components/table';
 
 export function ShelfPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
 
   const { useDeleteShelf } = useShelf();
-  const { mutateAsync: deleteShelfFn } = useDeleteShelf();
+  const { mutate: deleteShelfFn } = useDeleteShelf();
 
-  async function handleDelete(id: string) {
-    await deleteShelfFn({ id });
+  function handleDelete(id: string) {
+    deleteShelfFn({ id });
   }
 
   return (
@@ -43,13 +46,23 @@ export function ShelfPage() {
               </p>
             </div>
           </div>
-          <Button
-            onClick={() => setIsCreateDialogOpen(true)}
-            className="rounded-lg md:rounded-xl shadow-md hover:shadow-lg transition-all duration-300 h-9 md:h-10 lg:h-11 w-full md:w-auto"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            <span className="md:inline">Nova Prateleira</span>
-          </Button>
+          <div className="flex flex-col gap-2 md:flex-row md:items-center">
+            <Button
+              variant="outline"
+              onClick={() => setIsImportDialogOpen(true)}
+              className="rounded-lg md:rounded-xl h-9 md:h-10 lg:h-11 w-full md:w-auto"
+            >
+              <FileUp className="mr-2 h-4 w-4" />
+              Importar CSV
+            </Button>
+            <Button
+              onClick={() => setIsCreateDialogOpen(true)}
+              className="rounded-lg md:rounded-xl shadow-md hover:shadow-lg transition-all duration-300 h-9 md:h-10 lg:h-11 w-full md:w-auto"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              <span className="md:inline">Nova Prateleira</span>
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -62,6 +75,15 @@ export function ShelfPage() {
       <CreateShelfDialog
         open={isCreateDialogOpen}
         onOpenChange={setIsCreateDialogOpen}
+      />
+
+      <ImportCsvDialog
+        open={isImportDialogOpen}
+        onOpenChange={setIsImportDialogOpen}
+        entity="shelfs"
+        entityLabel="Prateleiras"
+        queryKeys={['shelfs']}
+        columns={csvColumns.shelfs}
       />
     </div>
   );
