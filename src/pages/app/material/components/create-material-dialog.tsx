@@ -69,7 +69,7 @@ export function CreateMaterialDialog({
   });
 
   const { useGetGroups } = useGroup();
-  const { data: groupsData } = useGetGroups(0, 100);
+  const { data: groupsData } = useGetGroups(0, 9999);
 
   const { useCreateMaterial } = useMaterial();
   const { mutate: createMaterialFn, isPending } = useCreateMaterial();

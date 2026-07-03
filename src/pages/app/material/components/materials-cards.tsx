@@ -111,10 +111,8 @@ export function MaterialsCards({
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
+                  <p className="text-xs font-mono text-muted-foreground">{material.code}</p>
                   <h3 className="font-semibold truncate">{material.name}</h3>
-                  <p className="text-sm text-muted-foreground">
-                    {material.code}
-                  </p>
                 </div>
               </div>
               <div className="space-y-3">

@@ -32,7 +32,7 @@ export function MaterialViewPage() {
   const { useGetMaterialById } = useMaterial();
   const { data: material, isLoading } = useGetMaterialById(id || '');
   const { useGetGroups } = useGroup();
-  const { data: groupsData } = useGetGroups(0, 100);
+  const { data: groupsData } = useGetGroups(0, 9999);
 
   return (
     <div className="flex-1 space-y-4 md:space-y-6">

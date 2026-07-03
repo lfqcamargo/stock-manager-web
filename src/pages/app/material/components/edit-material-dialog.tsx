@@ -73,7 +73,7 @@ export function EditMaterialDialog({
   });
 
   const { useGetGroups } = useGroup();
-  const { data: groupsData } = useGetGroups(0, 100);
+  const { data: groupsData } = useGetGroups(0, 9999);
 
   const { useEditMaterial } = useMaterial();
   const { mutate: editMaterialFn, isPending } = useEditMaterial();

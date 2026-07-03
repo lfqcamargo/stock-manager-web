@@ -4,11 +4,34 @@ export interface Movement {
   id: string;
   addressingId: string;
   movementTypeId: string;
+  movementTypeName: string;
+  movementTypeDirection: 'IN' | 'OUT';
   userId: string;
+  userName: string;
   quantity: number;
   date: string;
   observation: string | null;
   createdAt: string;
+  locationId: string;
+  locationCode: string;
+  locationName: string;
+  subLocationId: string;
+  subLocationCode: string;
+  subLocationName: string;
+  rowId: string;
+  rowCode: string;
+  rowName: string;
+  shelfId: string;
+  shelfCode: string;
+  shelfName: string;
+  positionId: string;
+  positionCode: string;
+  positionName: string;
+  materialId: string;
+  materialCode: string;
+  materialName: string;
+  materialDescription: string;
+  materialUnit: string;
 }
 
 export interface FetchMovementsResponse {
@@ -24,8 +47,14 @@ export interface FetchMovementsResponse {
 export async function fetchMovements({
   page = 0,
   limit = 20,
-  addressingId,
+  locationId,
+  subLocationId,
+  rowId,
+  shelfId,
+  positionId,
+  materialId,
   movementTypeId,
+  direction,
   userId,
   dateFrom,
   dateTo,
@@ -36,8 +65,14 @@ export async function fetchMovements({
 }: {
   page?: number;
   limit?: number;
-  addressingId?: string;
+  locationId?: string;
+  subLocationId?: string;
+  rowId?: string;
+  shelfId?: string;
+  positionId?: string;
+  materialId?: string;
   movementTypeId?: string;
+  direction?: 'IN' | 'OUT';
   userId?: string;
   dateFrom?: string;
   dateTo?: string;
@@ -50,8 +85,14 @@ export async function fetchMovements({
     params: {
       page: page + 1,
       itemsPerPage: limit,
-      addressingId,
+      locationId,
+      subLocationId,
+      rowId,
+      shelfId,
+      positionId,
+      materialId,
       movementTypeId,
+      direction,
       userId,
       dateFrom,
       dateTo,

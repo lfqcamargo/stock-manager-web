@@ -106,8 +106,8 @@ export function GroupsCards({
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
+                  <p className="text-xs font-mono text-muted-foreground">{group.code}</p>
                   <h3 className="font-semibold truncate">{group.name}</h3>
-                  <p className="text-sm text-muted-foreground">{group.code}</p>
                 </div>
               </div>
               <div className="space-y-3">

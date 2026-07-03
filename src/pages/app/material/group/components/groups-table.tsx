@@ -129,10 +129,10 @@ export function GroupsTable({
                 <Button
                   variant="ghost"
                   className="h-auto p-0 font-semibold hover:bg-transparent"
-                  onClick={() => handleSort('nome')}
+                  onClick={() => handleSort('codigo')}
                 >
-                  Grupo
-                  {currentSortField === 'nome' ? (
+                  Código
+                  {currentSortField === 'codigo' ? (
                     currentSortDirection === 'asc' ? (
                       <ArrowUp className="ml-2 h-4 w-4" />
                     ) : (
@@ -147,10 +147,10 @@ export function GroupsTable({
                 <Button
                   variant="ghost"
                   className="h-auto p-0 font-semibold hover:bg-transparent"
-                  onClick={() => handleSort('codigo')}
+                  onClick={() => handleSort('nome')}
                 >
-                  Código
-                  {currentSortField === 'codigo' ? (
+                  Grupo
+                  {currentSortField === 'nome' ? (
                     currentSortDirection === 'asc' ? (
                       <ArrowUp className="ml-2 h-4 w-4" />
                     ) : (
@@ -205,13 +205,13 @@ export function GroupsTable({
               ? Array.from({ length: 5 }).map((_, index) => (
                   <TableRow key={index}>
                     <TableCell>
+                      <Skeleton className="h-4 w-16" />
+                    </TableCell>
+                    <TableCell>
                       <div className="flex items-center gap-3">
                         <Skeleton className="h-9 w-9 rounded-lg" />
                         <Skeleton className="h-4 w-32" />
                       </div>
-                    </TableCell>
-                    <TableCell>
-                      <Skeleton className="h-4 w-16" />
                     </TableCell>
                     <TableCell className="hidden lg:table-cell">
                       <Skeleton className="h-4 w-40" />
@@ -226,6 +226,7 @@ export function GroupsTable({
                 ))
               : groups.map((group: Group) => (
                   <TableRow key={group.id} className="group">
+                    <TableCell className="font-medium">{group.code}</TableCell>
                     <TableCell>
                       <div
                         className="flex items-center gap-3 cursor-pointer"
@@ -252,7 +253,6 @@ export function GroupsTable({
                         <div className="font-medium">{group.name}</div>
                       </div>
                     </TableCell>
-                    <TableCell className="font-medium">{group.code}</TableCell>
                     <TableCell className="hidden lg:table-cell max-w-[300px] truncate">
                       {group.description || '-'}
                     </TableCell>

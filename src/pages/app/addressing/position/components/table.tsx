@@ -87,19 +87,19 @@ export function PositionsTable({ onDelete }: Props) {
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Buscar por nome..."
+            placeholder="Buscar por código..."
             className="pl-10 h-11"
-            value={nameFilter}
-            onChange={(e) => setNameFilter(e.target.value)}
+            value={codeFilter}
+            onChange={(e) => setCodeFilter(e.target.value)}
           />
         </div>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Buscar por código..."
+            placeholder="Buscar por nome..."
             className="pl-10 h-11"
-            value={codeFilter}
-            onChange={(e) => setCodeFilter(e.target.value)}
+            value={nameFilter}
+            onChange={(e) => setNameFilter(e.target.value)}
           />
         </div>
       </div>
@@ -252,12 +252,12 @@ export function PositionsTable({ onDelete }: Props) {
       )}
       {meta && meta.totalPages > 1 && (
         <Pagination
-          currentPage={page}
+          currentPage={page + 1}
           itemCount={meta.totalItems}
           itemsPerPage={meta.itemsPerPage}
           onPageChange={(p) =>
             setSearchParams((s) => {
-              s.set('page', (p + 1).toString());
+              s.set('page', p.toString());
               return s;
             })
           }

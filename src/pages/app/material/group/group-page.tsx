@@ -33,7 +33,8 @@ export function GroupPage() {
   const debouncedCodeFilter = useDebounce(codeFilter);
   const debouncedNameFilter = useDebounce(nameFilter);
   const debouncedDescriptionFilter = useDebounce(descriptionFilter);
-  const debouncedActiveFilter = useDebounce(activeFilter);
+  // Select não precisa de debounce — reage imediatamente
+  const debouncedActiveFilter = activeFilter;
 
   const { useGetGroups, useGetGroupsStats, useDeleteGroup } = useGroup();
   const { data: groupsData, isLoading } = useGetGroups(page - 1, 20, {

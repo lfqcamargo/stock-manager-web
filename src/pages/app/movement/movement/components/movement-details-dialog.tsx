@@ -1,4 +1,4 @@
-import { Calendar, ClipboardEdit, Hash, MapPin } from 'lucide-react';
+import { Calendar, ClipboardEdit, Hash, MapPin, Package } from 'lucide-react';
 
 import type { Movement } from '@/api/stock/fetch-movements';
 import { Button } from '@/components/ui/button';
@@ -15,17 +15,23 @@ interface MovementDetailsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   movement: Movement;
-  addressingLabel?: string;
-  movementType?: { name: string; direction: 'IN' | 'OUT' };
 }
 
 export function MovementDetailsDialog({
   open,
   onOpenChange,
   movement,
-  addressingLabel,
-  movementType,
 }: MovementDetailsDialogProps) {
+  const addrLabel = [
+    movement.locationName,
+    movement.subLocationName,
+    movement.rowName,
+    movement.shelfName,
+    movement.positionName,
+  ]
+    .filter(Boolean)
+    .join(' / ');
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px]">
@@ -40,7 +46,20 @@ export function MovementDetailsDialog({
               Endereçamento
             </label>
             <Input
-              value={addressingLabel ?? movement.addressingId}
+              value={addrLabel || movement.addressingId}
+              readOnly
+              className="bg-muted"
+            />
+          </div>
+
+          {/* Material */}
+          <div className="space-y-1">
+            <label className="text-sm font-medium flex items-center gap-2">
+              <Package className="w-4 h-4 text-muted-foreground" />
+              Material
+            </label>
+            <Input
+              value={`${movement.materialCode} — ${movement.materialName}`}
               readOnly
               className="bg-muted"
             />
@@ -54,11 +73,7 @@ export function MovementDetailsDialog({
                 Tipo de Movimentação
               </label>
               <Input
-                value={
-                  movementType
-                    ? `${movementType.name} (${movementType.direction === 'IN' ? 'Entrada' : 'Saída'})`
-                    : movement.movementTypeId
-                }
+                value={`${movement.movementTypeName} (${movement.movementTypeDirection === 'IN' ? 'Entrada' : 'Saída'})`}
                 readOnly
                 className="bg-muted"
               />
@@ -71,7 +86,7 @@ export function MovementDetailsDialog({
                 Quantidade
               </label>
               <Input
-                value={movement.quantity}
+                value={`${movement.quantity} ${movement.materialUnit}`}
                 readOnly
                 className="bg-muted"
               />

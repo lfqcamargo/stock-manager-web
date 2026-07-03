@@ -12,8 +12,14 @@ export function useMovement() {
     page = 0,
     limit = 20,
     params?: {
-      addressingId?: string;
+      locationId?: string;
+      subLocationId?: string;
+      rowId?: string;
+      shelfId?: string;
+      positionId?: string;
+      materialId?: string;
       movementTypeId?: string;
+      direction?: 'IN' | 'OUT';
       userId?: string;
       dateFrom?: string;
       dateTo?: string;

@@ -102,7 +102,7 @@ export function MovementTypesTable(_props: MovementTypesTableProps) {
 
   function handlePaginate(p: number) {
     setSearchParams((state) => {
-      state.set('page', (p + 1).toString());
+      state.set('page', p.toString());
       return state;
     });
   }
@@ -288,7 +288,7 @@ export function MovementTypesTable(_props: MovementTypesTableProps) {
       {/* Paginação */}
       {processedData.totalPages > 1 && (
         <Pagination
-          currentPage={page}
+          currentPage={page + 1}
           itemCount={typesData?.meta.totalItems ?? 0}
           itemsPerPage={typesData?.meta.itemsPerPage ?? 20}
           onPageChange={handlePaginate}

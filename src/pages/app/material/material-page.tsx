@@ -35,8 +35,9 @@ export function MaterialPage() {
   const debouncedCodeFilter = useDebounce(codeFilter);
   const debouncedNameFilter = useDebounce(nameFilter);
   const debouncedDescriptionFilter = useDebounce(descriptionFilter);
-  const debouncedGroupIdFilter = useDebounce(groupIdFilter);
-  const debouncedActiveFilter = useDebounce(activeFilter);
+  // Selects não precisam de debounce — reagem imediatamente
+  const debouncedGroupIdFilter = groupIdFilter;
+  const debouncedActiveFilter = activeFilter;
 
   const { useGetMaterials, useGetMaterialsStats, useDeleteMaterial } =
     useMaterial();
@@ -45,7 +46,7 @@ export function MaterialPage() {
     code: debouncedCodeFilter || undefined,
     name: debouncedNameFilter || undefined,
     description: debouncedDescriptionFilter || undefined,
-    groupId: debouncedGroupIdFilter === 'all' ? undefined : groupIdFilter,
+    groupId: debouncedGroupIdFilter === 'all' ? undefined : debouncedGroupIdFilter,
     active:
       debouncedActiveFilter === 'all'
         ? undefined

@@ -51,7 +51,7 @@ export function GroupsFilters({
       />
       <div className="flex items-center gap-2">
         <Select
-          value={activeFilter}
+          value={activeFilter || 'all'}
           onValueChange={(value) =>
             onUpdateSearchParams({ active: value === 'all' ? null : value })
           }

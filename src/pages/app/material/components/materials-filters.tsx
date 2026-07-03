@@ -55,7 +55,7 @@ export function MaterialsFilters({
         }
       />
       <Select
-        value={groupIdFilter}
+        value={groupIdFilter || 'all'}
         onValueChange={(value) =>
           onUpdateSearchParams({ groupId: value === 'all' ? null : value })
         }
@@ -67,14 +67,14 @@ export function MaterialsFilters({
           <SelectItem value="all">Todos os grupos</SelectItem>
           {groups.map((group) => (
             <SelectItem key={group.id} value={group.id}>
-              {group.name}
+              {group.code} — {group.name}
             </SelectItem>
           ))}
         </SelectContent>
       </Select>
       <div className="flex items-center gap-2">
         <Select
-          value={activeFilter}
+          value={activeFilter || 'all'}
           onValueChange={(value) =>
             onUpdateSearchParams({ active: value === 'all' ? null : value })
           }

@@ -131,10 +131,10 @@ export function MateriaisTable({
                 <Button
                   variant="ghost"
                   className="h-auto p-0 font-semibold hover:bg-transparent"
-                  onClick={() => handleSort('nome')}
+                  onClick={() => handleSort('codigo')}
                 >
-                  Material
-                  {currentSortField === 'nome' ? (
+                  Código
+                  {currentSortField === 'codigo' ? (
                     currentSortDirection === 'asc' ? (
                       <ArrowUp className="ml-2 h-4 w-4" />
                     ) : (
@@ -149,10 +149,10 @@ export function MateriaisTable({
                 <Button
                   variant="ghost"
                   className="h-auto p-0 font-semibold hover:bg-transparent"
-                  onClick={() => handleSort('codigo')}
+                  onClick={() => handleSort('nome')}
                 >
-                  Código
-                  {currentSortField === 'codigo' ? (
+                  Material
+                  {currentSortField === 'nome' ? (
                     currentSortDirection === 'asc' ? (
                       <ArrowUp className="ml-2 h-4 w-4" />
                     ) : (
@@ -225,13 +225,13 @@ export function MateriaisTable({
               ? Array.from({ length: 5 }).map((_, index) => (
                   <TableRow key={index}>
                     <TableCell>
+                      <Skeleton className="h-4 w-16" />
+                    </TableCell>
+                    <TableCell>
                       <div className="flex items-center gap-3">
                         <Skeleton className="h-9 w-9 rounded-lg" />
                         <Skeleton className="h-4 w-32" />
                       </div>
-                    </TableCell>
-                    <TableCell>
-                      <Skeleton className="h-4 w-16" />
                     </TableCell>
                     <TableCell>
                       <Skeleton className="h-4 w-24" />
@@ -249,6 +249,9 @@ export function MateriaisTable({
                 ))
               : materials.map((material: MaterialDetails) => (
                   <TableRow key={material.id} className="group">
+                    <TableCell className="font-medium">
+                      {material.code}
+                    </TableCell>
                     <TableCell>
                       <div
                         className="flex items-center gap-3 cursor-pointer"
@@ -274,9 +277,6 @@ export function MateriaisTable({
                         </div>
                         <div className="font-medium">{material.name}</div>
                       </div>
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      {material.code}
                     </TableCell>
                     <TableCell>{material.group}</TableCell>
                     <TableCell>{material.unit}</TableCell>

@@ -1,9 +1,6 @@
-import { useQuery } from '@tanstack/react-query';
 import { CalendarDays, Eye, MapPin, Package } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 
-import { fetchAddressings } from '@/api/stock/fetch-addressings';
-import { fetchMovementTypes } from '@/api/stock/fetch-movement-types';
 import type { FetchMovementsResponse, Movement } from '@/api/stock/fetch-movements';
 import { Pagination } from '@/components/pagination';
 import { Badge } from '@/components/ui/badge';
@@ -29,39 +26,6 @@ export function MovementsCards({
 }: MovementsCardsProps) {
   const [selectedMovement, setSelectedMovement] = useState<Movement | null>(null);
   const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
-
-  const { data: typesData } = useQuery({
-    queryKey: ['movementTypes', 0, 100, undefined],
-    queryFn: () => fetchMovementTypes({ page: 0, limit: 100 }),
-  });
-
-  const { data: addressingsData } = useQuery({
-    queryKey: ['addressings', 0, 100, { active: true }],
-    queryFn: () => fetchAddressings({ page: 0, limit: 100, active: true }),
-  });
-
-  const typesMap = useMemo(() => {
-    const map = new Map<string, { name: string; direction: 'IN' | 'OUT' }>();
-    typesData?.movementTypes.forEach((t) => map.set(t.id, t));
-    return map;
-  }, [typesData]);
-
-  const addressingsMap = useMemo(() => {
-    const map = new Map<string, string>();
-    addressingsData?.addressings.forEach((a) => {
-      const label = [
-        a.location?.name,
-        a.subLocation?.name,
-        a.row?.name,
-        a.shelf?.name,
-        a.position?.name,
-      ]
-        .filter(Boolean)
-        .join(' / ');
-      map.set(a.id, label || a.id);
-    });
-    return map;
-  }, [addressingsData]);
 
   if (isLoading) {
     return (
@@ -97,9 +61,15 @@ export function MovementsCards({
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {movements.map((movement) => {
-          const movType = typesMap.get(movement.movementTypeId);
-          const addressingLabel =
-            addressingsMap.get(movement.addressingId) ?? movement.addressingId;
+          const addrLabel = [
+            movement.locationName,
+            movement.subLocationName,
+            movement.rowName,
+            movement.shelfName,
+            movement.positionName,
+          ]
+            .filter(Boolean)
+            .join(' / ');
 
           return (
             <Card key={movement.id} className="overflow-hidden group">
@@ -110,7 +80,7 @@ export function MovementsCards({
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="font-semibold truncate">
-                      {movType?.name ?? 'Movimentação'}
+                      {movement.movementTypeName}
                     </h3>
                     <p className="text-sm text-muted-foreground">
                       Qtd: {movement.quantity}
@@ -120,7 +90,7 @@ export function MovementsCards({
                 <div className="space-y-2">
                   <div className="flex items-start gap-2 text-sm text-muted-foreground">
                     <MapPin className="h-4 w-4 shrink-0 mt-0.5" />
-                    <span className="truncate">{addressingLabel}</span>
+                    <span className="truncate">{addrLabel || movement.addressingId}</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <CalendarDays className="h-4 w-4 shrink-0" />
@@ -129,10 +99,10 @@ export function MovementsCards({
                   <div className="flex items-center gap-2">
                     <Badge
                       variant={
-                        movType?.direction === 'IN' ? 'default' : 'destructive'
+                        movement.movementTypeDirection === 'IN' ? 'default' : 'destructive'
                       }
                     >
-                      {movType?.direction === 'IN' ? 'Entrada' : 'Saída'}
+                      {movement.movementTypeDirection === 'IN' ? 'Entrada' : 'Saída'}
                     </Badge>
                   </div>
                   {movement.observation && (
@@ -161,15 +131,13 @@ export function MovementsCards({
       </div>
 
       {selectedMovement && (
-        <MovementDetailsDialog
+      <MovementDetailsDialog
           open={isDetailsDialogOpen}
           onOpenChange={(open) => {
             setIsDetailsDialogOpen(open);
             if (!open) setSelectedMovement(null);
           }}
           movement={selectedMovement}
-          addressingLabel={addressingsMap.get(selectedMovement.addressingId)}
-          movementType={typesMap.get(selectedMovement.movementTypeId)}
         />
       )}
 

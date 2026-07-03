@@ -365,10 +365,10 @@ export function AddressingTable({ onDelete }: Props) {
                 Prateleira / Posição
               </TableHead>
               <TableHead>Material</TableHead>
-              <TableHead>
+              <TableHead className="text-right">
                 <Button
                   variant="ghost"
-                  className="h-auto p-0 font-semibold hover:bg-transparent"
+                  className="h-auto p-0 font-semibold hover:bg-transparent ml-auto flex"
                   onClick={() => handleSort('amount')}
                 >
                   Saldo <ArrowUpDown className="ml-2 h-4 w-4" />
@@ -433,13 +433,13 @@ export function AddressingTable({ onDelete }: Props) {
                       <span className="text-muted-foreground text-sm">—</span>
                     )}
                   </TableCell>
-                  <TableCell>
-                    <Badge variant={addr.amount > 0 ? 'default' : 'outline'}>
+                  <TableCell className="text-right">
+                    <Badge variant={addr.amount > 0 ? 'default' : 'outline'} className="tabular-nums">
                       {addr.amount}
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <Badge variant={addr.active ? 'default' : 'secondary'}>
+                    <Badge variant={addr.active ? 'default' : 'destructive'}>
                       {addr.active ? 'Ativo' : 'Inativo'}
                     </Badge>
                   </TableCell>
@@ -503,12 +503,12 @@ export function AddressingTable({ onDelete }: Props) {
 
       {meta && meta.totalPages > 1 && (
         <Pagination
-          currentPage={page}
+          currentPage={page + 1}
           itemCount={meta.totalItems}
           itemsPerPage={meta.itemsPerPage}
           onPageChange={(p) =>
             setSearchParams((s) => {
-              s.set('page', (p + 1).toString());
+              s.set('page', p.toString());
               return s;
             })
           }
