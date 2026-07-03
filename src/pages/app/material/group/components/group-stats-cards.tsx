@@ -13,8 +13,10 @@ export function GroupStatsCards({
   totalActiveGroups = 0,
   totalEmptyGroups = 0,
 }: GroupStatsCardsProps) {
+  const totalInactiveGroups = totalItems - totalActiveGroups;
+
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-4 md:grid-cols-3">
       {/* Total de Grupos */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -38,7 +40,7 @@ export function GroupStatsCards({
           <CardTitle className="text-sm font-medium">
             Status dos Grupos
           </CardTitle>
-          <Package className="h-4 w-4 text-muted-foreground" />
+          <Boxes className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 gap-4">
@@ -47,42 +49,40 @@ export function GroupStatsCards({
               <div className="text-2xl font-bold text-green-600">
                 {totalActiveGroups}
               </div>
-              <div className="text-xs text-muted-foreground">Com materiais</div>
+              <div className="text-xs text-muted-foreground">Ativos</div>
             </div>
             <div className="text-center">
-              <PackageX className="h-6 w-6 text-yellow-500 mx-auto mb-2" />
-              <div className="text-2xl font-bold text-yellow-500">
-                {totalEmptyGroups}
+              <PackageX className="h-6 w-6 text-red-500 mx-auto mb-2" />
+              <div className="text-2xl font-bold text-red-500">
+                {totalInactiveGroups}
               </div>
-              <div className="text-xs text-muted-foreground">Vazios</div>
+              <div className="text-xs text-muted-foreground">Inativos</div>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Distribuição de Materiais */}
+      {/* Ocupação */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">
-            Distribuição de Materiais
-          </CardTitle>
+          <CardTitle className="text-sm font-medium">Ocupação</CardTitle>
           <Package className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-4">
             <div className="text-center">
-              <PackageCheck className="h-6 w-6 text-blue-600 mx-auto mb-2" />
-              <div className="text-xl font-bold text-blue-600">
-                {totalActiveGroups}
+              <Package className="h-6 w-6 text-blue-600 mx-auto mb-2" />
+              <div className="text-2xl font-bold text-blue-600">
+                {totalItems - totalEmptyGroups}
               </div>
-              <div className="text-xs text-muted-foreground">Ativos</div>
+              <div className="text-xs text-muted-foreground">Com materiais</div>
             </div>
             <div className="text-center">
-              <PackageX className="h-6 w-6 text-orange-600 mx-auto mb-2" />
-              <div className="text-xl font-bold text-orange-600">
-                {totalItems - totalActiveGroups}
+              <Package className="h-6 w-6 text-yellow-500 mx-auto mb-2" />
+              <div className="text-2xl font-bold text-yellow-500">
+                {totalEmptyGroups}
               </div>
-              <div className="text-xs text-muted-foreground">Inativos</div>
+              <div className="text-xs text-muted-foreground">Sem materiais</div>
             </div>
           </div>
         </CardContent>
