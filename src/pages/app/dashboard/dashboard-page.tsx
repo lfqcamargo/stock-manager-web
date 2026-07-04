@@ -31,11 +31,13 @@ export function DashboardPage() {
         <Button
           variant="outline"
           size="sm"
-          onClick={() => refetch()}
+          onClick={() => void refetch()}
           disabled={isFetching}
           className="gap-2"
         >
-          <RefreshCw className={`h-3.5 w-3.5 ${isFetching ? 'animate-spin' : ''}`} />
+          <RefreshCw
+            className={`h-3.5 w-3.5 ${isFetching ? 'animate-spin' : ''}`}
+          />
           Atualizar
         </Button>
       </div>
@@ -60,7 +62,10 @@ export function DashboardPage() {
       </div>
 
       {/* Recent movements — full width */}
-      <RecentMovements movements={data?.recentMovements} isLoading={isLoading} />
+      <RecentMovements
+        movements={data?.recentMovements}
+        isLoading={isLoading}
+      />
     </div>
   );
 }

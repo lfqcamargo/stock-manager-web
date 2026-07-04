@@ -1,14 +1,8 @@
-import { ArrowLeft, FolderPlus } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -32,7 +26,7 @@ export function GroupViewPage() {
             variant="outline"
             size="icon"
             className="h-9 w-9 md:h-10 md:w-10 rounded-lg md:rounded-xl shadow-sm hover:shadow transition-all duration-200"
-            onClick={() => navigate(-1)}
+            onClick={() => void navigate(-1)}
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>

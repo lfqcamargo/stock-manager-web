@@ -13,7 +13,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { EditGroupDialog } from './edit-group-dialog';
 
 interface GroupsCardsProps {
-  onDelete: (id: string) => void;
+  onDelete: ((id: string) => void) | undefined;
   isLoading?: boolean;
   groups: Group[];
   meta?: GetGroupsResponse['meta'];
@@ -106,7 +106,9 @@ export function GroupsCards({
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-mono text-muted-foreground">{group.code}</p>
+                  <p className="text-xs font-mono text-muted-foreground">
+                    {group.code}
+                  </p>
                   <h3 className="font-semibold truncate">{group.name}</h3>
                 </div>
               </div>
@@ -131,22 +133,26 @@ export function GroupsCards({
                 <Eye className="h-4 w-4 mr-2" />
                 Ver
               </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => handleEdit(group)}
-              >
-                <Edit className="h-4 w-4 mr-2" />
-                Editar
-              </Button>
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={() => onDelete(group.id)}
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                Excluir
-              </Button>
+              {onDelete && (
+                <>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleEdit(group)}
+                  >
+                    <Edit className="h-4 w-4 mr-2" />
+                    Editar
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => onDelete(group.id)}
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Excluir
+                  </Button>
+                </>
+              )}
             </CardFooter>
           </Card>
         ))}

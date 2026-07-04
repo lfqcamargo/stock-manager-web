@@ -2,7 +2,10 @@ import { Edit, Eye, MapPin, Package, Warehouse } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import type { Addressing, FetchAddressingsResponse } from '@/api/stock/fetch-addressings';
+import type {
+  Addressing,
+  FetchAddressingsResponse,
+} from '@/api/stock/fetch-addressings';
 import { Pagination } from '@/components/pagination';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -12,7 +15,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { EditAddressingDialog } from './edit-dialog';
 
 interface AddressingCardsProps {
-  onDelete: (id: string) => void;
+  onDelete: ((id: string) => void) | undefined;
   isLoading?: boolean;
   addressings: Addressing[];
   meta?: FetchAddressingsResponse['meta'];
@@ -150,24 +153,28 @@ export function AddressingCards({
                 <Eye className="h-4 w-4 mr-2" />
                 Ver
               </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setSelected(addr);
-                  setEditOpen(true);
-                }}
-              >
-                <Edit className="h-4 w-4 mr-2" />
-                Editar
-              </Button>
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={() => onDelete(addr.id)}
-              >
-                Excluir
-              </Button>
+              {onDelete && (
+                <>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setSelected(addr);
+                      setEditOpen(true);
+                    }}
+                  >
+                    <Edit className="h-4 w-4 mr-2" />
+                    Editar
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => onDelete(addr.id)}
+                  >
+                    Excluir
+                  </Button>
+                </>
+              )}
             </CardFooter>
           </Card>
         ))}

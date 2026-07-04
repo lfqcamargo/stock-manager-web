@@ -1,4 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
+import { parse } from 'date-fns';
+import { ptBR } from 'date-fns/locale/pt-BR';
 import {
   ArrowDown,
   ArrowUp,
@@ -10,12 +12,10 @@ import {
   TrendingDown,
   TrendingUp,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import type { DateRange } from 'react-day-picker';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { z } from 'zod';
-import { parse } from 'date-fns';
-import { ptBR } from 'date-fns/locale/pt-BR';
 
 import { fetchLocations } from '@/api/stock/fetch-locations';
 import { fetchMaterials } from '@/api/stock/fetch-materials';
@@ -25,6 +25,7 @@ import { fetchPositions } from '@/api/stock/fetch-positions';
 import { fetchRows } from '@/api/stock/fetch-rows';
 import { fetchShelfs } from '@/api/stock/fetch-shelfs';
 import { fetchSubLocations } from '@/api/stock/fetch-sub-locations';
+import { MaterialCombobox } from '@/components/material-combobox';
 import { Pagination } from '@/components/pagination';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -92,6 +93,13 @@ export function MovementsTable() {
 
   // Filtros de conteúdo
   const [materialFilter, setMaterialFilter] = useState('all');
+  const [materialSearch, setMaterialSearch] = useState('');
+  const matSearchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleMatSearchChange = useCallback((search: string) => {
+    if (matSearchTimerRef.current) clearTimeout(matSearchTimerRef.current);
+    matSearchTimerRef.current = setTimeout(() => setMaterialSearch(search), 300);
+  }, []);
   const [directionFilter, setDirectionFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
   const [observationFilter, setObservationFilter] = useState('');
@@ -105,7 +113,7 @@ export function MovementsTable() {
 
   // Filtro de data — armazenado no searchParams igual à página de usuários
   const dateFromStr = searchParams.get('dateFrom');
-  const dateToStr   = searchParams.get('dateTo');
+  const dateToStr = searchParams.get('dateTo');
   const dateRange: DateRange | undefined =
     dateFromStr || dateToStr
       ? {
@@ -172,15 +180,20 @@ export function MovementsTable() {
     queryFn: () => fetchPositions({ page: 0, limit: 100 }),
   });
 
-  const { data: matData } = useQuery({
+  const { data: matData, isFetching: matFetching } = useQuery({
     queryKey: [
       'materials',
       0,
       100,
-      { orderBy: 'name', orderDirection: 'asc', active: true },
+      { orderBy: 'name', orderDirection: 'asc', active: true, name: materialSearch || undefined },
     ],
     queryFn: () =>
-      fetchMaterials(0, 100, { orderBy: 'name', orderDirection: 'asc', active: true }),
+      fetchMaterials(0, 100, {
+        orderBy: 'name',
+        orderDirection: 'asc',
+        active: true,
+        name: materialSearch || undefined,
+      }),
   });
 
   const { data: typesData, isLoading: isLoadingTypes } = useQuery({
@@ -201,7 +214,8 @@ export function MovementsTable() {
   const { data: movementsData, isLoading: isLoadingMovements } =
     useGetMovements(page, 20, {
       locationId: locationFilter !== 'all' ? locationFilter : undefined,
-      subLocationId: subLocationFilter !== 'all' ? subLocationFilter : undefined,
+      subLocationId:
+        subLocationFilter !== 'all' ? subLocationFilter : undefined,
       rowId: rowFilter !== 'all' ? rowFilter : undefined,
       shelfId: shelfFilter !== 'all' ? shelfFilter : undefined,
       positionId: positionFilter !== 'all' ? positionFilter : undefined,
@@ -212,7 +226,7 @@ export function MovementsTable() {
           : undefined,
       movementTypeId: typeFilter !== 'all' ? typeFilter : undefined,
       dateFrom: dateFromStr ?? undefined,
-      dateTo:   dateToStr   ?? undefined,
+      dateTo: dateToStr ?? undefined,
       orderBy: sortField,
       orderDirection: sortDirection,
     });
@@ -297,7 +311,6 @@ export function MovementsTable() {
     <div className="space-y-6 p-4 md:p-6">
       {/* ── Filtros ─────────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-
         {/* Localização */}
         <Select
           value={locationFilter}
@@ -391,22 +404,17 @@ export function MovementsTable() {
         </Select>
 
         {/* Material */}
-        <Select
+        <MaterialCombobox
+          materials={matData?.materials ?? []}
           value={materialFilter}
           onValueChange={handleFilterChange(setMaterialFilter)}
-        >
-          <SelectTrigger className="h-10">
-            <SelectValue placeholder="Material" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos os materiais</SelectItem>
-            {matData?.materials?.map((m) => (
-              <SelectItem key={m.id} value={m.id}>
-                {m.code} — {m.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          onSearchChange={handleMatSearchChange}
+          isLoading={matFetching}
+          showAllOption
+          allLabel="Todos os materiais"
+          placeholder="Material"
+          triggerClassName="h-10"
+        />
 
         {/* Direção */}
         <Select

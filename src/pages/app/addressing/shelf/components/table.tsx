@@ -38,7 +38,7 @@ import { useShelf } from '@/hooks/use-shelf';
 import { EditShelfDialog } from './edit-dialog';
 
 interface Props {
-  onDelete: (id: string) => void;
+  onDelete: ((id: string) => void) | undefined;
 }
 
 export function ShelfsTable({ onDelete }: Props) {
@@ -210,27 +210,33 @@ export function ShelfsTable({ onDelete }: Props) {
                         <DropdownMenuLabel>Ações</DropdownMenuLabel>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
-                          onClick={() => navigate(`/addressing/shelf/${shelf.id}`)}
+                          onClick={() =>
+                            void navigate(`/addressing/shelf/${shelf.id}`)
+                          }
                         >
                           <Eye className="mr-2 h-4 w-4" />
                           Visualizar
                         </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => {
-                            setSelected(shelf);
-                            setEditOpen(true);
-                          }}
-                        >
-                          <Edit className="mr-2 h-4 w-4" />
-                          Editar
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => onDelete(shelf.id)}
-                          className="text-destructive focus:text-destructive"
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Excluir
-                        </DropdownMenuItem>
+                        {onDelete && (
+                          <>
+                            <DropdownMenuItem
+                              onClick={() => {
+                                setSelected(shelf);
+                                setEditOpen(true);
+                              }}
+                            >
+                              <Edit className="mr-2 h-4 w-4" />
+                              Editar
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => onDelete(shelf.id)}
+                              className="text-destructive focus:text-destructive"
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Excluir
+                            </DropdownMenuItem>
+                          </>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>

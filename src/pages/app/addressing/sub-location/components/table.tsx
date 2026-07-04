@@ -46,7 +46,7 @@ import { useSubLocation } from '@/hooks/use-sub-location';
 import { EditSubLocationDialog } from './edit-dialog';
 
 interface Props {
-  onDelete: (id: string) => void;
+  onDelete: ((id: string) => void) | undefined;
 }
 
 export function SubLocationsTable({ onDelete }: Props) {
@@ -265,24 +265,30 @@ export function SubLocationsTable({ onDelete }: Props) {
                         <DropdownMenuLabel>Ações</DropdownMenuLabel>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
-                          onClick={() => navigate(`/addressing/sub-location/${sub.id}`)}
+                          onClick={() =>
+                            void navigate(`/addressing/sub-location/${sub.id}`)
+                          }
                         >
                           <Eye className="mr-2 h-4 w-4" /> Visualizar
                         </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => {
-                            setSelected(sub);
-                            setEditOpen(true);
-                          }}
-                        >
-                          <Edit className="mr-2 h-4 w-4" /> Editar
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => onDelete(sub.id)}
-                          className="text-destructive focus:text-destructive"
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" /> Excluir
-                        </DropdownMenuItem>
+                        {onDelete && (
+                          <>
+                            <DropdownMenuItem
+                              onClick={() => {
+                                setSelected(sub);
+                                setEditOpen(true);
+                              }}
+                            >
+                              <Edit className="mr-2 h-4 w-4" /> Editar
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => onDelete(sub.id)}
+                              className="text-destructive focus:text-destructive"
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" /> Excluir
+                            </DropdownMenuItem>
+                          </>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>

@@ -1,18 +1,17 @@
 import { ArrowLeft, LayoutGrid, Plus, Table } from 'lucide-react';
 import { useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { z } from 'zod';
 
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useMovement } from '@/hooks/use-movement';
 
-import { CreateMovementDialog } from './components/create-movement-dialog';
 import { MovementsCards } from './components/movements-cards';
 import { MovementsTable } from './components/movimentacoes-table';
 
 export function MovementPage() {
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const navigate = useNavigate();
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -61,7 +60,7 @@ export function MovementPage() {
             </div>
           </div>
           <Button
-            onClick={() => setIsAddDialogOpen(true)}
+            onClick={() => void navigate('/movement/movement/new')}
             className="rounded-lg md:rounded-xl shadow-md hover:shadow-lg transition-all duration-300 h-9 md:h-10 lg:h-11 w-full md:w-auto"
           >
             <Plus className="mr-2 h-4 w-4" />
@@ -105,11 +104,6 @@ export function MovementPage() {
           </div>
         )}
       </div>
-
-      <CreateMovementDialog
-        open={isAddDialogOpen}
-        onOpenChange={setIsAddDialogOpen}
-      />
     </div>
   );
 }

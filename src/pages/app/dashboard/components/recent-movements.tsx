@@ -20,7 +20,10 @@ interface RecentMovementsProps {
   isLoading: boolean;
 }
 
-export function RecentMovements({ movements, isLoading }: RecentMovementsProps) {
+export function RecentMovements({
+  movements,
+  isLoading,
+}: RecentMovementsProps) {
   if (isLoading) {
     return (
       <Card>
@@ -53,7 +56,9 @@ export function RecentMovements({ movements, isLoading }: RecentMovementsProps) 
     <Card>
       <CardHeader>
         <CardTitle className="text-base">Últimas movimentações</CardTitle>
-        <CardDescription>Movimentos registrados mais recentemente</CardDescription>
+        <CardDescription>
+          Movimentos registrados mais recentemente
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-0 p-0">
         {!hasMovements ? (
@@ -92,7 +97,9 @@ export function RecentMovements({ movements, isLoading }: RecentMovementsProps) 
                       }`}
                     >
                       {m.direction === 'IN' ? '+' : '-'}
-                      {m.quantity.toLocaleString('pt-BR', { maximumFractionDigits: 2 })}
+                      {m.quantity.toLocaleString('pt-BR', {
+                        maximumFractionDigits: 2,
+                      })}
                     </Badge>
                   </div>
                   <p className="text-xs text-muted-foreground mt-0.5 truncate">

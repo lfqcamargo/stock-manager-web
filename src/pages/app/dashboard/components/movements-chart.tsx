@@ -1,12 +1,6 @@
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import {
-  Area,
-  AreaChart,
-  CartesianGrid,
-  XAxis,
-  YAxis,
-} from 'recharts';
+import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 
 import type { MovementByDay } from '@/api/stock/fetch-dashboard';
 import {
@@ -17,12 +11,12 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import {
+  type ChartConfig,
   ChartContainer,
   ChartLegend,
   ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
-  type ChartConfig,
 } from '@/components/ui/chart';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -65,12 +59,17 @@ export function MovementsChart({ data, isLoading }: MovementsChartProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">Movimentações — últimos 30 dias</CardTitle>
+        <CardTitle className="text-base">
+          Movimentações — últimos 30 dias
+        </CardTitle>
         <CardDescription>Entradas e saídas de estoque por dia</CardDescription>
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig} className="h-64 w-full">
-          <AreaChart data={chartData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+          <AreaChart
+            data={chartData}
+            margin={{ top: 4, right: 4, left: -20, bottom: 0 }}
+          >
             <defs>
               <linearGradient id="fillIn" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />

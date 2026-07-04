@@ -47,8 +47,8 @@ export function useMovement() {
     return useMutation({
       mutationFn: createMovement,
       onSuccess: () => {
-        queryClient.removeQueries({ queryKey: ['movements'] });
-        queryClient.removeQueries({ queryKey: ['addressings'] });
+        void queryClient.invalidateQueries({ queryKey: ['movements'] });
+        void queryClient.invalidateQueries({ queryKey: ['addressings'] });
         toast.success('Movimentação registrada com sucesso');
       },
     });

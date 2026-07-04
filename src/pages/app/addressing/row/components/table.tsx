@@ -38,7 +38,7 @@ import { useRow } from '@/hooks/use-row';
 import { EditRowDialog } from './edit-dialog';
 
 interface Props {
-  onDelete: (id: string) => void;
+  onDelete: ((id: string) => void) | undefined;
 }
 
 export function RowsTable({ onDelete }: Props) {
@@ -210,27 +210,31 @@ export function RowsTable({ onDelete }: Props) {
                         <DropdownMenuLabel>Ações</DropdownMenuLabel>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
-                          onClick={() => navigate(`/addressing/row/${row.id}`)}
+                          onClick={() => void navigate(`/addressing/row/${row.id}`)}
                         >
                           <Eye className="mr-2 h-4 w-4" />
                           Visualizar
                         </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => {
-                            setSelected(row);
-                            setEditOpen(true);
-                          }}
-                        >
-                          <Edit className="mr-2 h-4 w-4" />
-                          Editar
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => onDelete(row.id)}
-                          className="text-destructive focus:text-destructive"
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Excluir
-                        </DropdownMenuItem>
+                        {onDelete && (
+                          <>
+                            <DropdownMenuItem
+                              onClick={() => {
+                                setSelected(row);
+                                setEditOpen(true);
+                              }}
+                            >
+                              <Edit className="mr-2 h-4 w-4" />
+                              Editar
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => onDelete(row.id)}
+                              className="text-destructive focus:text-destructive"
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Excluir
+                            </DropdownMenuItem>
+                          </>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>

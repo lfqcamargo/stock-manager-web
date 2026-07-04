@@ -117,7 +117,9 @@ export function MovementViewPage() {
                   ) : (
                     <TrendingDown className="h-3 w-3" />
                   )}
-                  {movement.movementTypeDirection === 'IN' ? 'Entrada' : 'Saída'}
+                  {movement.movementTypeDirection === 'IN'
+                    ? 'Entrada'
+                    : 'Saída'}
                 </Badge>
               )}
             </div>
@@ -150,7 +152,6 @@ export function MovementViewPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
-
           {/* ── Card: Informações do Movimento ───────────────────────────── */}
           <Card>
             <CardHeader className="pb-3">
@@ -224,7 +225,9 @@ export function MovementViewPage() {
             </CardHeader>
             <CardContent>
               {movement.observation ? (
-                <p className="text-sm leading-relaxed">{movement.observation}</p>
+                <p className="text-sm leading-relaxed">
+                  {movement.observation}
+                </p>
               ) : (
                 <p className="text-sm text-muted-foreground italic">
                   Sem observação registrada.

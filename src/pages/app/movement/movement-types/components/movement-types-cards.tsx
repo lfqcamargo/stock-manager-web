@@ -12,7 +12,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { EditMovementTypeDialog } from './edit-movement-type-dialog';
 
 interface MovementTypesCardsProps {
-  onDelete: (id: string) => void;
+  onDelete: ((id: string) => void) | undefined;
   isLoading?: boolean;
   movementTypes: MovementType[];
   meta?: FetchMovementTypesResponse['meta'];
@@ -87,7 +87,9 @@ export function MovementTypesCards({
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <Badge
-                    variant={type.direction === 'IN' ? 'default' : 'destructive'}
+                    variant={
+                      type.direction === 'IN' ? 'default' : 'destructive'
+                    }
                   >
                     {type.direction === 'IN' ? 'Entrada' : 'Saída'}
                   </Badge>
@@ -95,22 +97,26 @@ export function MovementTypesCards({
               </div>
             </CardContent>
             <CardFooter className="border-t bg-muted/20 px-6 py-3 flex justify-end items-center gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => handleEdit(type)}
-              >
-                <Edit className="h-4 w-4 mr-2" />
-                Editar
-              </Button>
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={() => onDelete(type.id)}
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                Excluir
-              </Button>
+              {onDelete && (
+                <>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleEdit(type)}
+                  >
+                    <Edit className="h-4 w-4 mr-2" />
+                    Editar
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => onDelete(type.id)}
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Excluir
+                  </Button>
+                </>
+              )}
             </CardFooter>
           </Card>
         ))}

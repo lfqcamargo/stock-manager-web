@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes as RouterRoutes } from 'react-router-dom';
 
+import { useAuth } from '@/hooks/use-auth';
 import { AppLayout } from '@/layouts/app-layout';
 import { AddressingPage } from '@/pages/app/addressing/addressing/addressing-page';
 import { AddressingViewPage } from '@/pages/app/addressing/addressing/view/addressing-view-page';
@@ -20,10 +21,19 @@ import { GroupPage } from '@/pages/app/material/group/group-page';
 import { GroupViewPage } from '@/pages/app/material/group/view/group-view-page';
 import { MaterialPage } from '@/pages/app/material/material-page';
 import { MaterialViewPage } from '@/pages/app/material/view/material-view-page';
+import { CreateMovementPage } from '@/pages/app/movement/movement/create-movement-page';
 import { MovementPage } from '@/pages/app/movement/movement/movement-page';
 import { MovementViewPage } from '@/pages/app/movement/movement/view/movement-view-page';
 import { MovementTypesPage } from '@/pages/app/movement/movement-types/movement-types-page';
 import { UserProfilePage } from '@/pages/app/user/profile/user-profile-page';
+
+function AdminRoute({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth();
+  if (user?.role !== 'ADMIN') {
+    return <Navigate to="/" replace />;
+  }
+  return <>{children}</>;
+}
 
 export function AppRoutes() {
   return (
@@ -37,7 +47,10 @@ export function AppRoutes() {
         <Route path="/addressing/location" element={<LocationPage />} />
         <Route path="/addressing/location/:id" element={<LocationViewPage />} />
         <Route path="/addressing/sub-location" element={<SubLocationPage />} />
-        <Route path="/addressing/sub-location/:id" element={<SubLocationViewPage />} />
+        <Route
+          path="/addressing/sub-location/:id"
+          element={<SubLocationViewPage />}
+        />
         <Route path="/addressing/row" element={<RowPage />} />
         <Route path="/addressing/row/:id" element={<RowViewPage />} />
         <Route path="/addressing/shelf" element={<ShelfPage />} />
@@ -45,13 +58,34 @@ export function AppRoutes() {
         <Route path="/addressing/position" element={<PositionPage />} />
         <Route path="/addressing/position/:id" element={<PositionViewPage />} />
         <Route path="/addressing/addressing" element={<AddressingPage />} />
-        <Route path="/addressing/addressing/:id" element={<AddressingViewPage />} />
-        <Route path="/company/users" element={<UsersPage />} />
-        <Route path="/company/profile" element={<CompanyProfilePage />} />
+        <Route
+          path="/addressing/addressing/:id"
+          element={<AddressingViewPage />}
+        />
+        <Route
+          path="/company/users"
+          element={
+            <AdminRoute>
+              <UsersPage />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/company/profile"
+          element={
+            <AdminRoute>
+              <CompanyProfilePage />
+            </AdminRoute>
+          }
+        />
         <Route path="/user/profile" element={<UserProfilePage />} />
         <Route path="/movement/movement" element={<MovementPage />} />
+        <Route path="/movement/movement/new" element={<CreateMovementPage />} />
         <Route path="/movement/movement/:id" element={<MovementViewPage />} />
-        <Route path="/movement/movement-types" element={<MovementTypesPage />} />
+        <Route
+          path="/movement/movement-types"
+          element={<MovementTypesPage />}
+        />
       </Route>
 
       {/* Default redirect */}

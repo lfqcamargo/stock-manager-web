@@ -31,7 +31,7 @@ export function useShelf() {
     return useMutation({
       mutationFn: createShelf,
       onSuccess: () => {
-        queryClient.removeQueries({ queryKey: ['shelfs'] });
+        void queryClient.invalidateQueries({ queryKey: ['shelfs'] });
         toast.success('Prateleira criada com sucesso');
       },
     });
@@ -41,7 +41,7 @@ export function useShelf() {
     return useMutation({
       mutationFn: editShelf,
       onSuccess: () => {
-        queryClient.removeQueries({ queryKey: ['shelfs'] });
+        void queryClient.invalidateQueries({ queryKey: ['shelfs'] });
         toast.success('Prateleira atualizada com sucesso');
       },
     });
@@ -51,7 +51,7 @@ export function useShelf() {
     return useMutation({
       mutationFn: ({ id }: { id: string }) => deleteShelf(id),
       onSuccess: () => {
-        queryClient.removeQueries({ queryKey: ['shelfs'] });
+        void queryClient.invalidateQueries({ queryKey: ['shelfs'] });
         toast.success('Prateleira excluída com sucesso');
       },
     });
@@ -65,5 +65,11 @@ export function useShelf() {
     });
   };
 
-  return { useGetShelfs, useGetShelfById, useCreateShelf, useEditShelf, useDeleteShelf };
+  return {
+    useGetShelfs,
+    useGetShelfById,
+    useCreateShelf,
+    useEditShelf,
+    useDeleteShelf,
+  };
 }

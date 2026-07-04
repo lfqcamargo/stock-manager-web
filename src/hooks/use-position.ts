@@ -31,7 +31,7 @@ export function usePosition() {
     return useMutation({
       mutationFn: createPosition,
       onSuccess: () => {
-        queryClient.removeQueries({ queryKey: ['positions'] });
+        void queryClient.invalidateQueries({ queryKey: ['positions'] });
         toast.success('Posição criada com sucesso');
       },
     });
@@ -41,7 +41,7 @@ export function usePosition() {
     return useMutation({
       mutationFn: editPosition,
       onSuccess: () => {
-        queryClient.removeQueries({ queryKey: ['positions'] });
+        void queryClient.invalidateQueries({ queryKey: ['positions'] });
         toast.success('Posição atualizada com sucesso');
       },
     });
@@ -51,7 +51,7 @@ export function usePosition() {
     return useMutation({
       mutationFn: ({ id }: { id: string }) => deletePosition(id),
       onSuccess: () => {
-        queryClient.removeQueries({ queryKey: ['positions'] });
+        void queryClient.invalidateQueries({ queryKey: ['positions'] });
         toast.success('Posição excluída com sucesso');
       },
     });

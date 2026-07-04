@@ -37,7 +37,7 @@ export function useAddressing() {
     return useMutation({
       mutationFn: createAddressing,
       onSuccess: () => {
-        queryClient.removeQueries({ queryKey: ['addressings'] });
+        void queryClient.invalidateQueries({ queryKey: ['addressings'] });
         toast.success('Endereçamento criado com sucesso');
       },
     });
@@ -47,7 +47,7 @@ export function useAddressing() {
     return useMutation({
       mutationFn: editAddressing,
       onSuccess: () => {
-        queryClient.removeQueries({ queryKey: ['addressings'] });
+        void queryClient.invalidateQueries({ queryKey: ['addressings'] });
         toast.success('Endereçamento atualizado com sucesso');
       },
     });
@@ -57,7 +57,7 @@ export function useAddressing() {
     return useMutation({
       mutationFn: ({ id }: { id: string }) => deleteAddressing(id),
       onSuccess: () => {
-        queryClient.removeQueries({ queryKey: ['addressings'] });
+        void queryClient.invalidateQueries({ queryKey: ['addressings'] });
         toast.success('Endereçamento excluído com sucesso');
       },
     });

@@ -7,7 +7,7 @@ import {
   Trash2,
   Warehouse,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { z } from 'zod';
 
@@ -18,6 +18,7 @@ import { fetchPositions } from '@/api/stock/fetch-positions';
 import { fetchRows } from '@/api/stock/fetch-rows';
 import { fetchShelfs } from '@/api/stock/fetch-shelfs';
 import { fetchSubLocations } from '@/api/stock/fetch-sub-locations';
+import { MaterialCombobox } from '@/components/material-combobox';
 import { Pagination } from '@/components/pagination';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -50,7 +51,7 @@ import { useAddressing } from '@/hooks/use-addressing';
 import { EditAddressingDialog } from './edit-dialog';
 
 interface Props {
-  onDelete: (id: string) => void;
+  onDelete: ((id: string) => void) | undefined;
 }
 
 export function AddressingTable({ onDelete }: Props) {
@@ -63,6 +64,8 @@ export function AddressingTable({ onDelete }: Props) {
   const [shelfFilter, setShelfFilter] = useState('all');
   const [positionFilter, setPositionFilter] = useState('all');
   const [materialFilter, setMaterialFilter] = useState('all');
+  const [materialSearch, setMaterialSearch] = useState('');
+  const materialSearchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [activeFilter, setActiveFilter] = useState('all');
 
   const [sortField, setSortField] = useState<'createdAt' | 'amount'>(
@@ -113,18 +116,26 @@ export function AddressingTable({ onDelete }: Props) {
     queryFn: () => fetchPositions({ page: 0, limit: 100 }),
   });
 
-  const { data: matData } = useQuery({
+  const handleMaterialSearchChange = useCallback((search: string) => {
+    if (materialSearchTimerRef.current) clearTimeout(materialSearchTimerRef.current);
+    materialSearchTimerRef.current = setTimeout(() => {
+      setMaterialSearch(search);
+    }, 300);
+  }, []);
+
+  const { data: matData, isFetching: matFetching } = useQuery({
     queryKey: [
       'materials',
       0,
       100,
-      { orderBy: 'name', orderDirection: 'asc', active: true },
+      { orderBy: 'name', orderDirection: 'asc', active: true, name: materialSearch || undefined },
     ],
     queryFn: () =>
       fetchMaterials(0, 100, {
         orderBy: 'name',
         orderDirection: 'asc',
         active: true,
+        name: materialSearch || undefined,
       }),
   });
 
@@ -299,22 +310,17 @@ export function AddressingTable({ onDelete }: Props) {
         </Select>
 
         {/* Material */}
-        <Select
+        <MaterialCombobox
+          materials={matData?.materials ?? []}
           value={materialFilter}
           onValueChange={handleFilterChange(setMaterialFilter)}
-        >
-          <SelectTrigger className="h-11">
-            <SelectValue placeholder="Material" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos os materiais</SelectItem>
-            {matData?.materials?.map((m) => (
-              <SelectItem key={m.id} value={m.id}>
-                {m.code} — {m.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          onSearchChange={handleMaterialSearchChange}
+          isLoading={matFetching}
+          showAllOption
+          allLabel="Todos os materiais"
+          placeholder="Material"
+          triggerClassName="h-11"
+        />
 
         {/* Status */}
         <Select
@@ -434,7 +440,10 @@ export function AddressingTable({ onDelete }: Props) {
                     )}
                   </TableCell>
                   <TableCell className="text-right">
-                    <Badge variant={addr.amount > 0 ? 'default' : 'outline'} className="tabular-nums">
+                    <Badge
+                      variant={addr.amount > 0 ? 'default' : 'outline'}
+                      className="tabular-nums"
+                    >
                       {addr.amount}
                     </Badge>
                   </TableCell>
@@ -458,27 +467,33 @@ export function AddressingTable({ onDelete }: Props) {
                         <DropdownMenuLabel>Ações</DropdownMenuLabel>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
-                          onClick={() => navigate(`/addressing/addressing/${addr.id}`)}
+                          onClick={() =>
+                            void navigate(`/addressing/addressing/${addr.id}`)
+                          }
                         >
                           <Eye className="mr-2 h-4 w-4" />
                           Visualizar
                         </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => {
-                            setSelected(addr);
-                            setEditOpen(true);
-                          }}
-                        >
-                          <Edit className="mr-2 h-4 w-4" />
-                          Editar
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => onDelete(addr.id)}
-                          className="text-destructive focus:text-destructive"
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Excluir
-                        </DropdownMenuItem>
+                        {onDelete && (
+                          <>
+                            <DropdownMenuItem
+                              onClick={() => {
+                                setSelected(addr);
+                                setEditOpen(true);
+                              }}
+                            >
+                              <Edit className="mr-2 h-4 w-4" />
+                              Editar
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => onDelete(addr.id)}
+                              className="text-destructive focus:text-destructive"
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Excluir
+                            </DropdownMenuItem>
+                          </>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>

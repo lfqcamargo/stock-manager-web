@@ -34,7 +34,7 @@ export function MaterialViewPage() {
 
   const { data: addressingsData, isLoading: isLoadingAddressings } = useQuery({
     queryKey: ['addressings', 'material', id],
-    queryFn: () => fetchAddressings({ materialId: id, limit: 999 }),
+    queryFn: () => fetchAddressings({ materialId: id, limit: 100 }),
     enabled: !!id,
   });
 

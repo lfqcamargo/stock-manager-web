@@ -38,7 +38,7 @@ import {
 import { EditGroupDialog } from './edit-group-dialog';
 
 interface GroupsTableProps {
-  onDelete: (id: string) => void;
+  onDelete: ((id: string) => void) | undefined;
   isLoading?: boolean;
   groups: Group[];
   meta?: GetGroupsResponse['meta'];
@@ -277,17 +277,23 @@ export function GroupsTable({
                             <Eye className="mr-2 h-4 w-4" />
                             Ver
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleEdit(group)}>
-                            <Edit className="mr-2 h-4 w-4" />
-                            Editar grupo
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => onDelete(group.id)}
-                            className="text-destructive focus:text-destructive"
-                          >
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Excluir grupo
-                          </DropdownMenuItem>
+                          {onDelete && (
+                            <>
+                              <DropdownMenuItem
+                                onClick={() => handleEdit(group)}
+                              >
+                                <Edit className="mr-2 h-4 w-4" />
+                                Editar grupo
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => onDelete(group.id)}
+                                className="text-destructive focus:text-destructive"
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Excluir grupo
+                              </DropdownMenuItem>
+                            </>
+                          )}
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>

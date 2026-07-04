@@ -1,15 +1,16 @@
 import { CalendarDays, Eye, MapPin, Package } from 'lucide-react';
-import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-import type { FetchMovementsResponse, Movement } from '@/api/stock/fetch-movements';
+import type {
+  FetchMovementsResponse,
+  Movement,
+} from '@/api/stock/fetch-movements';
 import { Pagination } from '@/components/pagination';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatDate } from '@/utils/format-date';
-
-import { MovementDetailsDialog } from './movement-details-dialog';
 
 interface MovementsCardsProps {
   isLoading?: boolean;
@@ -24,8 +25,7 @@ export function MovementsCards({
   meta,
   onPaginate,
 }: MovementsCardsProps) {
-  const [selectedMovement, setSelectedMovement] = useState<Movement | null>(null);
-  const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
+  const navigate = useNavigate();
 
   if (isLoading) {
     return (
@@ -90,7 +90,9 @@ export function MovementsCards({
                 <div className="space-y-2">
                   <div className="flex items-start gap-2 text-sm text-muted-foreground">
                     <MapPin className="h-4 w-4 shrink-0 mt-0.5" />
-                    <span className="truncate">{addrLabel || movement.addressingId}</span>
+                    <span className="truncate">
+                      {addrLabel || movement.addressingId}
+                    </span>
                   </div>
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <CalendarDays className="h-4 w-4 shrink-0" />
@@ -99,10 +101,14 @@ export function MovementsCards({
                   <div className="flex items-center gap-2">
                     <Badge
                       variant={
-                        movement.movementTypeDirection === 'IN' ? 'default' : 'destructive'
+                        movement.movementTypeDirection === 'IN'
+                          ? 'default'
+                          : 'destructive'
                       }
                     >
-                      {movement.movementTypeDirection === 'IN' ? 'Entrada' : 'Saída'}
+                      {movement.movementTypeDirection === 'IN'
+                        ? 'Entrada'
+                        : 'Saída'}
                     </Badge>
                   </div>
                   {movement.observation && (
@@ -116,10 +122,9 @@ export function MovementsCards({
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => {
-                    setSelectedMovement(movement);
-                    setIsDetailsDialogOpen(true);
-                  }}
+                  onClick={() =>
+                    void navigate(`/movement/movement/${movement.id}`)
+                  }
                 >
                   <Eye className="h-4 w-4 mr-2" />
                   Ver detalhes
@@ -129,17 +134,6 @@ export function MovementsCards({
           );
         })}
       </div>
-
-      {selectedMovement && (
-      <MovementDetailsDialog
-          open={isDetailsDialogOpen}
-          onOpenChange={(open) => {
-            setIsDetailsDialogOpen(open);
-            if (!open) setSelectedMovement(null);
-          }}
-          movement={selectedMovement}
-        />
-      )}
 
       {meta && meta.totalPages > 0 && (
         <Pagination

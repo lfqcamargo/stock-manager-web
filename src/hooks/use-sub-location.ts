@@ -32,7 +32,7 @@ export function useSubLocation() {
     return useMutation({
       mutationFn: createSubLocation,
       onSuccess: () => {
-        queryClient.removeQueries({ queryKey: ['subLocations'] });
+        void queryClient.invalidateQueries({ queryKey: ['subLocations'] });
         toast.success('Sub-localização criada com sucesso');
       },
     });
@@ -42,7 +42,7 @@ export function useSubLocation() {
     return useMutation({
       mutationFn: editSubLocation,
       onSuccess: () => {
-        queryClient.removeQueries({ queryKey: ['subLocations'] });
+        void queryClient.invalidateQueries({ queryKey: ['subLocations'] });
         toast.success('Sub-localização atualizada com sucesso');
       },
     });
@@ -52,7 +52,7 @@ export function useSubLocation() {
     return useMutation({
       mutationFn: ({ id }: { id: string }) => deleteSubLocation(id),
       onSuccess: () => {
-        queryClient.removeQueries({ queryKey: ['subLocations'] });
+        void queryClient.invalidateQueries({ queryKey: ['subLocations'] });
         toast.success('Sub-localização excluída com sucesso');
       },
     });

@@ -36,7 +36,7 @@ export function SubLocationViewPage() {
             variant="outline"
             size="icon"
             className="h-9 w-9 md:h-10 md:w-10 rounded-lg md:rounded-xl shadow-sm hover:shadow transition-all duration-200"
-            onClick={() => navigate(-1)}
+            onClick={() => void navigate(-1)}
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>

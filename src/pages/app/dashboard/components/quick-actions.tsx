@@ -57,7 +57,9 @@ export function QuickActions() {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium">{link.label}</p>
-                <p className="text-xs text-muted-foreground">{link.description}</p>
+                <p className="text-xs text-muted-foreground">
+                  {link.description}
+                </p>
               </div>
               <ArrowUpRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors shrink-0" />
             </Link>

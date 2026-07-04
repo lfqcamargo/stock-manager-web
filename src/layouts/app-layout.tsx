@@ -91,6 +91,7 @@ interface NavGroup {
   title: string;
   icon?: React.ElementType;
   items: NavItem[];
+  adminOnly?: boolean;
 }
 
 const navItems: NavGroup[] = [
@@ -132,12 +133,17 @@ const navItems: NavGroup[] = [
         icon: Settings2,
         href: '/movement/movement-types',
       },
-      { label: 'Movimentações', icon: ArrowLeftRight, href: '/movement/movement' },
+      {
+        label: 'Movimentações',
+        icon: ArrowLeftRight,
+        href: '/movement/movement',
+      },
     ],
   },
   {
     title: 'Empresa',
     icon: Building2,
+    adminOnly: true,
     items: [
       { label: 'Empresa', icon: Building2, href: '/company/profile' },
       { label: 'Usuários', icon: Users, href: '/company/users' },
@@ -151,6 +157,11 @@ function AppLayoutContent() {
   const { theme, setTheme } = useTheme();
   const location = useLocation();
   const { state } = useSidebar();
+
+  const isAdmin = user?.role === 'ADMIN';
+  const visibleNavItems = navItems.filter(
+    (group) => !group.adminOnly || isAdmin,
+  );
 
   function handleSignOut() {
     void signOutMutation.mutateAsync();
@@ -207,7 +218,7 @@ function AppLayoutContent() {
             <SidebarGroup>
               <SidebarGroupContent>
                 <SidebarMenu>
-                  {navItems.flatMap((group) =>
+                  {visibleNavItems.flatMap((group) =>
                     group.items.map((item) => {
                       const isActive = location.pathname === item.href;
                       const ItemIcon = item.icon;
@@ -232,7 +243,7 @@ function AppLayoutContent() {
             </SidebarGroup>
           ) : (
             // Quando a sidebar está expandida, mostra a estrutura original com grupos e colapsíveis
-            navItems.map((group) => {
+            visibleNavItems.map((group) => {
               const hasIcon = !!group.icon;
               if (hasIcon) {
                 const GroupIcon = group.icon as React.ElementType;
@@ -440,7 +451,7 @@ function AppLayoutContent() {
           <Separator orientation="vertical" className="h-4" />
           {/* Breadcrumb slot — pode ser expandido por página */}
           <span className="text-sm text-muted-foreground">
-            {navItems
+            {visibleNavItems
               .flatMap((g) => g.items)
               .find((i) => i.href === location.pathname)?.label ?? 'Página'}
           </span>

@@ -31,7 +31,7 @@ export function useRow() {
     return useMutation({
       mutationFn: createRow,
       onSuccess: () => {
-        queryClient.removeQueries({ queryKey: ['rows'] });
+        void queryClient.invalidateQueries({ queryKey: ['rows'] });
         toast.success('Fileira criada com sucesso');
       },
     });
@@ -41,7 +41,7 @@ export function useRow() {
     return useMutation({
       mutationFn: editRow,
       onSuccess: () => {
-        queryClient.removeQueries({ queryKey: ['rows'] });
+        void queryClient.invalidateQueries({ queryKey: ['rows'] });
         toast.success('Fileira atualizada com sucesso');
       },
     });
@@ -51,7 +51,7 @@ export function useRow() {
     return useMutation({
       mutationFn: ({ id }: { id: string }) => deleteRow(id),
       onSuccess: () => {
-        queryClient.removeQueries({ queryKey: ['rows'] });
+        void queryClient.invalidateQueries({ queryKey: ['rows'] });
         toast.success('Fileira excluída com sucesso');
       },
     });

@@ -31,7 +31,7 @@ export function useLocation() {
     return useMutation({
       mutationFn: createLocation,
       onSuccess: () => {
-        queryClient.removeQueries({ queryKey: ['locations'] });
+        void queryClient.invalidateQueries({ queryKey: ['locations'] });
         toast.success('Localização criada com sucesso');
       },
     });
@@ -41,7 +41,7 @@ export function useLocation() {
     return useMutation({
       mutationFn: editLocation,
       onSuccess: () => {
-        queryClient.removeQueries({ queryKey: ['locations'] });
+        void queryClient.invalidateQueries({ queryKey: ['locations'] });
         toast.success('Localização atualizada com sucesso');
       },
     });
@@ -51,7 +51,7 @@ export function useLocation() {
     return useMutation({
       mutationFn: ({ id }: { id: string }) => deleteLocation(id),
       onSuccess: () => {
-        queryClient.removeQueries({ queryKey: ['locations'] });
+        void queryClient.invalidateQueries({ queryKey: ['locations'] });
         toast.success('Localização excluída com sucesso');
       },
     });

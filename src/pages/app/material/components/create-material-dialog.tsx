@@ -2,6 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Package } from 'lucide-react';
 import { Controller, useController, useForm, useWatch } from 'react-hook-form';
 
+import { GroupCombobox } from '@/components/group-combobox';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -152,18 +153,12 @@ export function CreateMaterialDialog({
               name="groupId"
               control={control}
               render={({ field }) => (
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione um grupo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {groupsData?.groups?.map((group) => (
-                      <SelectItem key={group.id} value={group.id}>
-                        {group.code} - {group.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <GroupCombobox
+                  groups={groupsData?.groups ?? []}
+                  value={field.value}
+                  onValueChange={field.onChange}
+                  placeholder="Selecione um grupo"
+                />
               )}
             />
             {errors.groupId && (

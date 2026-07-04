@@ -37,7 +37,7 @@ import {
 import { EditMaterialDialog } from './edit-material-dialog';
 
 interface MateriaisTableProps {
-  onDelete: (id: string) => void;
+  onDelete: ((id: string) => void) | undefined;
   isLoading?: boolean;
   materials: MaterialDetails[];
   meta?: GetMaterialsResponse['meta'];
@@ -303,19 +303,23 @@ export function MateriaisTable({
                             <Eye className="mr-2 h-4 w-4" />
                             Ver
                           </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => handleEdit(material)}
-                          >
-                            <Edit className="mr-2 h-4 w-4" />
-                            Editar material
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => onDelete(material.id)}
-                            className="text-destructive focus:text-destructive"
-                          >
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Excluir material
-                          </DropdownMenuItem>
+                          {onDelete && (
+                            <>
+                              <DropdownMenuItem
+                                onClick={() => handleEdit(material)}
+                              >
+                                <Edit className="mr-2 h-4 w-4" />
+                                Editar material
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => onDelete(material.id)}
+                                className="text-destructive focus:text-destructive"
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Excluir material
+                              </DropdownMenuItem>
+                            </>
+                          )}
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>

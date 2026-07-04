@@ -9,6 +9,7 @@ import { csvColumns } from '@/config/csv-columns';
 import { useDebounce } from '@/hooks/use-debounce';
 import { useGroup } from '@/hooks/use-group';
 import { useMaterial } from '@/hooks/use-material';
+import { useRole } from '@/hooks/use-role';
 
 import { CreateMaterialDialog } from './components/create-material-dialog';
 import { MateriaisTable } from './components/materiais-table';
@@ -17,6 +18,7 @@ import { MaterialsCards } from './components/materials-cards';
 import { MaterialsFilters } from './components/materials-filters';
 
 export function MaterialPage() {
+  const { canWrite } = useRole();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
@@ -46,7 +48,8 @@ export function MaterialPage() {
     code: debouncedCodeFilter || undefined,
     name: debouncedNameFilter || undefined,
     description: debouncedDescriptionFilter || undefined,
-    groupId: debouncedGroupIdFilter === 'all' ? undefined : debouncedGroupIdFilter,
+    groupId:
+      debouncedGroupIdFilter === 'all' ? undefined : debouncedGroupIdFilter,
     active:
       debouncedActiveFilter === 'all'
         ? undefined
@@ -130,21 +133,25 @@ export function MaterialPage() {
             </div>
           </div>
           <div className="flex flex-col gap-2 md:flex-row md:items-center">
-            <Button
-              variant="outline"
-              onClick={() => setIsImportDialogOpen(true)}
-              className="rounded-lg md:rounded-xl h-9 md:h-10 lg:h-11 w-full md:w-auto"
-            >
-              <FileUp className="mr-2 h-4 w-4" />
-              Importar CSV
-            </Button>
-            <Button
-              onClick={() => setIsAddDialogOpen(true)}
-              className="rounded-lg md:rounded-xl shadow-md hover:shadow-lg transition-all duration-300 h-9 md:h-10 lg:h-11 w-full md:w-auto"
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              <span className="md:inline">Novo Material</span>
-            </Button>
+            {canWrite && (
+              <Button
+                variant="outline"
+                onClick={() => setIsImportDialogOpen(true)}
+                className="rounded-lg md:rounded-xl h-9 md:h-10 lg:h-11 w-full md:w-auto"
+              >
+                <FileUp className="mr-2 h-4 w-4" />
+                Importar CSV
+              </Button>
+            )}
+            {canWrite && (
+              <Button
+                onClick={() => setIsAddDialogOpen(true)}
+                className="rounded-lg md:rounded-xl shadow-md hover:shadow-lg transition-all duration-300 h-9 md:h-10 lg:h-11 w-full md:w-auto"
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                <span className="md:inline">Novo Material</span>
+              </Button>
+            )}
           </div>
         </div>
       </div>
@@ -192,7 +199,7 @@ export function MaterialPage() {
 
           {viewMode === 'table' ? (
             <MateriaisTable
-              onDelete={handleDeleteMaterial}
+              onDelete={canWrite ? handleDeleteMaterial : undefined}
               isLoading={isLoading}
               materials={materialsData?.materials || []}
               meta={materialsData?.meta}
@@ -203,7 +210,7 @@ export function MaterialPage() {
             />
           ) : (
             <MaterialsCards
-              onDelete={handleDeleteMaterial}
+              onDelete={canWrite ? handleDeleteMaterial : undefined}
               isLoading={isLoading}
               materials={materialsData?.materials || []}
               meta={materialsData?.meta}
@@ -213,19 +220,23 @@ export function MaterialPage() {
         </div>
       </div>
 
-      <CreateMaterialDialog
-        open={isAddDialogOpen}
-        onOpenChange={setIsAddDialogOpen}
-      />
+      {canWrite && (
+        <CreateMaterialDialog
+          open={isAddDialogOpen}
+          onOpenChange={setIsAddDialogOpen}
+        />
+      )}
 
-      <ImportCsvDialog
-        open={isImportDialogOpen}
-        onOpenChange={setIsImportDialogOpen}
-        entity="materials"
-        entityLabel="Materiais"
-        queryKeys={['materials']}
-        columns={csvColumns.materials}
-      />
+      {canWrite && (
+        <ImportCsvDialog
+          open={isImportDialogOpen}
+          onOpenChange={setIsImportDialogOpen}
+          entity="materials"
+          entityLabel="Materiais"
+          queryKeys={['materials']}
+          columns={csvColumns.materials}
+        />
+      )}
     </div>
   );
 }

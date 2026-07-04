@@ -1,4 +1,5 @@
 import type { Group } from '@/api/stock/fetch-groups';
+import { GroupCombobox } from '@/components/group-combobox';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -54,24 +55,17 @@ export function MaterialsFilters({
           onUpdateSearchParams({ description: e.target.value || null })
         }
       />
-      <Select
+      <GroupCombobox
+        groups={groups}
         value={groupIdFilter || 'all'}
         onValueChange={(value) =>
           onUpdateSearchParams({ groupId: value === 'all' ? null : value })
         }
-      >
-        <SelectTrigger className="h-11">
-          <SelectValue placeholder="Grupo" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">Todos os grupos</SelectItem>
-          {groups.map((group) => (
-            <SelectItem key={group.id} value={group.id}>
-              {group.code} — {group.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+        showAllOption
+        allLabel="Todos os grupos"
+        placeholder="Grupo"
+        triggerClassName="h-11"
+      />
       <div className="flex items-center gap-2">
         <Select
           value={activeFilter || 'all'}

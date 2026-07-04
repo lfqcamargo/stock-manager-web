@@ -51,13 +51,13 @@ import { useMovementType } from '@/hooks/use-movement-type';
 import { EditMovementTypeDialog } from './edit-movement-type-dialog';
 
 interface MovementTypesTableProps {
-  onDelete: (id: string) => void;
+  onDelete: ((id: string) => void) | undefined;
 }
 
 type SortField = 'nome' | 'direcao';
 type SortDirection = 'asc' | 'desc';
 
-export function MovementTypesTable(_props: MovementTypesTableProps) {
+export function MovementTypesTable(props: MovementTypesTableProps) {
   const [selectedType, setSelectedType] = useState<MovementType | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [nameFilter, setNameFilter] = useState<string>('');
@@ -266,15 +266,19 @@ export function MovementTypesTable(_props: MovementTypesTableProps) {
                       <DropdownMenuContent align="end" className="w-48">
                         <DropdownMenuLabel>Ações</DropdownMenuLabel>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={() => handleEdit(type)}>
-                          <Edit className="mr-2 h-4 w-4" /> Editar
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => handleDeleteRequest(type)}
-                          className="text-destructive focus:text-destructive"
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" /> Excluir
-                        </DropdownMenuItem>
+                        {props.onDelete && (
+                          <>
+                            <DropdownMenuItem onClick={() => handleEdit(type)}>
+                              <Edit className="mr-2 h-4 w-4" /> Editar
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => handleDeleteRequest(type)}
+                              className="text-destructive focus:text-destructive"
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" /> Excluir
+                            </DropdownMenuItem>
+                          </>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
@@ -325,7 +329,7 @@ export function MovementTypesTable(_props: MovementTypesTableProps) {
             >
               Cancelar
             </Button>
-            <Button variant="destructive" onClick={handleDeleteConfirmed}>
+            <Button variant="destructive" onClick={() => void handleDeleteConfirmed()}>
               Excluir
             </Button>
           </DialogFooter>

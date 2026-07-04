@@ -13,7 +13,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { EditMaterialDialog } from './edit-material-dialog';
 
 interface MaterialsCardsProps {
-  onDelete: (id: string) => void;
+  onDelete: ((id: string) => void) | undefined;
   isLoading?: boolean;
   materials: MaterialDetails[];
   meta?: GetMaterialsResponse['meta'];
@@ -111,7 +111,9 @@ export function MaterialsCards({
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-mono text-muted-foreground">{material.code}</p>
+                  <p className="text-xs font-mono text-muted-foreground">
+                    {material.code}
+                  </p>
                   <h3 className="font-semibold truncate">{material.name}</h3>
                 </div>
               </div>
@@ -138,22 +140,26 @@ export function MaterialsCards({
                 <Eye className="h-4 w-4 mr-2" />
                 Ver
               </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => handleEdit(material)}
-              >
-                <Edit className="h-4 w-4 mr-2" />
-                Editar
-              </Button>
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={() => onDelete(material.id)}
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                Excluir
-              </Button>
+              {onDelete && (
+                <>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleEdit(material)}
+                  >
+                    <Edit className="h-4 w-4 mr-2" />
+                    Editar
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => onDelete(material.id)}
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Excluir
+                  </Button>
+                </>
+              )}
             </CardFooter>
           </Card>
         ))}

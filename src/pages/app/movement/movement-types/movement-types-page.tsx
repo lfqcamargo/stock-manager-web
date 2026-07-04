@@ -9,6 +9,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { csvColumns } from '@/config/csv-columns';
 import { useDebounce } from '@/hooks/use-debounce';
 import { useMovementType } from '@/hooks/use-movement-type';
+import { useRole } from '@/hooks/use-role';
 
 import { CreateMovementTypeDialog } from './components/create-movement-type-dialog';
 import { MovementTypeStatsCards } from './components/movement-type-stats-cards';
@@ -16,6 +17,7 @@ import { MovementTypesCards } from './components/movement-types-cards';
 import { MovementTypesTable } from './components/movement-types-table';
 
 export function MovementTypesPage() {
+  const { canWrite } = useRole();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
@@ -82,21 +84,25 @@ export function MovementTypesPage() {
             </div>
           </div>
           <div className="flex flex-col gap-2 md:flex-row md:items-center">
-            <Button
-              variant="outline"
-              onClick={() => setIsImportDialogOpen(true)}
-              className="rounded-lg md:rounded-xl h-9 md:h-10 lg:h-11 w-full md:w-auto"
-            >
-              <FileUp className="mr-2 h-4 w-4" />
-              Importar CSV
-            </Button>
-            <Button
-              onClick={() => setIsAddDialogOpen(true)}
-              className="rounded-lg md:rounded-xl shadow-md hover:shadow-lg transition-all duration-300 h-9 md:h-10 lg:h-11 w-full md:w-auto"
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              <span className="md:inline">Novo Tipo</span>
-            </Button>
+            {canWrite && (
+              <Button
+                variant="outline"
+                onClick={() => setIsImportDialogOpen(true)}
+                className="rounded-lg md:rounded-xl h-9 md:h-10 lg:h-11 w-full md:w-auto"
+              >
+                <FileUp className="mr-2 h-4 w-4" />
+                Importar CSV
+              </Button>
+            )}
+            {canWrite && (
+              <Button
+                onClick={() => setIsAddDialogOpen(true)}
+                className="rounded-lg md:rounded-xl shadow-md hover:shadow-lg transition-all duration-300 h-9 md:h-10 lg:h-11 w-full md:w-auto"
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                <span className="md:inline">Novo Tipo</span>
+              </Button>
+            )}
           </div>
         </div>
       </div>
@@ -132,10 +138,12 @@ export function MovementTypesPage() {
 
         <div className="p-6">
           {viewMode === 'table' ? (
-            <MovementTypesTable onDelete={handleDeleteMovementType} />
+            <MovementTypesTable
+              onDelete={canWrite ? handleDeleteMovementType : undefined}
+            />
           ) : (
             <MovementTypesCards
-              onDelete={handleDeleteMovementType}
+              onDelete={canWrite ? handleDeleteMovementType : undefined}
               isLoading={isLoading}
               movementTypes={typesData?.movementTypes ?? []}
               meta={typesData?.meta}
@@ -145,19 +153,23 @@ export function MovementTypesPage() {
         </div>
       </div>
 
-      <CreateMovementTypeDialog
-        open={isAddDialogOpen}
-        onOpenChange={setIsAddDialogOpen}
-      />
+      {canWrite && (
+        <CreateMovementTypeDialog
+          open={isAddDialogOpen}
+          onOpenChange={setIsAddDialogOpen}
+        />
+      )}
 
-      <ImportCsvDialog
-        open={isImportDialogOpen}
-        onOpenChange={setIsImportDialogOpen}
-        entity="movement-types"
-        entityLabel="Tipos de Movimentação"
-        queryKeys={['movementTypes']}
-        columns={csvColumns.movementTypes}
-      />
+      {canWrite && (
+        <ImportCsvDialog
+          open={isImportDialogOpen}
+          onOpenChange={setIsImportDialogOpen}
+          entity="movement-types"
+          entityLabel="Tipos de Movimentação"
+          queryKeys={['movementTypes']}
+          columns={csvColumns.movementTypes}
+        />
+      )}
     </div>
   );
 }

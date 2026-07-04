@@ -8,6 +8,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { csvColumns } from '@/config/csv-columns';
 import { useDebounce } from '@/hooks/use-debounce';
 import { useGroup } from '@/hooks/use-group';
+import { useRole } from '@/hooks/use-role';
 
 import { CreateGroupDialog } from './components/create-group-dialog';
 import { GroupStatsCards } from './components/group-stats-cards';
@@ -16,6 +17,7 @@ import { GroupsFilters } from './components/groups-filters';
 import { GroupsTable } from './components/groups-table';
 
 export function GroupPage() {
+  const { canWrite } = useRole();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
@@ -121,21 +123,25 @@ export function GroupPage() {
             </div>
           </div>
           <div className="flex flex-col gap-2 md:flex-row md:items-center">
-            <Button
-              variant="outline"
-              onClick={() => setIsImportDialogOpen(true)}
-              className="rounded-lg md:rounded-xl h-9 md:h-10 lg:h-11 w-full md:w-auto"
-            >
-              <FileUp className="mr-2 h-4 w-4" />
-              Importar CSV
-            </Button>
-            <Button
-              onClick={() => setIsAddDialogOpen(true)}
-              className="rounded-lg md:rounded-xl shadow-md hover:shadow-lg transition-all duration-300 h-9 md:h-10 lg:h-11 w-full md:w-auto"
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              <span className="md:inline">Novo Grupo</span>
-            </Button>
+            {canWrite && (
+              <Button
+                variant="outline"
+                onClick={() => setIsImportDialogOpen(true)}
+                className="rounded-lg md:rounded-xl h-9 md:h-10 lg:h-11 w-full md:w-auto"
+              >
+                <FileUp className="mr-2 h-4 w-4" />
+                Importar CSV
+              </Button>
+            )}
+            {canWrite && (
+              <Button
+                onClick={() => setIsAddDialogOpen(true)}
+                className="rounded-lg md:rounded-xl shadow-md hover:shadow-lg transition-all duration-300 h-9 md:h-10 lg:h-11 w-full md:w-auto"
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                <span className="md:inline">Novo Grupo</span>
+              </Button>
+            )}
           </div>
         </div>
       </div>
@@ -181,7 +187,7 @@ export function GroupPage() {
 
           {viewMode === 'table' ? (
             <GroupsTable
-              onDelete={handleDeleteGroup}
+              onDelete={canWrite ? handleDeleteGroup : undefined}
               isLoading={isLoading}
               groups={groupsData?.groups || []}
               meta={groupsData?.meta}
@@ -192,7 +198,7 @@ export function GroupPage() {
             />
           ) : (
             <GroupsCards
-              onDelete={handleDeleteGroup}
+              onDelete={canWrite ? handleDeleteGroup : undefined}
               isLoading={isLoading}
               groups={groupsData?.groups || []}
               meta={groupsData?.meta}
@@ -202,19 +208,23 @@ export function GroupPage() {
         </div>
       </div>
 
-      <CreateGroupDialog
-        open={isAddDialogOpen}
-        onOpenChange={setIsAddDialogOpen}
-      />
+      {canWrite && (
+        <CreateGroupDialog
+          open={isAddDialogOpen}
+          onOpenChange={setIsAddDialogOpen}
+        />
+      )}
 
-      <ImportCsvDialog
-        open={isImportDialogOpen}
-        onOpenChange={setIsImportDialogOpen}
-        entity="groups"
-        entityLabel="Grupos"
-        queryKeys={['groups']}
-        columns={csvColumns.groups}
-      />
+      {canWrite && (
+        <ImportCsvDialog
+          open={isImportDialogOpen}
+          onOpenChange={setIsImportDialogOpen}
+          entity="groups"
+          entityLabel="Grupos"
+          queryKeys={['groups']}
+          columns={csvColumns.groups}
+        />
+      )}
     </div>
   );
 }

@@ -38,7 +38,7 @@ export function useMovementType() {
     return useMutation({
       mutationFn: createMovementType,
       onSuccess: () => {
-        queryClient.removeQueries({ queryKey: ['movementTypes'] });
+        void queryClient.invalidateQueries({ queryKey: ['movementTypes'] });
         toast.success('Tipo de movimentação criado com sucesso');
       },
     });
@@ -48,7 +48,7 @@ export function useMovementType() {
     return useMutation({
       mutationFn: editMovementType,
       onSuccess: () => {
-        queryClient.removeQueries({ queryKey: ['movementTypes'] });
+        void queryClient.invalidateQueries({ queryKey: ['movementTypes'] });
         toast.success('Tipo de movimentação atualizado com sucesso');
       },
     });
@@ -58,7 +58,7 @@ export function useMovementType() {
     return useMutation({
       mutationFn: ({ id }: { id: string }) => deleteMovementType(id),
       onSuccess: () => {
-        queryClient.removeQueries({ queryKey: ['movementTypes'] });
+        void queryClient.invalidateQueries({ queryKey: ['movementTypes'] });
         toast.success('Tipo de movimentação excluído com sucesso');
       },
     });

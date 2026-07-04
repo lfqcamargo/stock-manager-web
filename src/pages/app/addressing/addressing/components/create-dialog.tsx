@@ -1,10 +1,12 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQuery } from '@tanstack/react-query';
 import { Warehouse } from 'lucide-react';
+import { useCallback, useRef, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 
 import { fetchMaterials } from '@/api/stock/fetch-materials';
+import { MaterialCombobox } from '@/components/material-combobox';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -82,18 +84,27 @@ export function CreateAddressingDialog({ open, onOpenChange }: Props) {
   const { useGetPositions } = usePosition();
   const { data: posData } = useGetPositions(0, 100);
 
-  const { data: matData } = useQuery({
+  const [materialSearch, setMaterialSearch] = useState('');
+  const matSearchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleMatSearchChange = useCallback((search: string) => {
+    if (matSearchTimerRef.current) clearTimeout(matSearchTimerRef.current);
+    matSearchTimerRef.current = setTimeout(() => setMaterialSearch(search), 300);
+  }, []);
+
+  const { data: matData, isFetching: matFetching } = useQuery({
     queryKey: [
       'materials',
       0,
       100,
-      { orderBy: 'name', orderDirection: 'asc', active: true },
+      { orderBy: 'name', orderDirection: 'asc', active: true, name: materialSearch || undefined },
     ],
     queryFn: () =>
       fetchMaterials(0, 100, {
         orderBy: 'name',
         orderDirection: 'asc',
         active: true,
+        name: materialSearch || undefined,
       }),
   });
 
@@ -291,24 +302,16 @@ export function CreateAddressingDialog({ open, onOpenChange }: Props) {
                 name="materialId"
                 control={control}
                 render={({ field }) => (
-                  <Select
+                  <MaterialCombobox
+                    materials={matData?.materials ?? []}
                     value={field.value ?? ''}
-                    onValueChange={(v) =>
-                      field.onChange(v === 'none' ? '' : v)
-                    }
-                  >
-                    <SelectTrigger className="h-11">
-                      <SelectValue placeholder="Selecione um material..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">Sem material</SelectItem>
-                      {matData?.materials?.map((m) => (
-                        <SelectItem key={m.id} value={m.id}>
-                          {m.code} — {m.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    onValueChange={(v) => field.onChange(v === 'none' ? '' : v)}
+                    onSearchChange={handleMatSearchChange}
+                    isLoading={matFetching}
+                    showNoneOption
+                    noneLabel="Sem material"
+                    placeholder="Selecione um material..."
+                  />
                 )}
               />
             </div>

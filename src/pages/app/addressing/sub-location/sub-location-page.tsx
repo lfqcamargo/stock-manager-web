@@ -5,12 +5,14 @@ import { Link } from 'react-router-dom';
 import { ImportCsvDialog } from '@/components/import-csv-dialog';
 import { Button } from '@/components/ui/button';
 import { csvColumns } from '@/config/csv-columns';
+import { useRole } from '@/hooks/use-role';
 import { useSubLocation } from '@/hooks/use-sub-location';
 
 import { CreateSubLocationDialog } from './components/create-dialog';
 import { SubLocationsTable } from './components/table';
 
 export function SubLocationPage() {
+  const { canWrite } = useRole();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
 
@@ -47,44 +49,52 @@ export function SubLocationPage() {
             </div>
           </div>
           <div className="flex flex-col gap-2 md:flex-row md:items-center">
-            <Button
-              variant="outline"
-              onClick={() => setIsImportDialogOpen(true)}
-              className="rounded-lg md:rounded-xl h-9 md:h-10 lg:h-11 w-full md:w-auto"
-            >
-              <FileUp className="mr-2 h-4 w-4" />
-              Importar CSV
-            </Button>
-            <Button
-              onClick={() => setIsCreateDialogOpen(true)}
-              className="rounded-lg md:rounded-xl shadow-md hover:shadow-lg transition-all duration-300 h-9 md:h-10 lg:h-11 w-full md:w-auto"
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              <span className="md:inline">Nova Sub-Localização</span>
-            </Button>
+            {canWrite && (
+              <Button
+                variant="outline"
+                onClick={() => setIsImportDialogOpen(true)}
+                className="rounded-lg md:rounded-xl h-9 md:h-10 lg:h-11 w-full md:w-auto"
+              >
+                <FileUp className="mr-2 h-4 w-4" />
+                Importar CSV
+              </Button>
+            )}
+            {canWrite && (
+              <Button
+                onClick={() => setIsCreateDialogOpen(true)}
+                className="rounded-lg md:rounded-xl shadow-md hover:shadow-lg transition-all duration-300 h-9 md:h-10 lg:h-11 w-full md:w-auto"
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                <span className="md:inline">Nova Sub-Localização</span>
+              </Button>
+            )}
           </div>
         </div>
       </div>
 
       {/* Table */}
       <div className="rounded-lg md:rounded-2xl border border-border/40 bg-card/50 backdrop-blur supports-backdrop-filter:bg-card/50 shadow-sm overflow-hidden">
-        <SubLocationsTable onDelete={handleDelete} />
+        <SubLocationsTable onDelete={canWrite ? handleDelete : undefined} />
       </div>
 
       {/* Dialogs */}
-      <CreateSubLocationDialog
-        open={isCreateDialogOpen}
-        onOpenChange={setIsCreateDialogOpen}
-      />
+      {canWrite && (
+        <CreateSubLocationDialog
+          open={isCreateDialogOpen}
+          onOpenChange={setIsCreateDialogOpen}
+        />
+      )}
 
-      <ImportCsvDialog
-        open={isImportDialogOpen}
-        onOpenChange={setIsImportDialogOpen}
-        entity="sub-locations"
-        entityLabel="Sub-Localizações"
-        queryKeys={['subLocations']}
-        columns={csvColumns.subLocations}
-      />
+      {canWrite && (
+        <ImportCsvDialog
+          open={isImportDialogOpen}
+          onOpenChange={setIsImportDialogOpen}
+          entity="sub-locations"
+          entityLabel="Sub-Localizações"
+          queryKeys={['subLocations']}
+          columns={csvColumns.subLocations}
+        />
+      )}
     </div>
   );
 }

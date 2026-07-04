@@ -14,14 +14,14 @@ import {
 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 
+import { fetchGroupById } from '@/api/stock/fetch-groups';
+import { fetchMaterialById } from '@/api/stock/fetch-materials';
 import { findAddressingById } from '@/api/stock/find-addressing-by-id';
 import { findLocationById } from '@/api/stock/find-location-by-id';
 import { findPositionById } from '@/api/stock/find-position-by-id';
 import { findRowById } from '@/api/stock/find-row-by-id';
 import { findShelfById } from '@/api/stock/find-shelf-by-id';
 import { findSubLocationById } from '@/api/stock/find-sub-location-by-id';
-import { fetchMaterialById } from '@/api/stock/fetch-materials';
-import { fetchGroupById } from '@/api/stock/fetch-groups';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -75,7 +75,9 @@ function LocationCard({
       <div className="font-mono text-xs text-primary">{code}</div>
       <div className="text-sm font-semibold leading-tight">{name}</div>
       {description && (
-        <div className="text-xs text-muted-foreground truncate">{description}</div>
+        <div className="text-xs text-muted-foreground truncate">
+          {description}
+        </div>
       )}
     </div>
   );
@@ -150,7 +152,7 @@ export function AddressingViewPage() {
             variant="outline"
             size="icon"
             className="h-9 w-9 md:h-10 md:w-10 rounded-lg md:rounded-xl shadow-sm hover:shadow transition-all duration-200 shrink-0"
-            onClick={() => navigate(-1)}
+            onClick={() => void navigate(-1)}
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>
@@ -170,7 +172,9 @@ export function AddressingViewPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {Array.from({ length: 3 }).map((_, i) => (
             <Card key={i} className={i === 2 ? 'lg:col-span-2' : ''}>
-              <CardHeader><Skeleton className="h-5 w-32" /></CardHeader>
+              <CardHeader>
+                <Skeleton className="h-5 w-32" />
+              </CardHeader>
               <CardContent className="space-y-3">
                 {Array.from({ length: 4 }).map((_, j) => (
                   <Skeleton key={j} className="h-4 w-full" />
@@ -181,7 +185,6 @@ export function AddressingViewPage() {
         </div>
       ) : addressing ? (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
-
           {/* ── Card: Localização ─────────────────────────────────────────── */}
           <Card>
             <CardHeader className="pb-3">
@@ -252,7 +255,9 @@ export function AddressingViewPage() {
             <CardContent className="space-y-4">
               <div className="flex items-center gap-4">
                 <div>
-                  <div className="text-xs text-muted-foreground mb-1">Saldo atual</div>
+                  <div className="text-xs text-muted-foreground mb-1">
+                    Saldo atual
+                  </div>
                   <div className="text-4xl font-bold font-mono tabular-nums">
                     {addressing.amount}
                   </div>
@@ -266,7 +271,9 @@ export function AddressingViewPage() {
               </div>
               <Separator />
               <div className="flex items-center justify-between">
-                <div className="text-sm font-medium">Status do endereçamento</div>
+                <div className="text-sm font-medium">
+                  Status do endereçamento
+                </div>
                 <Badge variant={addressing.active ? 'default' : 'secondary'}>
                   {addressing.active ? 'Ativo' : 'Inativo'}
                 </Badge>
@@ -309,7 +316,8 @@ export function AddressingViewPage() {
                           alt={material.name}
                           className="h-full w-full object-cover"
                           onError={(e) => {
-                            (e.target as HTMLImageElement).style.display = 'none';
+                            (e.target as HTMLImageElement).style.display =
+                              'none';
                           }}
                         />
                       ) : (
@@ -320,14 +328,29 @@ export function AddressingViewPage() {
 
                   {/* Informações do material */}
                   <div className="flex-1 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-                    <InfoItem icon={Hash} label="Código" value={material.code} mono />
-                    <InfoItem icon={Package} label="Nome" value={material.name} />
-                    <InfoItem icon={Tag} label="Unidade" value={material.unit} />
+                    <InfoItem
+                      icon={Hash}
+                      label="Código"
+                      value={material.code}
+                      mono
+                    />
+                    <InfoItem
+                      icon={Package}
+                      label="Nome"
+                      value={material.name}
+                    />
+                    <InfoItem
+                      icon={Tag}
+                      label="Unidade"
+                      value={material.unit}
+                    />
                     <InfoItem
                       icon={Tag}
                       label="Status"
                       value={
-                        <Badge variant={material.active ? 'default' : 'secondary'}>
+                        <Badge
+                          variant={material.active ? 'default' : 'secondary'}
+                        >
                           {material.active ? 'Ativo' : 'Inativo'}
                         </Badge>
                       }
@@ -362,7 +385,9 @@ export function AddressingViewPage() {
                                   alt={group.name}
                                   className="h-full w-full object-cover"
                                   onError={(e) => {
-                                    (e.target as HTMLImageElement).style.display = 'none';
+                                    (
+                                      e.target as HTMLImageElement
+                                    ).style.display = 'none';
                                   }}
                                 />
                               ) : (
@@ -370,10 +395,16 @@ export function AddressingViewPage() {
                               )}
                             </div>
                             <div>
-                              <div className="font-mono text-xs text-muted-foreground">{group.code}</div>
-                              <div className="text-sm font-semibold">{group.name}</div>
+                              <div className="font-mono text-xs text-muted-foreground">
+                                {group.code}
+                              </div>
+                              <div className="text-sm font-semibold">
+                                {group.name}
+                              </div>
                               {group.description && (
-                                <div className="text-xs text-muted-foreground">{group.description}</div>
+                                <div className="text-xs text-muted-foreground">
+                                  {group.description}
+                                </div>
                               )}
                             </div>
                             <Badge

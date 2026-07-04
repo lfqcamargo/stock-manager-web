@@ -55,7 +55,7 @@ export function useMaterial() {
         photoUrl?: string | null;
       }) => await createMaterial(data),
       onSuccess: () => {
-        queryClient.removeQueries({ queryKey: ['materials'] });
+        void queryClient.invalidateQueries({ queryKey: ['materials'] });
       },
     });
   };
@@ -73,7 +73,7 @@ export function useMaterial() {
         photoUrl?: string | null;
       }) => await editMaterial(data),
       onSuccess: () => {
-        queryClient.removeQueries({ queryKey: ['materials'] });
+        void queryClient.invalidateQueries({ queryKey: ['materials'] });
       },
     });
   };
@@ -82,7 +82,7 @@ export function useMaterial() {
     return useMutation({
       mutationFn: async (data: { id: string }) => await deleteMaterial(data.id),
       onSuccess: () => {
-        queryClient.removeQueries({ queryKey: ['materials'] });
+        void queryClient.invalidateQueries({ queryKey: ['materials'] });
       },
     });
   };

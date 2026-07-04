@@ -5,12 +5,14 @@ import { Link } from 'react-router-dom';
 import { ImportCsvDialog } from '@/components/import-csv-dialog';
 import { Button } from '@/components/ui/button';
 import { csvColumns } from '@/config/csv-columns';
+import { useRole } from '@/hooks/use-role';
 import { useRow } from '@/hooks/use-row';
 
 import { CreateRowDialog } from './components/create-dialog';
 import { RowsTable } from './components/table';
 
 export function RowPage() {
+  const { canWrite } = useRole();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
 
@@ -47,44 +49,52 @@ export function RowPage() {
             </div>
           </div>
           <div className="flex flex-col gap-2 md:flex-row md:items-center">
-            <Button
-              variant="outline"
-              onClick={() => setIsImportDialogOpen(true)}
-              className="rounded-lg md:rounded-xl h-9 md:h-10 lg:h-11 w-full md:w-auto"
-            >
-              <FileUp className="mr-2 h-4 w-4" />
-              Importar CSV
-            </Button>
-            <Button
-              onClick={() => setIsCreateDialogOpen(true)}
-              className="rounded-lg md:rounded-xl shadow-md hover:shadow-lg transition-all duration-300 h-9 md:h-10 lg:h-11 w-full md:w-auto"
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              <span className="md:inline">Nova Fileira</span>
-            </Button>
+            {canWrite && (
+              <Button
+                variant="outline"
+                onClick={() => setIsImportDialogOpen(true)}
+                className="rounded-lg md:rounded-xl h-9 md:h-10 lg:h-11 w-full md:w-auto"
+              >
+                <FileUp className="mr-2 h-4 w-4" />
+                Importar CSV
+              </Button>
+            )}
+            {canWrite && (
+              <Button
+                onClick={() => setIsCreateDialogOpen(true)}
+                className="rounded-lg md:rounded-xl shadow-md hover:shadow-lg transition-all duration-300 h-9 md:h-10 lg:h-11 w-full md:w-auto"
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                <span className="md:inline">Nova Fileira</span>
+              </Button>
+            )}
           </div>
         </div>
       </div>
 
       {/* Table */}
       <div className="rounded-lg md:rounded-2xl border border-border/40 bg-card/50 backdrop-blur supports-backdrop-filter:bg-card/50 shadow-sm overflow-hidden">
-        <RowsTable onDelete={handleDelete} />
+        <RowsTable onDelete={canWrite ? handleDelete : undefined} />
       </div>
 
       {/* Dialogs */}
-      <CreateRowDialog
-        open={isCreateDialogOpen}
-        onOpenChange={setIsCreateDialogOpen}
-      />
+      {canWrite && (
+        <CreateRowDialog
+          open={isCreateDialogOpen}
+          onOpenChange={setIsCreateDialogOpen}
+        />
+      )}
 
-      <ImportCsvDialog
-        open={isImportDialogOpen}
-        onOpenChange={setIsImportDialogOpen}
-        entity="rows"
-        entityLabel="Fileiras"
-        queryKeys={['rows']}
-        columns={csvColumns.rows}
-      />
+      {canWrite && (
+        <ImportCsvDialog
+          open={isImportDialogOpen}
+          onOpenChange={setIsImportDialogOpen}
+          entity="rows"
+          entityLabel="Fileiras"
+          queryKeys={['rows']}
+          columns={csvColumns.rows}
+        />
+      )}
     </div>
   );
 }

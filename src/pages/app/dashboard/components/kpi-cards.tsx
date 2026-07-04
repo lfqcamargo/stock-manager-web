@@ -9,9 +9,9 @@ import {
   Warehouse,
 } from 'lucide-react';
 
+import type { DashboardKpis } from '@/api/stock/fetch-dashboard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import type { DashboardKpis } from '@/api/stock/fetch-dashboard';
 
 interface KpiCardsProps {
   kpis?: DashboardKpis;
