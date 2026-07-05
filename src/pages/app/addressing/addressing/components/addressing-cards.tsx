@@ -1,4 +1,4 @@
-import { Edit, Eye, MapPin, Package, Warehouse } from 'lucide-react';
+import { Edit, Eye, MapPin, Package } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { getInitials } from '@/utils/get-initials';
 
 import { EditAddressingDialog } from './edit-dialog';
 
@@ -69,7 +70,6 @@ export function AddressingCards({
                 <div className="flex items-center gap-2">
                   <Skeleton className="h-8 w-16 rounded" />
                   <Skeleton className="h-8 w-16 rounded" />
-                  <Skeleton className="h-8 w-16 rounded" />
                 </div>
               </CardFooter>
             </Card>
@@ -85,12 +85,27 @@ export function AddressingCards({
         {addressings.map((addr) => (
           <Card key={addr.id} className="overflow-hidden group">
             <CardContent className="p-6">
+              {/* Cabeçalho: foto/avatar do material + endereço */}
               <div
                 className="flex items-start gap-4 mb-4 cursor-pointer"
                 onClick={() => handleView(addr)}
               >
-                <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                  <Warehouse className="h-6 w-6 text-primary" />
+                <div className="h-12 w-12 rounded-lg overflow-hidden shrink-0 border bg-muted">
+                  {addr.material?.photoUrl ? (
+                    <img
+                      src={addr.material.photoUrl}
+                      alt={addr.material.name}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : addr.material ? (
+                    <div className="h-full w-full bg-primary/10 flex items-center justify-center text-sm font-bold text-primary">
+                      {getInitials(addr.material.name)}
+                    </div>
+                  ) : (
+                    <div className="h-full w-full bg-muted flex items-center justify-center">
+                      <Package className="h-5 w-5 text-muted-foreground/40" />
+                    </div>
+                  )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="font-semibold truncate">
@@ -108,6 +123,8 @@ export function AddressingCards({
                   </p>
                 </div>
               </div>
+
+              {/* Corpo */}
               <div className="space-y-2">
                 {addr.material ? (
                   <div className="flex items-start gap-2 text-sm text-muted-foreground">
@@ -125,6 +142,7 @@ export function AddressingCards({
                     <span>Sem material vinculado</span>
                   </div>
                 )}
+
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <MapPin className="h-4 w-4 shrink-0" />
                   <span>
@@ -137,6 +155,7 @@ export function AddressingCards({
                     </Badge>
                   </span>
                 </div>
+
                 <div className="flex items-center gap-2">
                   <Badge variant={addr.active ? 'default' : 'secondary'}>
                     {addr.active ? 'Ativo' : 'Inativo'}
@@ -144,6 +163,7 @@ export function AddressingCards({
                 </div>
               </div>
             </CardContent>
+
             <CardFooter className="border-t bg-muted/20 px-6 py-3 flex justify-end items-center gap-2">
               <Button
                 variant="ghost"

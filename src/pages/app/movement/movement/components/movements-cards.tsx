@@ -1,4 +1,4 @@
-import { CalendarDays, Eye, MapPin, Package } from 'lucide-react';
+import { CalendarDays, Eye, MapPin } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 import type {
@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatDate } from '@/utils/format-date';
+import { getInitials } from '@/utils/get-initials';
 
 interface MovementsCardsProps {
   isLoading?: boolean;
@@ -75,14 +76,27 @@ export function MovementsCards({
             <Card key={movement.id} className="overflow-hidden group">
               <CardContent className="p-6">
                 <div className="flex items-start gap-4 mb-4">
-                  <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                    <Package className="h-6 w-6 text-primary" />
+                  <div className="h-12 w-12 rounded-lg overflow-hidden shrink-0 border bg-muted">
+                    {movement.materialPhotoUrl ? (
+                      <img
+                        src={movement.materialPhotoUrl}
+                        alt={movement.materialName}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="h-full w-full bg-primary/10 flex items-center justify-center text-sm font-bold text-primary">
+                        {getInitials(movement.materialName)}
+                      </div>
+                    )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="font-semibold truncate">
                       {movement.movementTypeName}
                     </h3>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-sm text-muted-foreground truncate">
+                      {movement.materialName}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
                       Qtd: {movement.quantity}
                     </p>
                   </div>

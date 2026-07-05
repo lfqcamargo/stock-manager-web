@@ -32,6 +32,9 @@ export interface Movement {
   materialName: string;
   materialDescription: string;
   materialUnit: string;
+  materialPhotoUrl: string | null;
+  materialGroupId: string;
+  materialGroupName: string;
 }
 
 export interface FetchMovementsResponse {

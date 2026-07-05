@@ -23,6 +23,8 @@ export interface Addressing {
     description?: string;
     unit: string;
     active: boolean;
+    photoUrl?: string | null;
+    groupId: string;
   } | null;
 }
 

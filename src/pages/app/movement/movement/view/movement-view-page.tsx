@@ -27,6 +27,7 @@ import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useMovement } from '@/hooks/use-movement';
 import { formatDate } from '@/utils/format-date';
+import { getInitials } from '@/utils/get-initials';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function LabeledField({
@@ -280,7 +281,6 @@ export function MovementViewPage() {
             </CardContent>
           </Card>
 
-          {/* ── Card: Material ────────────────────────────────────────────── */}
           <Card className="lg:col-span-2">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-base">
@@ -290,10 +290,20 @@ export function MovementViewPage() {
             </CardHeader>
             <CardContent>
               <div className="flex flex-col md:flex-row gap-6">
-                {/* Ícone placeholder */}
+                {/* Foto do material */}
                 <div className="shrink-0">
-                  <div className="h-24 w-24 rounded-xl border bg-muted flex items-center justify-center">
-                    <Package className="h-8 w-8 text-muted-foreground/40" />
+                  <div className="h-24 w-24 rounded-xl border overflow-hidden bg-muted flex items-center justify-center">
+                    {movement.materialPhotoUrl ? (
+                      <img
+                        src={movement.materialPhotoUrl}
+                        alt={movement.materialName}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-2xl font-bold text-muted-foreground">
+                        {getInitials(movement.materialName)}
+                      </span>
+                    )}
                   </div>
                 </div>
 
@@ -313,6 +323,11 @@ export function MovementViewPage() {
                     icon={Tag}
                     label="Unidade"
                     value={movement.materialUnit}
+                  />
+                  <LabeledField
+                    icon={FolderTree}
+                    label="Grupo"
+                    value={movement.materialGroupName || '—'}
                   />
                   {movement.materialDescription && (
                     <div className="col-span-full">
