@@ -1,5 +1,5 @@
 import { api } from '@/lib/axios';
 
 export async function signOut(): Promise<void> {
-  await api.get('/session/logout');
+  await api.get('auth/session/logout');
 }
