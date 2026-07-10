@@ -81,7 +81,7 @@ export function CreateMovementPage() {
     reset,
     setValue,
     formState: { errors, isSubmitting },
-  } = useForm<FormData, unknown, FormInput>({
+  } = useForm<FormInput, unknown, FormData>({
     resolver: zodResolver(schema),
     defaultValues: { date: new Date().toISOString().split('T')[0] },
   });
