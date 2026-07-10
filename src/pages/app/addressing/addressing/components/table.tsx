@@ -35,7 +35,10 @@ import {
   TableRow,
 } from '@/components/ui/table';
 
-import type { AddressingSortDirection, AddressingSortField } from '../addressing-page';
+import type {
+  AddressingSortDirection,
+  AddressingSortField,
+} from '../addressing-page';
 import { EditAddressingDialog } from './edit-dialog';
 
 interface AddressingTableProps {
@@ -111,7 +114,11 @@ export function AddressingTable({
                   onClick={() => onSort('amount')}
                 >
                   Saldo{' '}
-                  <SortIcon field="amount" sortField={sortField} sortDir={sortDir} />
+                  <SortIcon
+                    field="amount"
+                    sortField={sortField}
+                    sortDir={sortDir}
+                  />
                 </Button>
               </TableHead>
               <TableHead>Status</TableHead>
@@ -142,8 +149,12 @@ export function AddressingTable({
               addressings.map((addr) => (
                 <TableRow key={addr.id} className="group">
                   <TableCell>
-                    <div className="font-medium text-sm">{addr.location.code}</div>
-                    <div className="text-xs text-muted-foreground">{addr.location.name}</div>
+                    <div className="font-medium text-sm">
+                      {addr.location.code}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {addr.location.name}
+                    </div>
                   </TableCell>
                   <TableCell className="hidden md:table-cell text-sm">
                     <div>{addr.subLocation.code}</div>
@@ -151,12 +162,16 @@ export function AddressingTable({
                   </TableCell>
                   <TableCell className="hidden lg:table-cell text-sm">
                     <div>{addr.shelf.code}</div>
-                    <div className="text-muted-foreground">{addr.position.code}</div>
+                    <div className="text-muted-foreground">
+                      {addr.position.code}
+                    </div>
                   </TableCell>
                   <TableCell>
                     {addr.material ? (
                       <div>
-                        <div className="font-medium text-sm">{addr.material.code}</div>
+                        <div className="font-medium text-sm">
+                          {addr.material.code}
+                        </div>
                         <div className="text-xs text-muted-foreground truncate max-w-[140px]">
                           {addr.material.name}
                         </div>

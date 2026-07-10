@@ -61,7 +61,10 @@ export function AddressingPage() {
 
   const handleMaterialSearchChange = useCallback((search: string) => {
     if (matSearchTimerRef.current) clearTimeout(matSearchTimerRef.current);
-    matSearchTimerRef.current = setTimeout(() => setMaterialSearch(search), 300);
+    matSearchTimerRef.current = setTimeout(
+      () => setMaterialSearch(search),
+      300,
+    );
   }, []);
 
   // ── Sort ─────────────────────────────────────────────────────────────────────
@@ -115,7 +118,12 @@ export function AddressingPage() {
       'materials',
       0,
       100,
-      { orderBy: 'name', orderDirection: 'asc', active: true, name: materialSearch || undefined },
+      {
+        orderBy: 'name',
+        orderDirection: 'asc',
+        active: true,
+        name: materialSearch || undefined,
+      },
     ],
     queryFn: () =>
       fetchMaterials(0, 100, {
@@ -408,9 +416,7 @@ export function AddressingPage() {
             <div className="flex items-center gap-2">
               <Warehouse className="h-4 w-4" />
               <span>
-                {meta
-                  ? `${meta.totalItems} endereçamentos`
-                  : 'Carregando...'}
+                {meta ? `${meta.totalItems} endereçamentos` : 'Carregando...'}
                 {meta &&
                   meta.totalPages > 1 &&
                   ` • Página ${page + 1} de ${meta.totalPages}`}

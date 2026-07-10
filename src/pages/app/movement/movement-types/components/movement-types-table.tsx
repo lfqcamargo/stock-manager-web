@@ -329,7 +329,10 @@ export function MovementTypesTable(props: MovementTypesTableProps) {
             >
               Cancelar
             </Button>
-            <Button variant="destructive" onClick={() => void handleDeleteConfirmed()}>
+            <Button
+              variant="destructive"
+              onClick={() => void handleDeleteConfirmed()}
+            >
               Excluir
             </Button>
           </DialogFooter>

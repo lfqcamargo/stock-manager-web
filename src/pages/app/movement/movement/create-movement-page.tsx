@@ -24,7 +24,6 @@ import { fetchSubLocations } from '@/api/stock/fetch-sub-locations';
 import { EntityCombobox } from '@/components/entity-combobox';
 import { MaterialCombobox } from '@/components/material-combobox';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -68,7 +67,10 @@ export function CreateMovementPage() {
 
   const handleMatSearchChange = useCallback((search: string) => {
     if (matSearchTimerRef.current) clearTimeout(matSearchTimerRef.current);
-    matSearchTimerRef.current = setTimeout(() => setMaterialSearch(search), 300);
+    matSearchTimerRef.current = setTimeout(
+      () => setMaterialSearch(search),
+      300,
+    );
   }, []);
 
   const {
@@ -153,7 +155,12 @@ export function CreateMovementPage() {
       'materials',
       0,
       100,
-      { orderBy: 'code', orderDirection: 'asc', active: true, name: materialSearch || undefined },
+      {
+        orderBy: 'code',
+        orderDirection: 'asc',
+        active: true,
+        name: materialSearch || undefined,
+      },
     ],
     queryFn: () =>
       fetchMaterials(0, 100, {

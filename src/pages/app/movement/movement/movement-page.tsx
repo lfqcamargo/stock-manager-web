@@ -65,7 +65,10 @@ export function MovementPage() {
 
   const handleMatSearchChange = useCallback((search: string) => {
     if (matSearchTimerRef.current) clearTimeout(matSearchTimerRef.current);
-    matSearchTimerRef.current = setTimeout(() => setMaterialSearch(search), 300);
+    matSearchTimerRef.current = setTimeout(
+      () => setMaterialSearch(search),
+      300,
+    );
   }, []);
 
   const [directionFilter, setDirectionFilter] = useState('all');
@@ -154,7 +157,12 @@ export function MovementPage() {
       'materials',
       0,
       100,
-      { orderBy: 'name', orderDirection: 'asc', active: true, name: materialSearch || undefined },
+      {
+        orderBy: 'name',
+        orderDirection: 'asc',
+        active: true,
+        name: materialSearch || undefined,
+      },
     ],
     queryFn: () =>
       fetchMaterials(0, 100, {
@@ -187,9 +195,7 @@ export function MovementPage() {
     positionId: positionFilter !== 'all' ? positionFilter : undefined,
     materialId: materialFilter !== 'all' ? materialFilter : undefined,
     direction:
-      directionFilter !== 'all'
-        ? (directionFilter as 'IN' | 'OUT')
-        : undefined,
+      directionFilter !== 'all' ? (directionFilter as 'IN' | 'OUT') : undefined,
     movementTypeId: typeFilter !== 'all' ? typeFilter : undefined,
     dateFrom: dateFromStr ?? undefined,
     dateTo: dateToStr ?? undefined,

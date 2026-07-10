@@ -210,7 +210,9 @@ export function RowsTable({ onDelete }: Props) {
                         <DropdownMenuLabel>Ações</DropdownMenuLabel>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
-                          onClick={() => void navigate(`/addressing/row/${row.id}`)}
+                          onClick={() =>
+                            void navigate(`/addressing/row/${row.id}`)
+                          }
                         >
                           <Eye className="mr-2 h-4 w-4" />
                           Visualizar

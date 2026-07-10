@@ -89,7 +89,10 @@ export function CreateAddressingDialog({ open, onOpenChange }: Props) {
 
   const handleMatSearchChange = useCallback((search: string) => {
     if (matSearchTimerRef.current) clearTimeout(matSearchTimerRef.current);
-    matSearchTimerRef.current = setTimeout(() => setMaterialSearch(search), 300);
+    matSearchTimerRef.current = setTimeout(
+      () => setMaterialSearch(search),
+      300,
+    );
   }, []);
 
   const { data: matData, isFetching: matFetching } = useQuery({
@@ -97,7 +100,12 @@ export function CreateAddressingDialog({ open, onOpenChange }: Props) {
       'materials',
       0,
       100,
-      { orderBy: 'name', orderDirection: 'asc', active: true, name: materialSearch || undefined },
+      {
+        orderBy: 'name',
+        orderDirection: 'asc',
+        active: true,
+        name: materialSearch || undefined,
+      },
     ],
     queryFn: () =>
       fetchMaterials(0, 100, {
