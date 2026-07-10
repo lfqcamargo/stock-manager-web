@@ -2,7 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useQuery } from '@tanstack/react-query';
 import { Warehouse } from 'lucide-react';
 import { useCallback, useRef, useState } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 import { z } from 'zod';
 
 import { fetchMaterials } from '@/api/stock/fetch-materials';
@@ -51,7 +51,6 @@ export function CreateAddressingDialog({ open, onOpenChange }: Props) {
     control,
     handleSubmit,
     reset,
-    watch,
     formState: { errors, isSubmitting },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -65,7 +64,7 @@ export function CreateAddressingDialog({ open, onOpenChange }: Props) {
     },
   });
 
-  const locationId = watch('locationId');
+  const locationId = useWatch({ control, name: 'locationId' });
 
   const { useGetLocations } = useLocation();
   const { data: locData } = useGetLocations(0, 100);
@@ -136,7 +135,7 @@ export function CreateAddressingDialog({ open, onOpenChange }: Props) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[540px] p-0">
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <form onSubmit={(e) => void handleSubmit(onSubmit)(e)}>
           <DialogHeader className="px-6 pt-6 pb-4">
             <DialogTitle className="text-xl font-semibold flex items-center gap-2">
               <Warehouse className="h-5 w-5 text-primary" />

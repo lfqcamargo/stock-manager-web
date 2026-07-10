@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { FolderPlus } from 'lucide-react';
-import { Controller, useController, useForm } from 'react-hook-form';
+import { Controller, useController, useForm, useWatch } from 'react-hook-form';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -36,7 +36,6 @@ export function CreateGroupDialog({
     control,
     reset,
     formState: { errors },
-    watch,
   } = useForm<CreateGroupFormData>({
     resolver: zodResolver(CreateGroupSchema),
     defaultValues: {
@@ -49,7 +48,7 @@ export function CreateGroupDialog({
     mode: 'onChange',
   });
 
-  const watchName = watch('name');
+  const watchName = useWatch({ control, name: 'name' });
 
   const {
     field: { value: active, onChange: setActive },

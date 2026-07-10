@@ -201,7 +201,10 @@ export function CreateMovementPage() {
       }),
   });
 
-  const addressings = addressingsData?.addressings ?? [];
+  const addressings = useMemo(
+    () => addressingsData?.addressings ?? [],
+    [addressingsData],
+  );
 
   const selectedTypeId = useWatch({ control, name: 'movementTypeId' });
   const selectedAddressingId = useWatch({ control, name: 'addressingId' });
@@ -273,7 +276,7 @@ export function CreateMovementPage() {
 
   return (
     <form
-      onSubmit={handleSubmit(onSubmit)}
+      onSubmit={(e) => void handleSubmit(onSubmit)(e)}
       className="flex-1 space-y-4 md:space-y-6"
     >
       {/* Header */}

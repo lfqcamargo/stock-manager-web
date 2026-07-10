@@ -1,5 +1,5 @@
 import { Check, FileText, Shield, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -22,15 +22,8 @@ export function TermsAndPrivacyModal({
   onClose,
   agreeTerms,
 }: TermsAndPrivacyModalProps) {
-  const [acceptedTerms, setAcceptedTerms] = useState(false);
-  const [acceptedPrivacy, setAcceptedPrivacy] = useState(false);
-
-  useEffect(() => {
-    if (isOpen) {
-      setAcceptedTerms(agreeTerms);
-      setAcceptedPrivacy(agreeTerms);
-    }
-  }, [isOpen, agreeTerms]);
+  const [acceptedTerms, setAcceptedTerms] = useState(agreeTerms);
+  const [acceptedPrivacy, setAcceptedPrivacy] = useState(agreeTerms);
 
   const canAccept = acceptedTerms && acceptedPrivacy;
 

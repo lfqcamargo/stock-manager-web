@@ -40,7 +40,7 @@ export function ConfirmationCreateCompanyAndUserPage() {
         setState('error');
       }
     })();
-  }, [token]);
+  }, [token, isPending, confirmAccountMutation, navigate]);
 
   return (
     <div className="p-6 md:p-8">

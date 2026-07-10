@@ -98,7 +98,7 @@ export function MovementTypesTable(props: MovementTypesTableProps) {
       filteredTypes: typesData.movementTypes,
       totalPages: typesData.meta.totalPages,
     };
-  }, [typesData?.movementTypes, typesData?.meta?.totalPages]);
+  }, [typesData]);
 
   function handlePaginate(p: number) {
     setSearchParams((state) => {

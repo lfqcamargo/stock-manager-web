@@ -52,7 +52,7 @@ export function CreateShelfDialog({ open, onOpenChange }: Props) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px] p-0">
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <form onSubmit={(e) => void handleSubmit(onSubmit)(e)}>
           <DialogHeader className="px-6 pt-6 pb-4">
             <DialogTitle className="text-xl font-semibold flex items-center gap-2">
               <LayoutList className="h-5 w-5 text-primary" />
