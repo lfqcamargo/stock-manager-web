@@ -52,6 +52,7 @@ const schema = z.object({
 });
 
 type FormData = z.infer<typeof schema>;
+type FormInput = z.input<typeof schema>;
 
 export function CreateMovementPage() {
   const navigate = useNavigate();
@@ -80,7 +81,7 @@ export function CreateMovementPage() {
     reset,
     setValue,
     formState: { errors, isSubmitting },
-  } = useForm<FormData>({
+  } = useForm<FormData, unknown, FormInput>({
     resolver: zodResolver(schema),
     defaultValues: { date: new Date().toISOString().split('T')[0] },
   });

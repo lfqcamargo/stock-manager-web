@@ -2,6 +2,7 @@ import * as React from 'react';
 import * as RechartsPrimitive from 'recharts';
 import type {
   NameType,
+  Payload,
   ValueType,
 } from 'recharts/types/component/DefaultTooltipContent';
 
@@ -120,18 +121,18 @@ function ChartTooltipContent({
   labelKey,
 }: React.ComponentProps<'div'> & {
   active?: boolean;
-  payload?: RechartsPrimitive.Payload<ValueType, NameType>[];
+  payload?: Payload<ValueType, NameType>[];
   label?: string | number;
   labelFormatter?: (
-    value: string | number | undefined,
-    payload: RechartsPrimitive.Payload<ValueType, NameType>[],
+    value: React.ReactNode,
+    payload: Payload<ValueType, NameType>[],
   ) => React.ReactNode;
   formatter?: (
     value: ValueType,
     name: NameType,
-    item: RechartsPrimitive.Payload<ValueType, NameType>,
+    item: Payload<ValueType, NameType>,
     index: number,
-    payload: RechartsPrimitive.Payload<ValueType, NameType>[],
+    payload: Payload<ValueType, NameType>[],
   ) => React.ReactNode;
   color?: string;
   hideLabel?: boolean;
@@ -194,7 +195,7 @@ function ChartTooltipContent({
     >
       {!nestLabel ? tooltipLabel : null}
       <div className="grid gap-1.5">
-        {payload.map((item: RechartsPrimitive.Payload<ValueType, NameType>, index: number) => {
+        {payload.map((item: Payload<ValueType, NameType>, index: number) => {
           const key = `${nameKey || item.name || item.dataKey || 'value'}`;
           const itemConfig = getPayloadConfigFromPayload(config, item, key);
           const indicatorColor = color || (item.payload as Record<string, unknown>)?.fill as string | undefined || item.color;
